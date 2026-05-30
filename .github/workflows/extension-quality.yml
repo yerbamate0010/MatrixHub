@@ -1,0 +1,42 @@
+name: Extension Quality
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/extension-quality.yml"
+      - "extension/**"
+      - "packages/device-sdk/**"
+  pull_request:
+    paths:
+      - ".github/workflows/extension-quality.yml"
+      - "extension/**"
+      - "packages/device-sdk/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-extension:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify extension
+        run: npm run verify

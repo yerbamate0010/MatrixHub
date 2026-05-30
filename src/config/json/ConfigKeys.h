@@ -1,0 +1,250 @@
+#pragma once
+
+#include <Arduino.h>
+#include <cstdint>
+
+namespace CONFIG {
+namespace Keys {
+    constexpr const char* kNotification = "notification";
+    constexpr const char* kWifiSensing = "wifiSensing";
+    constexpr const char* kBle = "ble";
+    constexpr const char* kShelly = "shelly";
+    constexpr const char* kAlarms = "alarms";
+    constexpr const char* kHeartbeat = "heartbeat";
+    constexpr const char* kMode = "mode";
+    constexpr const char* kTelegramEnabled = "telegram_enabled";
+    constexpr const char* kWebhookEnabled = "webhook_enabled";
+    constexpr const char* kBotToken = "bot_token";
+    constexpr const char* kChatId = "chat_id";
+    constexpr const char* kCommandsEnabled = "commands_enabled";
+    constexpr const char* kWebhookUrl = "webhook_url";
+    constexpr const char* kPushoverEnabled = "pushover_enabled";
+    constexpr const char* kPushoverUser = "pushover_user";
+    constexpr const char* kPushoverToken = "pushover_token";
+    constexpr const char* kEnabled = "enabled";
+    constexpr const char* kSampleIntervalMs = "sample_interval_ms";
+    constexpr const char* kVarianceThreshold = "variance_threshold";
+    constexpr const char* kSensors = "sensors";
+    constexpr const char* kMac = "mac";
+    constexpr const char* kAlias = "alias";
+    constexpr const char* kScannerActive = "scanner_active";
+    constexpr const char* kSaved = "saved";
+    constexpr const char* kLastSeen = "last_seen";
+    constexpr const char* kRssi = "rssi";
+    constexpr const char* kBatt = "batt";
+    constexpr const char* kTemp = "temp";
+    constexpr const char* kHumid = "humid";
+    constexpr const char* kCo2 = "co2"; // Added kCo2
+    constexpr const char* kDevices = "devices";
+    constexpr const char* kName = "name";
+    constexpr const char* kIp = "ip";
+    constexpr const char* kId = "id";
+    constexpr const char* kRelayIndex = "relay_index";
+    constexpr const char* kRules = "rules";
+    constexpr const char* kSource = "source";
+    constexpr const char* kCreatedAt = "created_at";
+    constexpr const char* kUpdatedAt = "updated_at";
+    constexpr const char* kBleDeviceMac = "ble_device_mac";
+    constexpr const char* kOperator = "operator";
+    constexpr const char* kThreshold = "threshold";
+    constexpr const char* kSeverity = "severity";
+    constexpr const char* kNotifyChannels = "notify_channels";
+    constexpr const char* kCooldownSeconds = "cooldown_seconds";
+    constexpr const char* kShellyDevices = "shelly_devices";
+    constexpr const char* kSlots = "slots";
+    constexpr const char* kUrl = "url";
+    constexpr const char* kAllowInsecure = "allow_insecure";
+    constexpr const char* kIntervalMs = "interval_ms";
+
+    // Alarms
+    constexpr const char* kSchemaVersion = "schema_version";
+    constexpr const char* kShellyDeviceIds = "shelly_device_ids";
+    constexpr const char* kGeneration = "generation";
+    constexpr const char* kIsOn = "isOn";
+    constexpr const char* kIsOnline = "isOnline";
+    constexpr const char* kLastUpdate = "lastUpdate";
+    constexpr const char* kVoltage = "voltage";
+    constexpr const char* kCurrent = "current";
+    constexpr const char* kEnergy = "energy";
+    constexpr const char* kUdpPusher = "udp_pusher";
+    constexpr const char* kHost = "host";
+    constexpr const char* kPort = "port";
+    constexpr const char* kFormat = "format";
+    // Air Mouse
+    constexpr const char* kAirMouse = "airmouse";
+    constexpr const char* kSensitivityX = "sensitivity_x";
+    constexpr const char* kSensitivityY = "sensitivity_y";
+    constexpr const char* kDeadzone = "deadzone";
+    
+    // CSI (WiFi Sensing)
+    constexpr const char* kWsCsi = "/ws/csi";
+    constexpr const char* kCsiBroadcastName = "WS-CSI";
+    constexpr const char* kWsUsbTerminal = "/ws/usbterminal";
+    constexpr const char* kUsbTerminalBroadcastName = "WS-UsbTerminal";
+    
+    constexpr const char* kShakeThresholdG = "shake_threshold_g";
+    constexpr const char* kClickDebounceMs = "click_debounce_ms";
+    constexpr const char* kMovementEnabled = "movement_enabled";
+    constexpr const char* kClickEnabled = "click_enabled";
+    constexpr const char* kRunning = "running";
+    constexpr const char* kCalibrating = "calibrating";
+    constexpr const char* kAccelerationEnabled = "acceleration_enabled";
+    constexpr const char* kAccelerationFactor = "acceleration_factor";
+    constexpr const char* kTapThresholdG = "tap_threshold_g";
+    constexpr const char* kDoubleClickWindowMs = "double_click_window_ms";
+    constexpr const char* kEuroMinCutoff = "euro_min_cutoff";
+    constexpr const char* kEuroBeta = "euro_beta";
+    constexpr const char* kEuroDCutoff = "euro_d_cutoff";
+    constexpr const char* kJiggler = "jiggler";
+    constexpr const char* kGyroOffsetX = "gyro_offset_x";
+    constexpr const char* kGyroOffsetY = "gyro_offset_y";
+    constexpr const char* kGyroOffsetZ = "gyro_offset_z";
+    constexpr const char* kLastDeltaG = "last_delta_g";
+    constexpr const char* kImu = "imu";
+    constexpr const char* kGx = "gx";
+    constexpr const char* kGy = "gy";
+    constexpr const char* kGz = "gz";
+    constexpr const char* kAx = "ax";
+    constexpr const char* kAy = "ay";
+    constexpr const char* kAz = "az";
+    // kMode already defined above
+    constexpr const char* kInterval = "interval";
+    constexpr const char* kMoveDistance = "move_distance";
+    constexpr const char* kRandomInterval = "random_interval";
+    // Click source & actions
+    constexpr const char* kClickSource = "click_source";
+    constexpr const char* kSingleClickAction = "single_click_action";
+    constexpr const char* kDoubleClickAction = "double_click_action";
+    constexpr const char* kTripleClickAction = "triple_click_action";
+    constexpr const char* kSingleClickScript = "single_click_script";
+    constexpr const char* kDoubleClickScript = "double_click_script";
+    constexpr const char* kTripleClickScript = "triple_click_script";
+    // Matrix
+    constexpr const char* kMatrix = "matrix";
+    constexpr const char* kBrightness = "brightness";
+    constexpr const char* kAlarmMode = "alarm_mode";
+    constexpr const char* kRotation = "rotation";
+    constexpr const char* kAutoRotate = "auto_rotate";
+    constexpr const char* kEffectEnabled = "effect_enabled";
+    constexpr const char* kEffectMode = "effect_mode";
+    constexpr const char* kEffectSpeed = "effect_speed";
+    constexpr const char* kEffectColor = "effect_color";
+    constexpr const char* kEffectColor2 = "effect_color_2";
+    constexpr const char* kEffectColor3 = "effect_color_3";
+    constexpr const char* kMenuTextColor = "menu_text_color";
+    constexpr const char* kMenuScrollSpeed = "menu_scroll_speed";
+    constexpr const char* kMenuEnabled = "menu_enabled";
+    constexpr const char* kCustomIcons = "custom_icons";
+
+    // Macros
+    constexpr const char* kMacros = "macros";
+    constexpr const char* kBootDelay = "boot_delay";
+    constexpr const char* kBootScript = "boot_script";
+
+    // Keyboard
+    constexpr const char* kKeyboard = "keyboard";
+
+    // USB Terminal
+    constexpr const char* kUsbTerminal = "usb_terminal";
+    constexpr const char* kTargetPort = "target_port";
+    constexpr const char* kIdleTimeoutMs = "idle_timeout_ms";
+
+    // Keyboard
+    constexpr const char* kText = "text";
+    constexpr const char* kEnter = "enter";
+    constexpr const char* kKey = "key";
+    constexpr const char* kKeys = "keys";
+
+    // Macro status/file
+    constexpr const char* kFilename = "filename";
+    constexpr const char* kContent = "content";
+    constexpr const char* kCurrentScript = "current_script";
+    constexpr const char* kStatus = "status";
+    constexpr const char* kCurrentLine = "current_line";
+    constexpr const char* kUptimeMs = "uptime_ms";
+    constexpr const char* kLastError = "last_error";
+    
+    // Logging (New JSON keys)
+    constexpr const char* kLogging = "logging";
+    constexpr const char* kLevel = "level";
+    
+    // Power (New JSON keys)
+    constexpr const char* kPower = "power";
+    constexpr const char* kWakeReason = "wake_reason";
+    constexpr const char* kWakeCauseRaw = "wake_cause_raw";
+    constexpr const char* kWakeGpioMask = "wake_gpio_mask";
+    constexpr const char* kWakeExt1Mask = "wake_ext1_mask";
+    constexpr const char* kSleepRequested = "sleep_requested";
+    constexpr const char* kSleepEtaMs = "sleep_eta_ms";
+    constexpr const char* kWakeIntervalMs = "wake_interval_ms";
+    constexpr const char* kLastActivityMs = "last_activity_ms";
+
+    // System Info (Read-Only)
+    constexpr const char* kEspPlatform = "esp_platform";
+    constexpr const char* kFirmwareVersion = "firmware_version";
+    constexpr const char* kFirmwareName = "firmware_name";
+    constexpr const char* kFirmwareBuiltTarget = "firmware_built_target";
+    constexpr const char* kCpuFreqMhz = "cpu_freq_mhz";
+    constexpr const char* kCpuType = "cpu_type";
+    constexpr const char* kCpuRev = "cpu_rev";
+    constexpr const char* kCpuCores = "cpu_cores";
+    constexpr const char* kFlashChipSize = "flash_chip_size";
+    constexpr const char* kFlashChipSpeed = "flash_chip_speed";
+    constexpr const char* kSketchSize = "sketch_size";
+    constexpr const char* kFreeSketchSpace = "free_sketch_space";
+    constexpr const char* kMacAddress = "mac_address";
+    constexpr const char* kSdkVersion = "sdk_version";
+    constexpr const char* kArduinoVersion = "arduino_version";
+    constexpr const char* kCpuResetReason = "cpu_reset_reason";
+    constexpr const char* kCoreTemp = "core_temp";
+    constexpr const char* kFreeHeap = "free_heap";
+    constexpr const char* kTotalHeap = "total_heap";
+    constexpr const char* kUsedHeap = "used_heap";
+    constexpr const char* kMinFreeHeap = "min_free_heap";
+    constexpr const char* kMaxAllocHeap = "max_alloc_heap";
+    constexpr const char* kPsramSize = "psram_size";
+    constexpr const char* kFreePsram = "free_psram";
+    constexpr const char* kUsedPsram = "used_psram";
+    constexpr const char* kFsTotal = "fs_total";
+    constexpr const char* kFsUsed = "fs_used";
+    constexpr const char* kUptime = "uptime";
+    constexpr const char* kCompileDate = "compile_date";
+    constexpr const char* kCompileTime = "compile_time";
+    constexpr const char* kInactivityTimeoutMs = "inactivity_timeout_ms";
+    constexpr const char* kGraceAfterBootMs = "grace_after_boot_ms";
+    constexpr const char* kSleepEnabled = "sleep_enabled";
+
+    // SCD4x Compensation
+    constexpr const char* kCompensation = "compensation";
+    constexpr const char* kBaseTempOffset = "base_temp_offset";
+    constexpr const char* kReferenceCpuTemp = "reference_cpu_temp";
+    constexpr const char* kTempOffsetPerCpuDegree = "temp_offset_per_cpu_degree";
+    constexpr const char* kMinTempOffset = "min_temp_offset";
+    constexpr const char* kMaxTempOffset = "max_temp_offset";
+
+    // File Manager
+    constexpr const char* kFmFiles = "files";
+    constexpr const char* kFmOk = "ok";
+    constexpr const char* kFmSize = "size";
+    constexpr const char* kFmDirectory = "directory";
+    constexpr const char* kFmListPath = "/rest/fs/list";
+    constexpr const char* kFmDownloadPath = "/rest/fs/download";
+    constexpr const char* kFmUploadPath = "/rest/fs/upload";
+    constexpr const char* kFmParamDir = "dir";
+    constexpr const char* kFmParamPath = "path";
+    constexpr const char* kFmRemovePath = "/rest/fs/remove";
+    
+    namespace FILEMGR {
+        constexpr size_t kUploadMaxFileSize = 10 * 1024 * 1024; // 10 MB default sanity limit
+        constexpr size_t kUploadMinFreeSpace = 32 * 1024;       // 32 KB minimum free space required
+    }
+
+    // Framework
+    namespace FRAMEWORK {
+        constexpr uint32_t TASK_PRIORITY = 5; // Standard FreeRTOS priority
+        constexpr uint32_t MAX_URI_HANDLERS = 255;
+        constexpr bool USE_JWT_AUTH = false;
+    }
+
+}
+}

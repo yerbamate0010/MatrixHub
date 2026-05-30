@@ -1,0 +1,202 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { AlarmRule } from '$lib/types/domain/alarms';
+
+type AlarmFormState = ReturnType<typeof import('./useAlarmRuleForm.svelte').useAlarmRuleForm>;
+
+function createRule(overrides: Partial<AlarmRule> = {}): AlarmRule {
+	return {
+		id: 'alarm-1',
+		enabled: true,
+		name: 'High temp',
+		source: 'temperature',
+		operator: 'above',
+		threshold: 30,
+		severity: 'warning',
+		notify_channels: ['telegram'],
+		cooldown_seconds: 600,
+		shelly_device_ids: [],
+		ble_device_mac: '',
+		created_at: 100,
+		updated_at: 100,
+		...overrides
+	};
+}
+
+function flushPromises() {
+	return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+describe('useAlarmRuleForm', () => {
+	beforeEach(() => {
+		// no-op; keep structure aligned with other hook tests
+	});
+
+	it('initializes a new rule when modal opens and generates auto name', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				}
+			};
+		});
+
+		control.open();
+		await flushPromises();
+
+		expect(form.formData.enabled).toBe(true);
+		expect(form.formData.notify_channels).toEqual(['led']);
+		expect(form.formData.name).toBe('Temp > 30°C (LED)');
+		expect(form.formValid).toBe(true);
+		expect(form.isEditing).toBe(false);
+
+		cleanup();
+	});
+
+	it('resets threshold on source change and preserves manual name edits', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				}
+			};
+		});
+
+		control.open();
+		await flushPromises();
+
+		form.formData.name = 'Custom alarm';
+		form.handleSourceChange('co2');
+
+		expect(form.formData.source).toBe('co2');
+		expect(form.formData.threshold).toBe(1000);
+		expect(form.formData.name).toBe('Custom alarm');
+
+		cleanup();
+	});
+
+	it('builds saved rule with injected id and timestamp when draft is valid', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen,
+				{
+					now: () => 999,
+					createId: () => 'generated-id'
+				}
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				}
+			};
+		});
+
+		control.open();
+		await flushPromises();
+
+		form.formData.source = 'ble_temperature';
+		form.formData.ble_device_mac = 'aa:bb';
+		form.handleThresholdChange(24);
+		form.handleNotifyChannelsChange(['telegram', 'webhook']);
+
+		const saved = form.submitRule();
+
+		expect(saved).toMatchObject({
+			id: 'generated-id',
+			source: 'ble_temperature',
+			threshold: 24,
+			ble_device_mac: 'aa:bb',
+			notify_channels: ['telegram', 'webhook'],
+			created_at: 999,
+			updated_at: 999
+		});
+
+		cleanup();
+	});
+
+	it('returns null for invalid BLE draft without selected device', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+			edit: (rule: AlarmRule) => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				},
+				edit: (rule: AlarmRule) => {
+					currentRule = rule;
+					isOpen = true;
+				}
+			};
+		});
+
+		control.edit(
+			createRule({
+				source: 'ble_temperature',
+				name: 'BLE temp',
+				ble_device_mac: ''
+			})
+		);
+		await flushPromises();
+
+		expect(form.isBleSource).toBe(true);
+		expect(form.formValid).toBe(false);
+		expect(form.submitRule()).toBeNull();
+
+		cleanup();
+	});
+});

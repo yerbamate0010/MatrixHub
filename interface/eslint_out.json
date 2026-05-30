@@ -1,0 +1,5084 @@
+[
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/eslint.config.js",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/playwright.config.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/scripts/patch-svelte-focus-trap.js",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/app.d.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/actions/portal.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/ConnectionStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/Modal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/ModalBase.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/AirMouseMain.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/airMouseState.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/airMouseState.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/components/AirMouseJiggler.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/components/AirMouseSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/components/AirMouseStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/airmouse/components/KeyboardCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/common/CardHeader.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/common/Spinner.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/common/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/ConfirmDialog.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormButton.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormCheckbox.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormInput.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormRange.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormSelect.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/FormToggle.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/InfoDialog.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/PairingModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/PromptDialog.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/RestartController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/RestartProgressDialog.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/TokenDialog.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/forms/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/BatteryIndicator.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/RSSIIndicator.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/Sparkline.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/useSparklineGeometry.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/indicators/useSparklineHover.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/KeyboardController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/KeyboardPanel.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/KeyboardPanel.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/components/KeyboardControls.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/components/SimpleKeyboardManager.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/config/constants.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/config/keyCodes.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/config/layouts.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/keyboard/config/types.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/BaseCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/BaseWidget.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/ContentBox.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/GridLayout.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/InfoCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/LoadingCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/PageWrapper.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/SensorCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/layout/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroEditor.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroHelpModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroList.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroSettingsModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/macros/MacroSettingsModal.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/matrix/IconEditor.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/matrix/IconEditorModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/matrix/defaultIcons.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormButton.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormFileInput.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormGrid.svelte",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 8,
+				"column": 14,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 8,
+				"endColumn": 17,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [160, 163], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [160, 163], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 1,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "<!-- @runes -->\n<script lang=\"ts\">\n\timport { variants } from '$lib/styles/design-system';\n\n\tinterface Props {\n\t\tcolumns?: 1 | 2;\n\t\tclass?: string;\n\t\tchildren?: any;\n\t}\n\n\tlet { columns = 2, class: additionalClasses = '', children }: Props = $props();\n\n\tconst gridClasses = $derived(\n\t\tcolumns === 1\n\t\t\t? `grid w-full grid-cols-1 content-center gap-y-4 px-4 ${additionalClasses}`.trim()\n\t\t\t: `${variants.form.grid} ${additionalClasses}`.trim()\n\t);\n</script>\n\n<div class={gridClasses}>\n\t{@render children?.()}\n</div>\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormInput.svelte",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 181,
+				"column": 33,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 181,
+				"endColumn": 36,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [4317, 4320], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [4317, 4320], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 1,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "<!-- @runes -->\n<script lang=\"ts\">\n\timport { browser } from '$app/environment';\n\timport { getInputClasses, semantic } from '$lib/styles/design-system';\n\timport { createHtmlId } from '$lib/utils/dom/htmlId';\n\timport type { HTMLInputAttributes } from 'svelte/elements';\n\n\tinterface Props extends HTMLInputAttributes {\n\t\tlabel?: string;\n\t\tsizeVariant?: 'xs' | 'sm' | 'md' | 'lg';\n\t\tinputClass?: string;\n\t\twrapperClass?: string;\n\t\terror?: string;\n\t\thelp?: string;\n\t\tconstrained?: boolean;\n\t\tariaLabel?: string;\n\t}\n\n\tlet {\n\t\tlabel,\n\t\tid = '',\n\t\tvalue = $bindable<string | number>(''),\n\t\tplaceholder = '',\n\t\ttype = 'text',\n\t\trequired = false,\n\t\tdisabled = false,\n\t\treadonly = false,\n\t\terror = '',\n\t\thelp = '',\n\t\tconstrained = false,\n\t\tminlength,\n\t\tmaxlength,\n\t\tmin,\n\t\tmax,\n\t\tsize,\n\t\tpattern,\n\t\tautocomplete,\n\t\tariaLabel,\n\t\tstep,\n\t\tinputmode,\n\t\tsizeVariant = 'md',\n\t\tinputClass = '',\n\t\twrapperClass = '',\n\t\tname,\n\t\toninput,\n\t\tonchange,\n\t\tonfocus,\n\t\tonblur\n\t}: Props = $props();\n\n\tlet fallbackId = $state('');\n\n\t$effect(() => {\n\t\tconst hasProvidedId = !!id?.trim();\n\t\tif (!hasProvidedId && browser && !fallbackId) {\n\t\t\tfallbackId = createHtmlId('input');\n\t\t}\n\t\tif (hasProvidedId && fallbackId) {\n\t\t\tfallbackId = '';\n\t\t}\n\t});\n\n\tconst resolvedId = $derived(id?.trim() ? id : fallbackId);\n\tconst resolvedName = $derived(name?.trim() ? name : resolvedId);\n\n\tconst hasError = $derived(!!error);\n\tconst inputClasses = $derived(\n\t\t`${getInputClasses(hasError, constrained, sizeVariant)} ${inputClass}`.trim()\n\t);\n\n\tfunction parseStep(stepValue: Props['step']): number | null {\n\t\tif (stepValue === undefined || stepValue === null) {\n\t\t\treturn null;\n\t\t}\n\t\tif (typeof stepValue === 'number') {\n\t\t\treturn Number.isFinite(stepValue) && stepValue > 0 ? stepValue : null;\n\t\t}\n\t\tconst normalized = stepValue.trim().toLowerCase();\n\t\tif (!normalized.length || normalized === 'any') {\n\t\t\treturn null;\n\t\t}\n\t\tconst parsed = Number(normalized);\n\t\treturn Number.isFinite(parsed) && parsed > 0 ? parsed : null;\n\t}\n\n\tfunction computeFractionDigits(stepValue: number | null): number | null {\n\t\tif (stepValue === null) {\n\t\t\treturn null;\n\t\t}\n\t\tlet digits = 0;\n\t\tlet scaled = stepValue;\n\t\twhile (!Number.isInteger(scaled) && digits < 6) {\n\t\t\tscaled *= 10;\n\t\t\tdigits += 1;\n\t\t}\n\t\treturn digits;\n\t}\n\n\tfunction trimTrailingZeros(literal: string): string {\n\t\treturn literal.replace(/(\\.\\d*?)0+$/, '$1').replace(/\\.$/, '');\n\t}\n\n\tfunction formatNumberForInput(rawValue: number, rawStep: Props['step']): string {\n\t\tif (!Number.isFinite(rawValue)) {\n\t\t\treturn '';\n\t\t}\n\t\tconst stepNumber = parseStep(rawStep);\n\t\tconst fractionDigits = computeFractionDigits(stepNumber);\n\t\tconst maximumFractionDigits = fractionDigits ?? 6;\n\t\ttry {\n\t\t\tconst formatted = rawValue.toLocaleString('en-US', {\n\t\t\t\tuseGrouping: false,\n\t\t\t\tminimumFractionDigits: 0,\n\t\t\t\tmaximumFractionDigits\n\t\t\t});\n\t\t\treturn fractionDigits === 0 ? formatted : trimTrailingZeros(formatted);\n\t\t} catch {\n\t\t\tif (maximumFractionDigits === 0) {\n\t\t\t\treturn Math.round(rawValue).toString();\n\t\t\t}\n\t\t\treturn trimTrailingZeros(rawValue.toFixed(maximumFractionDigits));\n\t\t}\n\t}\n\n\tconst displayValue = $derived(\n\t\ttype === 'number' && typeof value === 'number'\n\t\t\t? formatNumberForInput(value, step)\n\t\t\t: (value ?? '')\n\t);\n\n\tconst handleInput = (e: Event & { currentTarget: HTMLInputElement }) => {\n\t\tconst target = e.currentTarget;\n\t\tif (type === 'number') {\n\t\t\tconst raw = target?.value ?? '';\n\t\t\tif (raw === '') {\n\t\t\t\tvalue = '';\n\t\t\t} else {\n\t\t\t\tconst parsed = Number(raw);\n\t\t\t\tvalue = Number.isNaN(parsed) ? '' : parsed;\n\t\t\t}\n\t\t} else {\n\t\t\tvalue = target?.value ?? '';\n\t\t}\n\n\t\toninput?.(e);\n\t};\n\n\tconst handleChange = (e: Event & { currentTarget: HTMLInputElement }) => {\n\t\tonchange?.(e);\n\t};\n\n\tconst handleFocus = (e: FocusEvent & { currentTarget: HTMLInputElement }) => {\n\t\tonfocus?.(e);\n\t};\n\n\tconst handleBlur = (e: FocusEvent & { currentTarget: HTMLInputElement }) => {\n\t\tonblur?.(e);\n\t};\n</script>\n\n<div class={`${semantic.form.field} ${wrapperClass}`.trim()}>\n\t{#if label}\n\t\t<label class={semantic.form.label} for={resolvedId || undefined}>{label}</label>\n\t{/if}\n\n\t<input\n\t\tid={resolvedId || undefined}\n\t\tname={resolvedName || undefined}\n\t\t{type}\n\t\t{placeholder}\n\t\t{required}\n\t\t{disabled}\n\t\t{readonly}\n\t\t{minlength}\n\t\t{maxlength}\n\t\t{min}\n\t\t{max}\n\t\t{size}\n\t\t{pattern}\n\t\t{step}\n\t\tautocomplete={autocomplete as any}\n\t\taria-label={ariaLabel || label}\n\t\t{inputmode}\n\t\tclass={inputClasses}\n\t\tvalue={displayValue}\n\t\toninput={handleInput}\n\t\tonchange={handleChange}\n\t\tonfocus={handleFocus}\n\t\tonblur={handleBlur}\n\t/>\n\n\t{#if error}\n\t\t<span class={semantic.form.error}>{error}</span>\n\t{:else if help}\n\t\t<span class={semantic.form.help}>{help}</span>\n\t{/if}\n</div>\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormSelect.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/FormTextarea.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/shared/forms/RefreshButton.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/system/file-manager/FileManagerDirectoryList.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/system/file-manager/FileManagerStorageStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/system/file-manager/FileManagerToolbar.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/system/file-manager/FileManagerUploadPanel.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/toasts/Toast.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/components/toasts/notifications.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/colors.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/layout.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/polling.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/thresholds.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/constants/wifiConstants.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/data/timezones.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/i18n.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/sanity.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/BleApiService.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/BleApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/NtpApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/WifiApApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/WifiApiService.test.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 56,
+				"column": 8,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 56,
+				"endColumn": 11,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1461, 1464], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1461, 1464], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/WifiApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/connectivity/WifiSensingApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/core/MatrixApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/core/PowerApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/core/SecurityApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/core/SystemApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/AirMouseApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/CompensationApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/HeartbeatApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/NotificationApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/ShellyApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/integrations/UdpApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/monitoring/AlarmsApiService.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/monitoring/AlarmsApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/monitoring/LogsApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/api/monitoring/SensorsApiService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/core/AuthService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/core/EventHandlers.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/core/Logger.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/core/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/fileManager/api.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-unused-vars",
+				"severity": 2,
+				"message": "'FileListResponse' is defined but never used. Allowed unused vars must match /^_/u.",
+				"line": 10,
+				"column": 2,
+				"nodeType": "Identifier",
+				"messageId": "unusedVar",
+				"endLine": 10,
+				"endColumn": 18,
+				"suggestions": [
+					{
+						"messageId": "removeUnusedVar",
+						"data": { "varName": "FileListResponse" },
+						"fix": { "range": [173, 192], "text": "" },
+						"desc": "Remove unused variable \"FileListResponse\"."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 20,
+				"column": 62,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 20,
+				"endColumn": 65,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [571, 574], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [571, 574], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 68,
+				"column": 62,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 68,
+				"endColumn": 65,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1896, 1899], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1896, 1899], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 150,
+				"column": 17,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 150,
+				"endColumn": 20,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [4175, 4178], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [4175, 4178], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 4,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import {\n\tcreateDefaultState,\n\tdetectSdCardFromListing,\n\tderiveSystemState,\n\tgetBackendMountPath\n} from './utils';\nimport type {\n\tCreateFileManagerActionsOptions,\n\tFileEntry,\n\tFileListResponse,\n\t// FileManagerActionCallbacks,\n\tFileManagerSystemState\n\t// StorageBackend\n} from './types';\nimport type { SystemInformation } from '$lib/types/models';\nimport { basename } from '$lib/utils/path/helpers';\nimport { showError, showSuccess } from '$lib/utils/ui/notifications';\nimport { Logger } from '$lib/services';\n\nexport async function fetchFileManagerSystemState(apiClient: any): Promise<FileManagerSystemState> {\n\ttry {\n\t\tconst probeEndpoint = `/rest/fs/list?dir=${encodeURIComponent('/sdcard')}`;\n\t\tawait apiClient.get(probeEndpoint);\n\t} catch (error) {\n\t\tLogger.debug('SD card probe request failed (expected when no card present).', error);\n\t}\n\n\ttry {\n\t\tconst data = await apiClient.get('/rest/systemStatus');\n\n\t\tif (!data) {\n\t\t\tLogger.error('Received invalid storage status payload.', data);\n\t\t\treturn createDefaultState();\n\t\t}\n\n\t\treturn deriveSystemState(data as SystemInformation);\n\t} catch (error) {\n\t\tLogger.error('Failed to load storage status', error);\n\t\treturn createDefaultState();\n\t}\n}\n\nexport function createFileManagerActions(\n\t{\n\t\tdefaultPath,\n\t\tdirectoryCache,\n\t\tsdcardMountPath,\n\t\tcheckIfDirectory,\n\t\tcallbacks,\n\t\tapiClient\n\t}: CreateFileManagerActionsOptions,\n\t{\n\t\tfetchSystemState = fetchFileManagerSystemState\n\t}: { fetchSystemState?: typeof fetchFileManagerSystemState } = {}\n) {\n\tasync function refreshSystemState() {\n\t\tconst next = await fetchSystemState(apiClient);\n\t\tcallbacks.setSystemState(next);\n\t}\n\n\tasync function loadDirectory(path: string) {\n\t\tcallbacks.setIsLoading(true);\n\t\tcallbacks.setErrorMessage(null);\n\n\t\ttry {\n\t\t\tconst data = await apiClient.get(`/rest/fs/list?dir=${encodeURIComponent(path)}`);\n\n\t\t\tconst files: FileEntry[] = (data?.files ?? []).map((file: any) => ({\n\t\t\t\t...file,\n\t\t\t\ttype: file.directory ? 'directory' : file.size === 0 ? 'unknown' : 'file'\n\t\t\t}));\n\n\t\t\tfiles.forEach((entry: FileEntry) => {\n\t\t\t\tdirectoryCache.set(entry.name, entry.type === 'directory');\n\t\t\t});\n\n\t\t\tcallbacks.setCurrentPath(path);\n\t\t\tcallbacks.setEntries(files);\n\t\t\tcallbacks.setSelectedBackend(path.startsWith(sdcardMountPath) ? 'sdcard' : 'littlefs');\n\n\t\t\tif (path.startsWith(sdcardMountPath)) {\n\t\t\t\tvoid refreshSystemState();\n\t\t\t}\n\n\t\t\tconst pending = files.filter((entry: FileEntry) => entry.type === 'unknown');\n\n\t\t\tif (pending.length) {\n\t\t\t\tawait Promise.allSettled(\n\t\t\t\t\tpending.map(async (entry: FileEntry) => {\n\t\t\t\t\t\tconst isDir = await checkIfDirectory(entry.name);\n\t\t\t\t\t\tentry.type = isDir ? 'directory' : 'file';\n\t\t\t\t\t})\n\t\t\t\t);\n\t\t\t\tcallbacks.setEntries([...files]);\n\t\t\t}\n\n\t\t\tconst state = callbacks.getSystemState();\n\t\t\tif (!state.hasSdCard && detectSdCardFromListing(path, files)) {\n\t\t\t\tcallbacks.onSdCardDetected();\n\t\t\t}\n\t\t} catch (error) {\n\t\t\tLogger.error('Failed to load directory', error);\n\t\t\tcallbacks.setErrorMessage('Failed to load directory contents.');\n\t\t} finally {\n\t\t\tcallbacks.setIsLoading(false);\n\t\t}\n\t}\n\n\tasync function downloadEntry(entry: FileEntry) {\n\t\ttry {\n\t\t\tconst response = await apiClient.fetch(\n\t\t\t\t`/rest/fs/download?path=${encodeURIComponent(entry.name)}`,\n\t\t\t\t{\n\t\t\t\t\tmethod: 'GET',\n\t\t\t\t\theaders: {\n\t\t\t\t\t\tAccept: 'application/octet-stream'\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t);\n\n\t\t\tif (!response.ok) {\n\t\t\t\tshowError('Failed to download file.');\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tconst blob = await response.blob();\n\t\t\tconst url = URL.createObjectURL(blob);\n\t\t\tconst link = document.createElement('a');\n\t\t\tlink.href = url;\n\t\t\tlink.download = basename(entry.name);\n\t\t\tdocument.body.appendChild(link);\n\t\t\tlink.click();\n\t\t\tdocument.body.removeChild(link);\n\t\t\tURL.revokeObjectURL(url);\n\t\t} catch (error) {\n\t\t\tLogger.error('Failed to download file', error);\n\t\t\tshowError('Failed to download file.');\n\t\t}\n\t}\n\n\tasync function refreshCurrentDirectory() {\n\t\tconst path = callbacks.getCurrentPath() || defaultPath;\n\t\tawait Promise.all([loadDirectory(path), refreshSystemState()]);\n\t}\n\n\tasync function deleteEntry(entry: FileEntry) {\n\t\ttry {\n\t\t\tconst data = await apiClient.delete(`/rest/fs/remove?path=${encodeURIComponent(entry.name)}`);\n\n\t\t\tif ((data as any)?.ok !== false) {\n\t\t\t\tshowSuccess('Entry removed successfully.');\n\t\t\t\tawait refreshCurrentDirectory();\n\t\t\t} else {\n\t\t\t\tshowError('Failed to remove entry.');\n\t\t\t}\n\t\t} catch (error) {\n\t\t\tLogger.error('Failed to remove entry', error);\n\t\t\tshowError('Failed to remove entry.');\n\t\t}\n\t}\n\n\tasync function handleUpload() {\n\t\tconst files = callbacks.getUploadFiles();\n\t\tif (!files || files.length === 0) {\n\t\t\treturn;\n\t\t}\n\n\t\tcallbacks.setUploading(true);\n\n\t\ttry {\n\t\t\tconst file = files[0];\n\t\t\tconst backend = callbacks.getSelectedBackend();\n\t\t\tconst fallbackPath = getBackendMountPath(backend);\n\t\t\tconst targetPath = callbacks.getCurrentPath() || fallbackPath;\n\t\t\tconst endpoint = `/rest/fs/upload?backend=${backend}&path=${encodeURIComponent(targetPath)}`;\n\n\t\t\tconst formData = new FormData();\n\t\t\tformData.append('file', file);\n\n\t\t\tconst response = await apiClient.fetch(endpoint, {\n\t\t\t\tmethod: 'POST',\n\t\t\t\tbody: formData\n\t\t\t});\n\n\t\t\tif (response.ok) {\n\t\t\t\tshowSuccess('File uploaded successfully.');\n\t\t\t\tcallbacks.setUploadFiles(null);\n\t\t\t\tawait refreshCurrentDirectory();\n\t\t\t} else {\n\t\t\t\tshowError('Failed to upload file.');\n\t\t\t}\n\t\t} catch (error) {\n\t\t\tLogger.error('Failed to upload file', error);\n\t\t\tshowError('Failed to upload file.');\n\t\t} finally {\n\t\t\tcallbacks.setUploading(false);\n\t\t}\n\t}\n\n\treturn {\n\t\tloadDirectory,\n\t\tdownloadEntry,\n\t\tdeleteEntry,\n\t\thandleUpload,\n\t\trefreshSystemState\n\t};\n}\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/fileManager/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/fileManager/types.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 55,
+				"column": 13,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 55,
+				"endColumn": 16,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1392, 1395], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1392, 1395], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 1,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import type { SystemInformation } from '$lib/types/models';\n\nexport type StorageBackend = 'littlefs' | 'sdcard';\n\nexport type EntryType = 'file' | 'directory' | 'unknown';\n\nexport type RawFileEntry = {\n\tname: string;\n\tsize: number;\n\tdirectory?: boolean;\n};\n\nexport type FileEntry = RawFileEntry & {\n\ttype: EntryType;\n};\n\nexport type FileListResponse = {\n\tfiles: RawFileEntry[];\n};\n\nexport type StorageBackendStatus = {\n\tbackend: StorageBackend;\n\tlabel: string;\n\tmountPath: string;\n\tavailable: boolean;\n\tmounted: boolean;\n};\n\nexport type FileManagerSystemState = {\n\thasSdCard: boolean;\n\tbackends: StorageBackendStatus[];\n\tsystemInformation: SystemInformation | null;\n};\n\nexport type FileManagerActionCallbacks = {\n\tsetIsLoading(value: boolean): void;\n\tsetErrorMessage(message: string | null): void;\n\tsetCurrentPath(path: string): void;\n\tsetEntries(entries: FileEntry[]): void;\n\tsetSelectedBackend(backend: StorageBackend): void;\n\tgetCurrentPath(): string;\n\tgetSelectedBackend(): StorageBackend;\n\tgetUploadFiles(): FileList | null;\n\tsetUploadFiles(files: FileList | null): void;\n\tsetUploading(value: boolean): void;\n\tgetSystemState(): FileManagerSystemState;\n\tsetSystemState(state: FileManagerSystemState): void;\n\tonSdCardDetected(): void;\n};\n\nexport interface CreateFileManagerActionsOptions {\n\tdefaultPath: string;\n\tdirectoryCache: Map<string, boolean>;\n\tsdcardMountPath: string;\n\tapiClient: any;\n\tcheckIfDirectory(path: string): Promise<boolean>;\n\tcallbacks: FileManagerActionCallbacks;\n}\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/fileManager/utils.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 43,
+				"column": 34,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 43,
+				"endColumn": 37,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1104, 1107], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1104, 1107], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 56,
+				"column": 28,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 56,
+				"endColumn": 31,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1618, 1621], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1618, 1621], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 68,
+				"column": 28,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 68,
+				"endColumn": 31,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1921, 1924], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1921, 1924], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 3,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import type { SystemInformation } from '$lib/types/models';\nimport {\n\ttype FileEntry,\n\ttype FileManagerSystemState,\n\ttype StorageBackend,\n\ttype StorageBackendStatus\n} from './types';\n\nconst STORAGE_BACKEND_METADATA: Record<StorageBackend, { label: string; mountPath: string }> = {\n\tlittlefs: { label: 'LittleFS', mountPath: '/' },\n\tsdcard: { label: 'microSD Card', mountPath: '/sdcard' }\n};\n\nconst DEFAULT_SYSTEM_STATE: FileManagerSystemState = {\n\thasSdCard: false,\n\tbackends: [\n\t\t{\n\t\t\tbackend: 'littlefs',\n\t\t\tlabel: STORAGE_BACKEND_METADATA.littlefs.label,\n\t\t\tmountPath: STORAGE_BACKEND_METADATA.littlefs.mountPath,\n\t\t\tavailable: true,\n\t\t\tmounted: true\n\t\t},\n\t\t{\n\t\t\tbackend: 'sdcard',\n\t\t\tlabel: STORAGE_BACKEND_METADATA.sdcard.label,\n\t\t\tmountPath: STORAGE_BACKEND_METADATA.sdcard.mountPath,\n\t\t\tavailable: false,\n\t\t\tmounted: false\n\t\t}\n\t],\n\tsystemInformation: null\n};\n\nexport function createDefaultState(): FileManagerSystemState {\n\treturn {\n\t\thasSdCard: false,\n\t\tbackends: DEFAULT_SYSTEM_STATE.backends.map((backend) => ({ ...backend })),\n\t\tsystemInformation: null\n\t};\n}\n\nfunction resolveMetrics(metrics: any, fallbackAvailable: boolean) {\n\tconst available = metrics?.available ?? metrics?.mounted ?? fallbackAvailable;\n\tconst mounted = metrics?.mounted ?? metrics?.available ?? false;\n\tconst total = metrics?.total ?? 0;\n\treturn { available: Boolean(available), mounted: Boolean(mounted), total: Number(total) };\n}\n\nexport function deriveSystemState(info?: SystemInformation | null): FileManagerSystemState {\n\tif (!info) {\n\t\treturn createDefaultState();\n\t}\n\n\tconst littlefsStatus = (() => {\n\t\tconst metrics = (info as any).storage?.littlefs;\n\t\tconst resolved = resolveMetrics(metrics, true);\n\t\treturn {\n\t\t\tbackend: 'littlefs' as StorageBackend,\n\t\t\tlabel: 'LittleFS',\n\t\t\tmountPath: '/littlefs',\n\t\t\tavailable: !!metrics,\n\t\t\tmounted: resolved.total > 0\n\t\t};\n\t})();\n\n\tconst sdCardStatus = (() => {\n\t\tconst metrics = (info as any).storage?.sdcard;\n\t\tconst resolved = resolveMetrics(metrics, false);\n\t\treturn {\n\t\t\tbackend: 'sdcard' as const,\n\t\t\tlabel: STORAGE_BACKEND_METADATA.sdcard.label,\n\t\t\tmountPath: STORAGE_BACKEND_METADATA.sdcard.mountPath,\n\t\t\tavailable: resolved.available,\n\t\t\tmounted: resolved.mounted\n\t\t} satisfies StorageBackendStatus;\n\t})();\n\n\tconst hasSdCard = sdCardStatus.available || sdCardStatus.mounted;\n\n\treturn {\n\t\thasSdCard,\n\t\tbackends: [littlefsStatus, sdCardStatus],\n\t\tsystemInformation: info\n\t} satisfies FileManagerSystemState;\n}\n\nexport function markSdCardPresent(state: FileManagerSystemState): FileManagerSystemState {\n\tconst updatedBackends = state.backends.map((backend) =>\n\t\tbackend.backend === 'sdcard'\n\t\t\t? {\n\t\t\t\t\t...backend,\n\t\t\t\t\tavailable: true\n\t\t\t\t}\n\t\t\t: backend\n\t);\n\n\treturn {\n\t\t...state,\n\t\thasSdCard: true,\n\t\tbackends: updatedBackends\n\t} satisfies FileManagerSystemState;\n}\n\nexport function detectSdCardFromListing(path: string, files: FileEntry[]): boolean {\n\tif (path !== '/') {\n\t\treturn false;\n\t}\n\n\treturn files.some((entry) => {\n\t\tif (!entry.directory) {\n\t\t\treturn false;\n\t\t}\n\n\t\tconst normalized = entry.name.replace(/\\/+$/, '');\n\t\treturn normalized === '/sdcard' || normalized === 'sdcard';\n\t});\n}\n\nexport function getBackendLabel(backend: StorageBackend): string {\n\treturn STORAGE_BACKEND_METADATA[backend].label;\n}\n\nexport function getBackendMountPath(backend: StorageBackend): string {\n\treturn STORAGE_BACKEND_METADATA[backend].mountPath;\n}\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/services/ui/ErrorService.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/storage.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/bluetooth.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/connectionState.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/connectionState.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/fileManagerState/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/fileManagerState/selectors/formatters.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/fileManagerState/state/store.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-unused-vars",
+				"severity": 2,
+				"message": "'FileListResponse' is defined but never used. Allowed unused vars must match /^_/u.",
+				"line": 8,
+				"column": 7,
+				"nodeType": "Identifier",
+				"messageId": "unusedVar",
+				"endLine": 8,
+				"endColumn": 23,
+				"suggestions": [
+					{
+						"messageId": "removeUnusedVar",
+						"data": { "varName": "FileListResponse" },
+						"fix": { "range": [159, 183], "text": "" },
+						"desc": "Remove unused variable \"FileListResponse\"."
+					}
+				]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 27,
+				"column": 14,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 27,
+				"endColumn": 17,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [837, 840], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [837, 840], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 2,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import { get, writable } from 'svelte/store';\nimport {\n\tcreateFileManagerActions,\n\tderiveSystemState,\n\tgetBackendMountPath,\n\tmarkSdCardPresent,\n\ttype FileEntry,\n\ttype FileListResponse,\n\ttype FileManagerSystemState,\n\ttype StorageBackend\n} from '$lib/services/fileManager';\nimport type { SystemInformation } from '$lib/types/models';\nimport { parentPath } from '$lib/utils/path/helpers';\nimport { Logger } from '$lib/services';\nimport {\n\tformatEntrySize as baseFormatEntrySize,\n\tgetBackendOptions as deriveBackendOptions,\n\tgetEntryLabel as baseGetEntryLabel,\n\ttype BackendOption\n} from '../selectors/formatters';\nexport type { BackendOption } from '../selectors/formatters';\n\ninterface CreateFileManagerStateOptions {\n\tinitialPath?: string;\n\tinitialEntries?: FileEntry[];\n\tinitialSystemInformation?: SystemInformation | null;\n\tapiClient?: any;\n}\n\nconst DEFAULT_PATH = '/';\n\nexport function createFileManagerState({\n\tinitialPath = DEFAULT_PATH,\n\tinitialEntries = [],\n\tinitialSystemInformation = null,\n\tapiClient\n}: CreateFileManagerStateOptions = {}) {\n\tconst directoryCache = new Map<string, boolean>([[DEFAULT_PATH, true]]);\n\tconst sdcardMountPath = getBackendMountPath('sdcard');\n\n\tconst currentPath = writable(initialPath);\n\tconst entries = writable<FileEntry[]>(initialEntries);\n\tconst isLoading = writable(false);\n\tconst errorMessage = writable<string | null>(null);\n\tconst uploadFiles = writable<FileList | null>(null);\n\tconst uploading = writable(false);\n\tconst systemState = writable<FileManagerSystemState>(\n\t\tderiveSystemState(initialSystemInformation ?? null)\n\t);\n\tconst selectedBackend = writable<StorageBackend>(\n\t\tinitialPath.startsWith(sdcardMountPath) ? 'sdcard' : 'littlefs'\n\t);\n\n\tfunction setUploadFiles(files: FileList | null) {\n\t\tuploadFiles.set(files);\n\t}\n\n\tasync function checkIfDirectory(path: string): Promise<boolean> {\n\t\tif (directoryCache.has(path)) {\n\t\t\treturn directoryCache.get(path) ?? false;\n\t\t}\n\n\t\tif (path === DEFAULT_PATH) {\n\t\t\tdirectoryCache.set(path, true);\n\t\t\treturn true;\n\t\t}\n\n\t\ttry {\n\t\t\tconst data = await apiClient.get(`/rest/fs/list?dir=${encodeURIComponent(path)}`);\n\t\t\tconst files = data?.files ?? [];\n\t\t\tlet isDir = false;\n\t\t\tif (files.length === 0) {\n\t\t\t\tisDir = true;\n\t\t\t} else if (files.length === 1 && files[0]?.name === path) {\n\t\t\t\tisDir = false;\n\t\t\t} else {\n\t\t\t\tisDir = true;\n\t\t\t}\n\t\t\tdirectoryCache.set(path, isDir);\n\t\t\treturn isDir;\n\t\t} catch (error) {\n\t\t\tLogger.error(`[FileManagerState] Failed to determine entry type for ${path}`, error);\n\t\t\tdirectoryCache.set(path, false);\n\t\t\treturn false;\n\t\t}\n\t}\n\n\tconst { loadDirectory, downloadEntry, deleteEntry, handleUpload, refreshSystemState } =\n\t\tcreateFileManagerActions({\n\t\t\tdefaultPath: DEFAULT_PATH,\n\t\t\tdirectoryCache,\n\t\t\tsdcardMountPath,\n\t\t\tapiClient,\n\t\t\tasync checkIfDirectory(path: string) {\n\t\t\t\treturn checkIfDirectory(path);\n\t\t\t},\n\t\t\tcallbacks: {\n\t\t\t\tsetIsLoading(value) {\n\t\t\t\t\tisLoading.set(value);\n\t\t\t\t},\n\t\t\t\tsetErrorMessage(message) {\n\t\t\t\t\terrorMessage.set(message);\n\t\t\t\t},\n\t\t\t\tsetCurrentPath(path) {\n\t\t\t\t\tcurrentPath.set(path);\n\t\t\t\t},\n\t\t\t\tsetEntries(value) {\n\t\t\t\t\tentries.set(value);\n\t\t\t\t},\n\t\t\t\tsetSelectedBackend(backend) {\n\t\t\t\t\tselectedBackend.set(backend);\n\t\t\t\t},\n\t\t\t\tgetCurrentPath() {\n\t\t\t\t\treturn get(currentPath);\n\t\t\t\t},\n\t\t\t\tgetSelectedBackend() {\n\t\t\t\t\treturn get(selectedBackend);\n\t\t\t\t},\n\t\t\t\tgetUploadFiles() {\n\t\t\t\t\treturn get(uploadFiles);\n\t\t\t\t},\n\t\t\t\tsetUploadFiles(files) {\n\t\t\t\t\tuploadFiles.set(files);\n\t\t\t\t},\n\t\t\t\tsetUploading(value) {\n\t\t\t\t\tuploading.set(value);\n\t\t\t\t},\n\t\t\t\tgetSystemState() {\n\t\t\t\t\treturn get(systemState);\n\t\t\t\t},\n\t\t\t\tsetSystemState(state) {\n\t\t\t\t\tsystemState.set(state);\n\t\t\t\t},\n\t\t\t\tonSdCardDetected() {\n\t\t\t\t\tconst state = get(systemState);\n\t\t\t\t\tsystemState.set(markSdCardPresent(state));\n\t\t\t\t}\n\t\t\t}\n\t\t});\n\n\tasync function ensureEntryType(entry: FileEntry): Promise<'file' | 'directory'> {\n\t\tif (entry.type === 'unknown') {\n\t\t\tconst isDir = await checkIfDirectory(entry.name);\n\t\t\tentries.update((current) =>\n\t\t\t\tcurrent.map((item) =>\n\t\t\t\t\titem.name === entry.name\n\t\t\t\t\t\t? {\n\t\t\t\t\t\t\t\t...item,\n\t\t\t\t\t\t\t\ttype: isDir ? 'directory' : 'file'\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t: item\n\t\t\t\t)\n\t\t\t);\n\t\t\treturn isDir ? 'directory' : 'file';\n\t\t}\n\n\t\treturn entry.type === 'directory' ? 'directory' : 'file';\n\t}\n\n\tasync function openEntry(entry: FileEntry) {\n\t\tconst type = await ensureEntryType(entry);\n\t\tif (type === 'directory') {\n\t\t\tawait loadDirectory(entry.name);\n\t\t} else {\n\t\t\tawait downloadEntry(entry);\n\t\t}\n\t}\n\n\tasync function goToParent() {\n\t\tconst next = parentPath(get(currentPath));\n\t\tawait loadDirectory(next);\n\t}\n\n\tasync function refresh() {\n\t\tconst path = get(currentPath);\n\t\tawait Promise.all([loadDirectory(path), refreshSystemState()]);\n\t}\n\n\tfunction setSelectedBackend(backend: StorageBackend) {\n\t\tselectedBackend.set(backend);\n\n\t\tconst path = get(currentPath);\n\t\tif (backend === 'sdcard') {\n\t\t\tif (!path.startsWith(sdcardMountPath)) {\n\t\t\t\tvoid loadDirectory(sdcardMountPath);\n\t\t\t}\n\t\t} else if (path.startsWith(sdcardMountPath)) {\n\t\t\tvoid loadDirectory(DEFAULT_PATH);\n\t\t}\n\t}\n\n\tfunction syncSystemInformation(info?: SystemInformation | null) {\n\t\tif (!info) {\n\t\t\treturn;\n\t\t}\n\n\t\tconst derived = deriveSystemState(info);\n\t\tconst state = get(systemState);\n\t\tif (derived.hasSdCard && !state.hasSdCard) {\n\t\t\tsystemState.set(derived);\n\t\t}\n\t}\n\n\tfunction formatEntrySize(entry: FileEntry): string {\n\t\treturn baseFormatEntrySize(entry);\n\t}\n\n\tfunction getEntryLabel(entry: FileEntry): string {\n\t\treturn baseGetEntryLabel(entry);\n\t}\n\n\tfunction getBackendOptions(): BackendOption[] {\n\t\treturn deriveBackendOptions(get(systemState));\n\t}\n\n\tfunction canDeleteEntry(entry: FileEntry, canModify: boolean): boolean {\n\t\treturn canModify && entry.name !== DEFAULT_PATH;\n\t}\n\n\treturn {\n\t\tcurrentPath,\n\t\tentries,\n\t\tisLoading,\n\t\terrorMessage,\n\t\tuploadFiles,\n\t\tuploading,\n\t\tselectedBackend,\n\t\tsystemState,\n\t\tloadDirectory,\n\t\topenEntry,\n\t\tdownloadEntry,\n\t\tdeleteEntry,\n\t\thandleUpload,\n\t\trefresh,\n\t\tgoToParent,\n\t\trefreshSystemState,\n\t\tsetUploadFiles,\n\t\tsetSelectedBackend,\n\t\tsyncSystemInformation,\n\t\tformatEntrySize,\n\t\tgetEntryLabel,\n\t\tgetBackendOptions,\n\t\tcanDeleteEntry\n\t};\n}\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/system/parsers.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/system/types.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/systemStatus.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/telemetry.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/theme.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/user.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/stores/user.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/__tests__/designSystem.test.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 12,
+				"column": 53,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 12,
+				"endColumn": 56,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [573, 576], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [573, 576], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 1,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import { describe, expect, it } from 'vitest';\n\ndescribe('design system barrel exports', () => {\n\tit('exposes tokens, variants, presets, and utilities', async () => {\n\t\tconst designSystem = await import('../design-system');\n\n\t\texpect(designSystem.icon.wrapper.panel).toContain('rounded-2xl');\n\t\texpect(designSystem.semantic.page.container).toContain('space-y');\n\n\t\texpect(designSystem.getButtonClasses('ghost', 'sm')).toContain('btn-ghost');\n\t\texpect(designSystem.getButtonClasses('icon', 'lg')).toContain('btn-circle');\n\t\texpect(designSystem.getButtonClasses('unknown' as any, 'md')).toContain('btn-primary');\n\n\t\texpect(designSystem.getInputClasses(true, false, 'xs')).toContain('border-error');\n\t\texpect(designSystem.getInputClasses(false, true, 'lg')).toContain('max-w-xs');\n\t\texpect(designSystem.getInputClasses(true, true, 'sm')).toContain('border-error');\n\t\texpect(designSystem.cardVariants.interactive).toContain('hover:shadow-2xl');\n\t\texpect(designSystem.dialogVariants.md).toContain('max-w-md');\n\t\texpect(designSystem.formVariants.actions).toContain('justify-end');\n\n\t\texpect(designSystem.surfaceCard('px-4')).toContain('surface-card');\n\t\texpect(designSystem.surfacePanel('shadow')).toContain('surface-panel');\n\t\texpect(designSystem.detailTile('gap-2')).toContain('detail-tile');\n\t\texpect(designSystem.miniCard('gap-1')).toContain('mini-card');\n\n\t\texpect(designSystem.fileManagerStyles.headerBadge).toContain('badge');\n\t\texpect(designSystem.powerManagementStyles.badgeWithIcon).toContain('badge-outline');\n\n\t\texpect(designSystem.variants.button.primary).toContain('btn-primary');\n\t});\n});\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/presets/fileManager.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/presets/powerManagement.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/tokens/icons.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/tokens/semantic.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/utils/classNames.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/variants/__tests__/buttons.test.ts",
+		"messages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 21,
+				"column": 40,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 21,
+				"endColumn": 43,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [996, 999], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [996, 999], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				]
+			}
+		],
+		"suppressedMessages": [],
+		"errorCount": 1,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"source": "import { describe, expect, it } from 'vitest';\n\nimport { buttonVariants, getButtonClasses } from '../buttons';\n\ndescribe('button variants', () => {\n\tit('exposes static variant map', () => {\n\t\texpect(buttonVariants.primary).toContain('btn-primary');\n\t\texpect(buttonVariants.icon.md).toContain('btn-circle');\n\t});\n\n\tit('computes button classes for all variants and sizes', () => {\n\t\texpect(getButtonClasses()).toBe(buttonVariants.primary);\n\t\texpect(getButtonClasses('secondary', 'lg')).toContain('btn-lg');\n\t\texpect(getButtonClasses('ghost', 'sm')).toContain('btn-sm');\n\t\texpect(getButtonClasses('danger', 'xs')).toContain('btn-xs');\n\t\texpect(getButtonClasses('success')).toContain('btn-success');\n\t\texpect(getButtonClasses('warning')).toContain('btn-warning');\n\t\texpect(getButtonClasses('accent')).toContain('btn-accent');\n\t\texpect(getButtonClasses('neutral')).toContain('btn-neutral');\n\t\texpect(getButtonClasses('icon', 'lg')).toBe(buttonVariants.icon.lg);\n\t\texpect(getButtonClasses('unknown' as any)).toBe(buttonVariants.primary);\n\t});\n});\n",
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/variants/buttons.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/variants/inputs.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/styles/design-system/variants/layouts.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/connectivity/ap.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/connectivity/ble.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/connectivity/ntp.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/connectivity/wifi.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/connectivity/wifiSensing.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/devices/airmouse.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/domain/alarms.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/domain/sensors.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/integrations/telegram.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/models.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/system/health.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/system/power.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/system/system.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/system/systemStatus.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/types/telegramcmd/types.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/apiClient.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/apiClient.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/requestErrors.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/requestErrors.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/useApiClient.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/usePolling.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/useSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/api/waitForDevice.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/axesConfig.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/seriesConfig.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/statsCalculator.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/syncManager.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/timeFormatters.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/charts/wheelZoomPlugin.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/dom/htmlId.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/format/formatters.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/format/timeFormat.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/logs/binaryLogParser.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/path/helpers.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/ui/dialogs.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 17,
+				"column": 31,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 17,
+				"endColumn": 34,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [475, 478], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [475, 478], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/ui/iconManager.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/ui/modal.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 4,
+				"column": 60,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 4,
+				"endColumn": 63,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [188, 191], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [188, 191], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 4,
+				"column": 67,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 4,
+				"endColumn": 70,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [195, 198], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [195, 198], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/ui/notifications.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/ui/restartConfirmation.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/validation/schemas.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/validation/sensorClassification.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/lib/utils/validation/validators.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/mocks/appNavigation.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/mocks/appState.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/alarms/AlarmsWidget.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/alarms/AlarmsWidget.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/alarms/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/ble/BleWidget.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/ble/BleWidgetController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/ble/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/shelly/ShellyWidget.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/shelly/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/wifi-sensing/WifiSensingWidget.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/(dashboard)/widgets/wifi-sensing/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/+error.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/+layout.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/+layout.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/airmouse/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/AlarmInfoModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/AlarmRuleForm.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/AlarmRuleList.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/AlarmRuleModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmConditionFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmCooldownSlider.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmNameInput.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmNotifyChannels.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmNotifyCheckboxes.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmSeveritySelect.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmShellySelect.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/AlarmThresholdSlider.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/fields/BleDeviceSelect.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/alarms/components/useAlarmThreshold.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/BluetoothController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/header/BleHeader.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/BleScanner.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/SavedDeviceItem.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/SavedDeviceList.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/ScanResultsModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/useBleScanner.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/scanner/useBleScanner.test.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 9,
+				"column": 34,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 9,
+				"endColumn": 37,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [331, 334], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [331, 334], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 11,
+				"column": 23,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 11,
+				"endColumn": 26,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [387, 390], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [387, 390], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 16,
+				"column": 12,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 16,
+				"endColumn": 15,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [500, 503], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [500, 503], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 20,
+				"column": 20,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 20,
+				"endColumn": 23,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [591, 594], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [591, 594], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 20,
+				"column": 28,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 20,
+				"endColumn": 31,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [599, 602], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [599, 602], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 118,
+				"column": 21,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 118,
+				"endColumn": 24,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [2598, 2601], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [2598, 2601], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 131,
+				"column": 21,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 131,
+				"endColumn": 24,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [2931, 2934], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [2931, 2934], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 163,
+				"column": 21,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 163,
+				"endColumn": 24,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [3720, 3723], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [3720, 3723], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 190,
+				"column": 21,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 190,
+				"endColumn": 24,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [4331, 4334], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [4331, 4334], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 218,
+				"column": 19,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 218,
+				"endColumn": 22,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [4983, 4986], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [4983, 4986], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 218,
+				"column": 55,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 218,
+				"endColumn": 58,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [5019, 5022], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [5019, 5022], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 218,
+				"column": 67,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 218,
+				"endColumn": 70,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [5031, 5034], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [5031, 5034], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			},
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 227,
+				"column": 21,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 227,
+				"endColumn": 24,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [5250, 5253], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [5250, 5253], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/settings/BleSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/bluetooth/components/status/BleStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/chartConfigs.test.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/chartConfigs.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/components/ChartCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/components/DateSelector.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/components/charts/BaseChart.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/charts/components/charts/useUplotChart.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/NTP.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/components/NtpManualTimeFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/components/NtpServerFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/components/NtpSettingsForm.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/components/NtpStatusCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/connections/ntp/components/useNtpValidation.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/keytest/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/login.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/login/LoginForm.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/login/useLogin.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/LogEmptyState.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/LogMonthCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/LogPeriodCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/LogSkeleton.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/LogStatisticsCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/logs/useLogStatistics.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/menu.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/menu/MenuItem.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/menuConfig.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/UdpInfo.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/UdpSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/UdpTest.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/integrations/udp/useUdpSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/HeartbeatInfo.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/HeartbeatSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/HeartbeatTest.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/heartbeat/useHeartbeatSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/pushover/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/pushover/PushoverFormFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/pushover/PushoverSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/pushover/PushoverTest.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/pushover/usePushoverSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/TelegramFormFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/TelegramInstructions.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/TelegramSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/TelegramTest.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/TelegramTestResult.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/useTelegramSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/telegram/useTelegramTest.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/WebhookSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/WebhookTest.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/WebhookTestResult.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/useWebhookSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/notifications/webhook/useWebhookTest.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/sensors/compensation/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/sensors/compensation/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/sensors/compensation/CompensationPreview.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/sensors/compensation/CompensationSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/settings/sensors/compensation/useCompensationSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/shelly/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/shelly/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/shelly/components/ShellyAddDeviceModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/shelly/components/ShellyDeviceRow.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/shelly/components/useShellyDevices.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/statusbar.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/file-manager/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/file-manager/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/matrix/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/matrix/MatrixEffects.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/matrix/MatrixSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/matrix/useMatrixSettings.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/PowerSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/components/PowerActionsCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/components/PowerConfigCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/power/usePowerManagement.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/LiveTail.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/LiveTailController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/SystemStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/HardwareInfoCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/HealthCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/MemoryCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/StabilityCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/StorageCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/TaskManagerModal.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/WifiHealthCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/status/components/index.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/styles/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/system/styles/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/user/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/user/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/user/EditUser.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/user/components/UserListItem.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/user/components/useUserManagement.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 29,
+				"column": 90,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 29,
+				"endColumn": 93,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [1023, 1026], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [1023, 1026], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/Accesspoint.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/components/ApNetworkFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/components/ApSettingsForm.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/components/ApStatusCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/useApManagement.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/ap/useApValidation.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/EditNetwork.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/Scan.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/Wifi.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/ConnectionSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/NetworkListCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/StaticIPFields.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/WifiStatusCard.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/useNetworkList.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/components/useWifiManagement.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifi/sta/useNetworkValidation.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/+page.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/LiveStatus.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/RssiChart.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/RssiChartConfig.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/RssiChartController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/SensingSettings.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/components/WifiSensingController.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/csi/+page.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/csi/components/CsiAmplitudeChart.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/csi/components/CsiConnection.svelte.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/routes/wifisensing/csi/components/CsiWaterfallChart.svelte",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/src/types/svelte-focus-trap.d.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/svelte.config.js",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/test-connection.js",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/tests/e2e/dashboard.spec.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/tests/e2e/readonly.spec.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/tests/e2e/smoke.spec.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/tests/e2e/test-utils.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/vite-plugin-littlefs.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/vite.config.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/vitest.config.ts",
+		"messages": [],
+		"suppressedMessages": [
+			{
+				"ruleId": "@typescript-eslint/no-explicit-any",
+				"severity": 2,
+				"message": "Unexpected any. Specify a different type.",
+				"line": 8,
+				"column": 30,
+				"nodeType": "TSAnyKeyword",
+				"messageId": "unexpectedAny",
+				"endLine": 8,
+				"endColumn": 33,
+				"suggestions": [
+					{
+						"messageId": "suggestUnknown",
+						"fix": { "range": [291, 294], "text": "unknown" },
+						"desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+					},
+					{
+						"messageId": "suggestNever",
+						"fix": { "range": [291, 294], "text": "never" },
+						"desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+					}
+				],
+				"suppressions": [{ "kind": "directive", "justification": "" }]
+			}
+		],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	},
+	{
+		"filePath": "/Users/michal/Documents/PlatformIO/Projects/c6/interface/vitest.setup.ts",
+		"messages": [],
+		"suppressedMessages": [],
+		"errorCount": 0,
+		"fatalErrorCount": 0,
+		"warningCount": 0,
+		"fixableErrorCount": 0,
+		"fixableWarningCount": 0,
+		"usedDeprecatedRules": []
+	}
+]

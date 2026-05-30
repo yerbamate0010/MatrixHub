@@ -1,0 +1,26 @@
+/**
+ * @file AlarmInputData.h
+ * @brief DTO for alarm evaluation inputs
+ */
+
+#pragma once
+
+#include <cmath>
+
+namespace ALARMS {
+
+/**
+ * Sensor input data for alarm evaluation.
+ * All fields default to NAN so callers can omit values.
+ */
+struct AlarmInputData {
+    float co2 = NAN;
+    float temperature = NAN;
+    float humidity = NAN;
+    float wifiVariance = NAN;
+    // Optional BLE fields for rule evaluation
+    float bleTemp = NAN;
+    float bleHumid = NAN;
+};
+
+}  // namespace ALARMS

@@ -1,0 +1,156 @@
+@import 'tailwindcss';
+
+@plugin "daisyui" {
+	themes:
+		business --default,
+		corporate --preferslight,
+		night,
+		black,
+		luxury,
+		dracula,
+		forest,
+		coffee,
+		dim,
+		sunset,
+		halloween,
+		synthwave,
+		light,
+		nord,
+		retro;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+	html,
+	body {
+		max-width: 100%;
+		overflow-x: hidden;
+		font-family: 'Inter', sans-serif;
+		touch-action: manipulation;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: 'Poppins', sans-serif;
+	}
+
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentcolor);
+	}
+}
+
+/* Card shadow effects with smooth color transitions */
+.card-shadow-base {
+	--shadow-color: 59 130 246;
+	box-shadow: 0 0 20px 2px rgb(var(--shadow-color) / 0.25) !important;
+	transition: all 0.3s ease-in-out;
+}
+
+.card-shadow-base:hover {
+	box-shadow: 0 0 30px 4px rgb(var(--shadow-color) / 0.45) !important;
+	transform: translateY(-2px);
+}
+
+.card-shadow-error {
+	--shadow-color: 239 68 68;
+}
+
+.card-shadow-info {
+	--shadow-color: 59 130 246;
+}
+
+.card-shadow-warning {
+	--shadow-color: 250 204 21;
+}
+
+.card-shadow-success {
+	--shadow-color: 34 197 94;
+}
+
+.card-shadow-accent {
+	--shadow-color: 192 132 252;
+}
+
+.card-shadow-primary {
+	--shadow-color: 96 165 250;
+}
+
+.card-shadow-neutral {
+	--shadow-color: 148 163 184;
+}
+
+/* 
+ * DaisyUI v5 Animation Speed Override
+ * Force components to respect the CSS variables managed by ThemeStore
+ */
+:root {
+	--animation-btn: 0.2s;
+	--animation-input: 0.2s;
+}
+
+.btn,
+.file-selector-button {
+	transition-duration: var(--animation-btn) !important;
+	animation-duration: var(--animation-btn) !important;
+}
+
+.input,
+.select,
+.checkbox,
+.radio,
+.toggle,
+.range,
+.textarea {
+	transition-duration: var(--animation-input) !important;
+	animation-duration: var(--animation-input) !important;
+}
+
+/* 
+ * App Background Gradient
+ * Adds subtle color blobs behind the content
+ */
+body {
+	background-image:
+		radial-gradient(
+			at 0% 0%,
+			color-mix(in srgb, var(--color-primary), transparent 97%) 0,
+			transparent 50%
+		),
+		radial-gradient(
+			at 100% 0%,
+			color-mix(in srgb, var(--color-secondary), transparent 97%) 0,
+			transparent 50%
+		),
+		radial-gradient(
+			at 100% 100%,
+			color-mix(in srgb, var(--color-accent), transparent 97%) 0,
+			transparent 50%
+		),
+		radial-gradient(
+			at 0% 100%,
+			color-mix(in srgb, var(--color-neutral), transparent 98%) 0,
+			transparent 50%
+		);
+	background-attachment: fixed;
+	background-size: cover;
+}
+
+.drawer,
+.drawer-content {
+	background-color: transparent !important;
+}

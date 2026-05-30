@@ -1,0 +1,234 @@
+import type {
+	AlarmOperator,
+	AlarmRule,
+	AlarmSource,
+	NotifyChannel
+} from '$lib/types/domain/alarms';
+import {
+	ALARM_SOURCES,
+	DEFAULT_ALARM_RULE,
+	MAX_ALARM_NAME_LENGTH,
+	generateId
+} from '$lib/types/domain/alarms';
+import { getThresholdConfig } from './alarmThresholdConfig';
+
+type AlarmRuleDraft = Omit<AlarmRule, 'id' | 'created_at' | 'updated_at'>;
+
+type AlarmRuleFormDeps = {
+	now?: () => number;
+	createId?: () => string;
+};
+
+function createNewDraft(): AlarmRuleDraft {
+	return {
+		// This draft inherits the shared default channel set from DEFAULT_ALARM_RULE.
+		// Today that is LED-first on purpose so new rules work locally out of the box.
+		...DEFAULT_ALARM_RULE,
+		enabled: true,
+		shelly_device_ids: [],
+		ble_device_mac: ''
+	};
+}
+
+function createDraftFromRule(rule: AlarmRule): AlarmRuleDraft {
+	return {
+		enabled: rule.enabled,
+		name: rule.name,
+		source: rule.source,
+		operator: rule.operator,
+		threshold: rule.threshold,
+		severity: rule.severity,
+		cooldown_seconds: rule.cooldown_seconds,
+		notify_channels: [...rule.notify_channels],
+		shelly_device_ids: [...(rule.shelly_device_ids ?? [])],
+		ble_device_mac: rule.ble_device_mac ?? ''
+	};
+}
+
+function getSourceShortName(source: AlarmSource): string {
+	switch (source) {
+		case 'co2':
+			return 'CO₂';
+		case 'temperature':
+			return 'Temp';
+		case 'humidity':
+			return 'RH';
+		case 'wifi_motion':
+			return 'Motion';
+		case 'ble_temperature':
+			return 'BLE Temp';
+		case 'ble_humidity':
+			return 'BLE RH';
+		default:
+			return source;
+	}
+}
+
+function getActionTokens(channels: NotifyChannel[], shellyDeviceIds: string[] = []): string[] {
+	const parts: string[] = [];
+	// Keep these short tokens stable because they are embedded in auto-generated
+	// rule names and also make it obvious during debugging which default channel
+	// was applied to a freshly opened rule modal.
+	if (channels.includes('led')) parts.push('LED');
+	if (channels.includes('telegram')) parts.push('TG');
+	if (channels.includes('webhook')) parts.push('WH');
+	if (channels.includes('pushover')) parts.push('PO');
+	if (shellyDeviceIds.length > 0) parts.push('Shelly');
+	return parts;
+}
+
+function generateAutoName(draft: AlarmRuleDraft): string {
+	const sourceMeta = ALARM_SOURCES[draft.source];
+	const unit = sourceMeta ? sourceMeta.unit : '';
+	const op = draft.operator === 'above' ? '>' : '<';
+	const actions = getActionTokens(draft.notify_channels, draft.shelly_device_ids ?? []);
+	const actionSuffix = actions.length > 0 ? ` (${actions.join(', ')})` : '';
+	const baseName = `${getSourceShortName(draft.source)} ${op} ${draft.threshold}${unit}`;
+	const fullName = `${baseName}${actionSuffix}`;
+
+	if (fullName.length <= MAX_ALARM_NAME_LENGTH) {
+		return fullName;
+	}
+
+	const availableForBase = MAX_ALARM_NAME_LENGTH - actionSuffix.length;
+	return `${baseName.slice(0, availableForBase)}${actionSuffix}`;
+}
+
+function isBleSource(source: AlarmSource): boolean {
+	return source === 'ble_temperature' || source === 'ble_humidity';
+}
+
+function hasAnyActions(draft: AlarmRuleDraft): boolean {
+	return draft.notify_channels.length > 0 || (draft.shelly_device_ids?.length ?? 0) > 0;
+}
+
+export function useAlarmRuleForm(
+	getRule: () => AlarmRule | null,
+	getIsOpen: () => boolean,
+	deps: AlarmRuleFormDeps = {}
+) {
+	const now = deps.now ?? (() => Math.floor(Date.now() / 1000));
+	const createId = deps.createId ?? generateId;
+
+	let formData = $state<AlarmRuleDraft>(createNewDraft());
+	let wasOpen = $state(false);
+	let lastAutoName = $state('');
+	let previousSource = $state<AlarmSource>('co2');
+
+	function resetDraft() {
+		const currentRule = getRule();
+		const nextDraft = currentRule ? createDraftFromRule(currentRule) : createNewDraft();
+
+		formData = nextDraft;
+		previousSource = nextDraft.source;
+
+		if (!currentRule && nextDraft.name === '') {
+			const autoName = generateAutoName(nextDraft);
+			formData.name = autoName;
+			lastAutoName = autoName;
+		} else {
+			lastAutoName = '';
+		}
+	}
+
+	$effect.pre(() => {
+		const currentIsOpen = getIsOpen();
+		if (currentIsOpen && !wasOpen) {
+			resetDraft();
+		}
+		wasOpen = currentIsOpen;
+	});
+
+	function updateAutoName() {
+		if (formData.name === lastAutoName || formData.name === '') {
+			const nextName = generateAutoName(formData);
+			formData.name = nextName;
+			lastAutoName = nextName;
+		}
+	}
+
+	function handleSourceChange(nextSource: AlarmSource) {
+		formData.source = nextSource;
+		if (nextSource !== previousSource) {
+			formData.threshold = getThresholdConfig(nextSource).default;
+			previousSource = nextSource;
+		}
+		updateAutoName();
+	}
+
+	function handleOperatorChange(nextOperator: AlarmOperator) {
+		formData.operator = nextOperator;
+		updateAutoName();
+	}
+
+	function handleThresholdChange(nextThreshold: number) {
+		formData.threshold = nextThreshold;
+		updateAutoName();
+	}
+
+	function handleNotifyChannelsChange(nextChannels: NotifyChannel[]) {
+		formData.notify_channels = nextChannels;
+		updateAutoName();
+	}
+
+	function handleShellyChange(nextIds: string[]) {
+		formData.shelly_device_ids = nextIds;
+		updateAutoName();
+	}
+
+	let thresholdConfig = $derived(getThresholdConfig(formData.source));
+	let isEditing = $derived(getRule() !== null);
+	let currentBleSource = $derived(isBleSource(formData.source));
+	let bleValid = $derived(!currentBleSource || (formData.ble_device_mac?.length ?? 0) > 0);
+	// LED-only rules stay local and do not need remote-channel cooldown UX.
+	// If LED should start using cooldown-specific UI later, revisit this derived
+	// flag together with DEFAULT_ALARM_RULE and AlarmRule defaults.
+	let needsCooldown = $derived(
+		formData.notify_channels.includes('telegram') ||
+			formData.notify_channels.includes('webhook') ||
+			formData.notify_channels.includes('pushover')
+	);
+	let formValid = $derived(formData.name.trim().length >= 2 && hasAnyActions(formData) && bleValid);
+
+	function submitRule(): AlarmRule | null {
+		if (!formValid) return null;
+
+		const currentRule = getRule();
+		const timestamp = now();
+
+		return {
+			id: currentRule?.id ?? createId(),
+			...formData,
+			created_at: currentRule?.created_at ?? timestamp,
+			updated_at: timestamp
+		};
+	}
+
+	return {
+		get formData() {
+			return formData;
+		},
+		get thresholdConfig() {
+			return thresholdConfig;
+		},
+		get isEditing() {
+			return isEditing;
+		},
+		get isBleSource() {
+			return currentBleSource;
+		},
+		get needsCooldown() {
+			return needsCooldown;
+		},
+		get formValid() {
+			return formValid;
+		},
+		updateAutoName,
+		handleSourceChange,
+		handleOperatorChange,
+		handleThresholdChange,
+		handleNotifyChannelsChange,
+		handleShellyChange,
+		submitRule
+	};
+}
