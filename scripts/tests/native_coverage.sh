@@ -37,6 +37,14 @@ if [ -z "${PIO_BIN:-}" ]; then
     fi
 fi
 
+if [ -z "${CC:-}" ] && command -v clang >/dev/null 2>&1; then
+    export CC="$(command -v clang)"
+fi
+
+if [ -z "${CXX:-}" ] && command -v clang++ >/dev/null 2>&1; then
+    export CXX="$(command -v clang++)"
+fi
+
 FILTERED_RUN=false
 PASSTHROUGH_ARGS=()
 
