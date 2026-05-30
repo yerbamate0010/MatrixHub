@@ -1,9 +1,17 @@
 Import("env")
 
 import pathlib
+import shutil
 import subprocess
 import sys
 
+clang = shutil.which("clang")
+clangxx = shutil.which("clang++")
+
+if not clang or not clangxx:
+    raise FileNotFoundError("LLVM coverage build requires clang and clang++")
+
+env.Replace(CC=clang, CXX=clangxx, LINK=clangxx)
 
 if sys.platform == "darwin":
     resource_dir = subprocess.check_output(
