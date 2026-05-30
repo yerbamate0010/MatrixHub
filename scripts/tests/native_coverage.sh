@@ -26,7 +26,16 @@ resolve_llvm_tool() {
 
 LLVM_COV_BIN="$(resolve_llvm_tool llvm-cov)"
 LLVM_PROFDATA_BIN="$(resolve_llvm_tool llvm-profdata)"
-PIO_BIN="${PIO_BIN:-$(command -v pio || echo "/Users/michal/.platformio/penv/bin/pio")}"
+if [ -z "${PIO_BIN:-}" ]; then
+    if command -v pio >/dev/null 2>&1; then
+        PIO_BIN="$(command -v pio)"
+    elif command -v platformio >/dev/null 2>&1; then
+        PIO_BIN="$(command -v platformio)"
+    else
+        echo "Required tool not found: pio or platformio" >&2
+        exit 1
+    fi
+fi
 
 FILTERED_RUN=false
 PASSTHROUGH_ARGS=()
