@@ -59,12 +59,12 @@
 				{:else}
 					<ConnectionSettings
 						hostname={state.settings.hostname}
-						connectionMode={state.settings.connection_mode}
+						mode={state.settings.mode}
 						isDirty={state.isSettingsDirty}
 						saveBlocked={state.isSaveBlocked}
 						onApply={wifiMgmt.saveSettings}
 						onHostnameChange={wifiMgmt.updateHostname}
-						onConnectionModeChange={wifiMgmt.updateConnectionMode}
+						onModeChange={wifiMgmt.updateMode}
 					/>
 				{/if}
 			</div>

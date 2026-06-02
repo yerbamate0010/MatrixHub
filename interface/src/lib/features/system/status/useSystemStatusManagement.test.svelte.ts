@@ -332,7 +332,7 @@ describe('useSystemStatusManagement', () => {
 		cleanup();
 	});
 
-	it('keeps AP mode visible during rescue AP+STA even when legacy flag says false', async () => {
+	it('keeps AP mode visible when diagnostics report an active AP', async () => {
 		const { useSystemStatusManagement } = await import('./useSystemStatusManagement.svelte');
 		let statusView: SystemStatusView | null = null;
 
@@ -353,7 +353,7 @@ describe('useSystemStatusManagement', () => {
 						rssi: -70,
 						lastDisconnectReason: 2,
 						healthy: true,
-						rescueApActive: true
+						apActive: true
 					},
 					ap: {
 						active: true,

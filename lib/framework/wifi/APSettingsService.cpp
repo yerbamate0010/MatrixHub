@@ -67,20 +67,6 @@ void APSettingsService::loop()
     handleDNS();
 }
 
-const char* APSettingsService::apLaunchModeName(ApLaunchMode mode)
-{
-    switch (mode) {
-        case ApLaunchMode::None:
-            return "none";
-        case ApLaunchMode::ManualApOnly:
-            return "manual";
-        case ApLaunchMode::RescueApSta:
-            return "rescue";
-        default:
-            return "unknown";
-    }
-}
-
 void APSettingsService::ensureLoadedState()
 {
     // NOTE: WiFiSettingsService may call AP setup very early during boot
@@ -122,45 +108,28 @@ void APSettingsService::ensureLoadedState()
 
 void APSettingsService::forceAPMode()
 {
-    (void)startAccessPoint(ApLaunchMode::ManualApOnly);
+    (void)startAccessPoint();
 }
 
-bool APSettingsService::startAccessPoint(ApLaunchMode mode)
+bool APSettingsService::startAccessPoint()
 {
     ensureLoadedState();
 
-    if (_apStarted && _launchMode == mode)
+    if (_apStarted)
     {
         return true;
     }
 
     ESP_LOGI(SVK_TAG,
-             "Starting software access point (mode=%s, ssid=%s, channel=%u, hidden=%d)",
-             apLaunchModeName(mode),
+             "Starting software access point (ssid=%s, channel=%u, hidden=%d)",
              _state.ssid.c_str(),
              (unsigned)_state.channel,
              _state.ssidHidden ? 1 : 0);
 
-    // Do not pre-stop an already running AP when only the launch mode changes.
-    // Reconfiguring in place gives rescue/manual transitions a better chance of
-    // keeping the existing SSID alive if the new mode fails to apply.
-
-    if (mode == ApLaunchMode::ManualApOnly)
-    {
-        // Manual AP-only mode intentionally tears down STA state.
-        MDNS.end();
-        WiFi.disconnect(true);
-        vTaskDelay(pdMS_TO_TICKS(100));
-        WiFi.mode(WIFI_AP);
-    }
-    else
-    {
-        // Rescue AP overlays on top of STA to keep uplink recovery alive.
-        if (WiFi.getMode() != WIFI_AP_STA)
-        {
-            WiFi.mode(WIFI_AP_STA);
-        }
-    }
+    MDNS.end();
+    WiFi.disconnect(true);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    WiFi.mode(WIFI_AP);
 
     vTaskDelay(pdMS_TO_TICKS(50));
 
@@ -184,23 +153,19 @@ bool APSettingsService::startAccessPoint(ApLaunchMode mode)
     if (!okAp)
     {
         ESP_LOGE(SVK_TAG,
-                 "softAP failed (mode=%s, ssid_len=%u, channel=%u, hidden=%d, max_clients=%u)",
-                 apLaunchModeName(mode),
+                 "softAP failed (ssid_len=%u, channel=%u, hidden=%d, max_clients=%u)",
                  (unsigned)_state.ssid.length(),
                  (unsigned)_state.channel,
                  _state.ssidHidden ? 1 : 0,
                  (unsigned)_state.maxClients);
         _apStarted = false;
-        _launchMode = ApLaunchMode::None;
         return false;
     }
 
     _apStarted = true;
-    _launchMode = mode;
 
     IPAddress apIp = WiFi.softAPIP();
-    ESP_LOGI(SVK_TAG, "AP started successfully (mode=%s, IP=%s, channel=%u, wifi_mode=%d)",
-             apLaunchModeName(mode),
+    ESP_LOGI(SVK_TAG, "AP started successfully (IP=%s, channel=%u, wifi_mode=%d)",
              apIp.toString().c_str(),
              (unsigned)WiFi.channel(),
              (int)WiFi.getMode());
@@ -277,14 +242,9 @@ void APSettingsService::stopAP()
         stopDnsServer();
     }
 
-    ESP_LOGI(SVK_TAG, "Stopping software access point (mode=%s)", apLaunchModeName(_launchMode));
+    ESP_LOGI(SVK_TAG, "Stopping software access point");
     WiFi.softAPdisconnect(true);
-    if (_launchMode == ApLaunchMode::RescueApSta)
-    {
-        WiFi.mode(WIFI_STA);
-    }
     _apStarted = false;
-    _launchMode = ApLaunchMode::None;
 }
 
 void APSettingsService::stopAccessPoint()
@@ -307,7 +267,7 @@ void APSettingsService::handleDNS()
 APNetworkStatus APSettingsService::getAPNetworkStatus()
 {
     // Diagnose the AP that this service actually started instead of inferring
-    // activity from WiFi.mode(), which can stay in AP/AP+STA after a failed
-    // SoftAP bring-up and make the dashboard report a phantom AP.
+    // activity from WiFi.mode(), which can stay in AP after a failed SoftAP
+    // bring-up and make the dashboard report a phantom AP.
     return _apStarted ? APNetworkStatus::ACTIVE : APNetworkStatus::INACTIVE;
 }

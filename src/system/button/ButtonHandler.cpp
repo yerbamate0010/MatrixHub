@@ -141,8 +141,9 @@ void ButtonHandler::update() {
                  static_cast<unsigned long>(FACTORY::LONG_PRESS_MS));
         }
 
-        // 2s threshold → open/close the matrix menu immediately. This used to
-        // wait until release; users expected the menu to appear *at* 2 s.
+        // 2s threshold -> open the matrix menu or select the active menu item.
+        // The menu owns EXIT as an explicit item, so active-menu holds are no
+        // longer hidden close gestures.
         if (!_mediumPressTriggered &&
             heldMs >= FACTORY::MEDIUM_PRESS_MS &&
             heldMs < FACTORY::LONG_PRESS_MS) {
@@ -151,10 +152,10 @@ void ButtonHandler::update() {
             const bool menuActive = _bindings.isMenuActive ? _bindings.isMenuActive() : false;
             const bool menuEnabled = _bindings.isMenuEnabled ? _bindings.isMenuEnabled() : false;
             if (menuActive) {
-                if (_bindings.onMenuExit) {
-                    _bindings.onMenuExit();
+                if (_bindings.onMenuSelect) {
+                    _bindings.onMenuSelect();
                 }
-                LOGI("Medium hold (%lu ms) - Exit Menu (while held)",
+                LOGI("Medium hold (%lu ms) - Select Menu Item (while held)",
                      static_cast<unsigned long>(heldMs));
             } else if (menuEnabled) {
                 if (_bindings.onMenuEnter) {

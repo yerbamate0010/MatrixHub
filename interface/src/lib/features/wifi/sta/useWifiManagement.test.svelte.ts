@@ -106,12 +106,13 @@ vi.mock('$lib/i18n.svelte', () => ({
 vi.mock('$lib/paraglide/messages.js', () => ({
 	wifi_apply_title: () => 'Apply WiFi Settings?',
 	wifi_ap_mode_title: () => 'AP Mode Activation',
+	wifi_off_mode_title: () => 'Turn WiFi Off?',
 	wifi_sta_confirm_msg: () => 'Connect to saved networks',
-	wifi_ap_confirm_msg: ({ status }: { status: string }) => `Switch to AP: ${status}`,
+	wifi_ap_confirm_msg: () => 'Switch to AP',
+	wifi_off_confirm_msg: () => 'Switch WiFi off',
 	wifi_apply_restart_btn: () => 'Apply & Restart',
 	wifi_restart_ap_btn: () => 'Restart to AP',
-	wifi_sta_disabled: () => 'STA disabled',
-	wifi_no_networks: () => 'No saved networks',
+	wifi_restart_off_btn: () => 'Restart with WiFi Off',
 	wifi_password_error: () => 'WPA/WPA2 password must be 8-63 characters or empty',
 	wifi_ssid_required: () => 'SSID is required',
 	wifi_ssid_too_long: ({ max }: { max: number }) => `SSID too long (max ${max} bytes)`,
@@ -127,6 +128,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	wifi_field_dns_1: () => 'DNS 1',
 	wifi_field_dns_2: () => 'DNS 2',
 	wifi_networks_limit_error: ({ max }: { max: number }) => `Maximum ${max} networks allowed`,
+	wifi_sta_requires_network: () => 'Station mode requires at least one saved network.',
 	toast_wifi_status_load_failed: () => 'Failed to load Wi-Fi status.',
 	toast_wifi_settings_load_failed: () => 'Failed to load Wi-Fi settings.',
 	toast_wifi_settings_update_failed: ({ error }: { error: string }) =>
@@ -179,7 +181,7 @@ describe('useWifiManagement', () => {
 		} as never);
 		mockWifiApi.getSettings.mockResolvedValue({
 			hostname: 'node-a',
-			connection_mode: 1,
+			mode: 'sta',
 			wifi_networks: [{ ssid: 'Home', password: 'secret123', static_ip_config: false }]
 		});
 		mockWifiApi.saveSettings.mockImplementation(async (settings) => settings);
@@ -247,7 +249,7 @@ describe('useWifiManagement', () => {
 				});
 
 				void wifiMgmt.loadInitialData().then(async () => {
-					wifiMgmt.updateConnectionMode(0);
+					wifiMgmt.updateMode('ap');
 					wifiMgmt.updateNetworks([]);
 
 					wifiMgmt.saveSettings();
@@ -255,7 +257,7 @@ describe('useWifiManagement', () => {
 					expect(mockConfirmRestartAndSave).toHaveBeenCalledOnce();
 					const [, options] = mockConfirmRestartAndSave.mock.calls[0];
 					expect(options.title).toBe('AP Mode Activation');
-					expect(options.message).toBe('Switch to AP: STA disabled');
+					expect(options.message).toBe('Switch to AP');
 					expect(options.confirmLabel).toBe('Restart to AP');
 
 					const [onSave] = mockConfirmRestartAndSave.mock.calls[0];
@@ -263,7 +265,7 @@ describe('useWifiManagement', () => {
 
 					expect(mockWifiApi.saveSettings).toHaveBeenCalledWith({
 						hostname: 'node-a',
-						connection_mode: 0,
+						mode: 'ap',
 						wifi_networks: []
 					});
 
@@ -286,6 +288,34 @@ describe('useWifiManagement', () => {
 
 				void wifiMgmt.loadInitialData().then(() => {
 					wifiMgmt.updateHostname('');
+
+					expect(wifiMgmt.state.isSettingsDirty).toBe(true);
+					expect(wifiMgmt.state.isSaveBlocked).toBe(true);
+
+					wifiMgmt.saveSettings();
+
+					expect(mockConfirmRestartAndSave).not.toHaveBeenCalled();
+					expect(mockWifiApi.saveSettings).not.toHaveBeenCalled();
+					expect(mockNotifications.warning).toHaveBeenCalledWith('Validation error', 3000);
+					resolve();
+				});
+			});
+		});
+
+		cleanup?.();
+	});
+
+	it('blocks station mode when no saved networks remain', async () => {
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const wifiMgmt = useWifiManagement({
+					bearerToken: 'token'
+				});
+
+				void wifiMgmt.loadInitialData().then(() => {
+					wifiMgmt.updateNetworks([]);
 
 					expect(wifiMgmt.state.isSettingsDirty).toBe(true);
 					expect(wifiMgmt.state.isSaveBlocked).toBe(true);

@@ -31,7 +31,7 @@ class DNSServer;
 
 #ifndef FACTORY_AP_PASSWORD
 // DEV-ONLY SECURITY EXCEPTION:
-// Manual/rescue AP mode intentionally keeps a shared default password during
+// AP mode intentionally keeps a shared default password during
 // development so unprovisioned or recovered boards remain reachable without
 // extra onboarding steps. We are aware this is not production-safe. Routine
 // reviews can skip flagging this until the per-device bootstrap plan is ready.
@@ -72,13 +72,6 @@ enum APNetworkStatus
 {
     ACTIVE = 0,
     INACTIVE
-};
-
-enum class ApLaunchMode : uint8_t
-{
-    None = 0,
-    ManualApOnly,
-    RescueApSta
 };
 
 class APSettings
@@ -224,7 +217,7 @@ private:
     static void sanitizeForPersistence(APSettings &settings)
     {
         // Stored config may come from an older build or a corrupted file, so repair fields
-        // individually instead of dropping the whole object when recovery AP is needed most.
+        // individually instead of dropping the whole object when AP mode is needed.
         if (settings.ssid.length() < kMinSsidLength || settings.ssid.length() > kMaxSsidLength)
         {
             settings.ssid = defaultSsid();
@@ -296,12 +289,10 @@ public:
     void begin();
     void loop();
     APNetworkStatus getAPNetworkStatus();
-    ApLaunchMode getActiveLaunchMode() const { return _launchMode; }
-    static const char* apLaunchModeName(ApLaunchMode mode);
+    bool isAccessPointStarted() const { return _apStarted; }
 
-    // Force AP mode (called by WiFiSettingsService when STA fails)
     void forceAPMode();
-    bool startAccessPoint(ApLaunchMode mode);
+    bool startAccessPoint();
     void stopAccessPoint();
 
 private:
@@ -315,7 +306,6 @@ private:
     bool _dnsServerAllocatedInPsram = false;
 
     bool _apStarted = false;
-    ApLaunchMode _launchMode = ApLaunchMode::None;
 
     void ensureLoadedState();
     void stopDnsServer();

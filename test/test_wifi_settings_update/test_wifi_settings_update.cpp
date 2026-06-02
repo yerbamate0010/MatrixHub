@@ -14,7 +14,7 @@ void test_update_accepts_32_byte_ssid_and_preserves_static_ip_config() {
     JsonDocument doc;
     JsonObject root = doc.to<JsonObject>();
     root["hostname"] = "matrixhub";
-    root["connection_mode"] = 1;
+    root["mode"] = "sta";
 
     JsonObject wifi = root["wifi_networks"].to<JsonArray>().add<JsonObject>();
     wifi["ssid"] = "12345678901234567890123456789012";
@@ -29,6 +29,8 @@ void test_update_accepts_32_byte_ssid_and_preserves_static_ip_config() {
 
     TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::CHANGED), static_cast<int>(result));
     TEST_ASSERT_EQUAL_STRING("matrixhub", settings.hostname.c_str());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(WiFiOperatingMode::Station),
+                            static_cast<uint8_t>(settings.mode));
     TEST_ASSERT_EQUAL(1, settings.wifiSettings.size());
 
     const wifi_settings_t& network = settings.wifiSettings.front();
@@ -48,7 +50,7 @@ void test_update_rejects_33_byte_ssid() {
     JsonDocument doc;
     JsonObject root = doc.to<JsonObject>();
     root["hostname"] = "matrixhub";
-    root["connection_mode"] = 1;
+    root["mode"] = "ap";
 
     JsonObject wifi = root["wifi_networks"].to<JsonArray>().add<JsonObject>();
     wifi["ssid"] = "123456789012345678901234567890123";
@@ -58,7 +60,23 @@ void test_update_rejects_33_byte_ssid() {
 
     TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::CHANGED), static_cast<int>(result));
     TEST_ASSERT_EQUAL_STRING("matrixhub", settings.hostname.c_str());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(WiFiOperatingMode::AccessPoint),
+                            static_cast<uint8_t>(settings.mode));
     TEST_ASSERT_EQUAL(0, settings.wifiSettings.size());
+}
+
+void test_update_rejects_sta_without_valid_networks() {
+    WiFiSettings settings;
+
+    JsonDocument doc;
+    JsonObject root = doc.to<JsonObject>();
+    root["hostname"] = "matrixhub";
+    root["mode"] = "sta";
+    root["wifi_networks"].to<JsonArray>();
+
+    const StateUpdateResult result = WiFiSettings::update(root, settings, HTTP_ENDPOINT_ORIGIN_ID);
+
+    TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::ERROR), static_cast<int>(result));
 }
 
 int main(int argc, char** argv) {
@@ -68,5 +86,6 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_update_accepts_32_byte_ssid_and_preserves_static_ip_config);
     RUN_TEST(test_update_rejects_33_byte_ssid);
+    RUN_TEST(test_update_rejects_sta_without_valid_networks);
     return UNITY_END();
 }

@@ -19,7 +19,6 @@
 
 #include <ArduinoJson.h>
 
-#include <Preferences.h>
 #include <cstring>
 
 #include <services/RestartService.h>
@@ -30,9 +29,9 @@
 #include "../../../src/system/rtc/RtcConfig.h"
 
 // Guard window after WiFi.begin() to avoid reconfiguring while the stack is busy.
-// Reduced to 5s for faster failover when network is unavailable or credentials are wrong.
 static constexpr uint32_t WIFI_CONNECT_GUARD_MS = 5000;
 static constexpr const char* WIFI_FAST_TAG = "WiFiFast";
+static constexpr const char* WIFI_MODE_CHANGE_ORIGIN = "matrix_menu";
 
 namespace {
 
@@ -42,13 +41,6 @@ struct ConnectedTransitionInfo {
     bool ipChanged = false;
     IPAddress previousIp = INADDR_NONE;
     WiFiConnectivityState previousState = WiFiConnectivityState::StaConnecting;
-};
-
-struct RecoveryTransitionDecision {
-    bool apply = false;
-    bool dropped = false;
-    wifi_mode_t targetMode = WIFI_MODE_STA;
-    char reason[32]{0};
 };
 
 void refreshFastReconnectCache() {
@@ -91,6 +83,38 @@ bool isZeroIp(const IPAddress& ip) {
 
 }  // namespace
 
+const char* wifiOperatingModeName(WiFiOperatingMode mode)
+{
+    switch (mode) {
+        case WiFiOperatingMode::Off:
+            return "off";
+        case WiFiOperatingMode::AccessPoint:
+            return "ap";
+        case WiFiOperatingMode::Station:
+            return "sta";
+        default:
+            return "unknown";
+    }
+}
+
+const char* wifiConnectivityStateName(WiFiConnectivityState state)
+{
+    switch (state) {
+        case WiFiConnectivityState::Off:
+            return "off";
+        case WiFiConnectivityState::ApOnly:
+            return "ap_only";
+        case WiFiConnectivityState::StaConnecting:
+            return "sta_connecting";
+        case WiFiConnectivityState::StaConnected:
+            return "sta_connected";
+        case WiFiConnectivityState::StaBackoff:
+            return "sta_backoff";
+        default:
+            return "unknown";
+    }
+}
+
 WiFiSettingsService::WiFiSettingsService(PsychicHttpServer *server,
                                          FS *fs,
                                          SecurityManager *securityManager)
@@ -114,7 +138,7 @@ WiFiSettingsService::WiFiSettingsService(PsychicHttpServer *server,
                 _onHostnameChangeCallback();
             }
         }
-        ESP_LOGI(SVK_TAG, "WiFi settings changed. Reconnecting shortly...");
+        ESP_LOGI(SVK_TAG, "WiFi settings changed. Scheduling restart...");
         delayedReconnect();
         return StateHandlerResult::success();
     }, false);
@@ -127,15 +151,11 @@ void WiFiSettingsService::setAPSettingsService(APSettingsService *apSettingsServ
 
 void WiFiSettingsService::initWiFi()
 {
-    WiFi.mode(WIFI_MODE_STA);
     WiFi.persistent(false);
     WiFi.setAutoReconnect(false);
     _fsPersistence.readFromFS();
     _lastAppliedHostname = _state.hostname;
-    _connectivityState = WiFiConnectivityState::StaConnecting;
-
-    // Immediate first connection attempt (don't wait for loop delay)
-    manageSTA();
+    applyConfiguredMode();
 }
 
 void WiFiSettingsService::begin()
@@ -150,14 +170,13 @@ void WiFiSettingsService::delayedReconnect()
 
 void WiFiSettingsService::loop()
 {
-    const unsigned long currentMillis = millis();
+    if (_state.mode != WiFiOperatingMode::Station) {
+        return;
+    }
 
-    // Order matters: first observe the real STA state, then consume queued
-    // recovery, then let policy react to the updated timestamps/flags.
-    // This keeps the state machine deterministic during disconnect storms.
+    const unsigned long currentMillis = millis();
     observeConnectivity(currentMillis);
     (void)processRecoveryRequest();
-    applyPolicy(currentMillis);
 
     const RuntimeSnapshot runtime = snapshotRuntimeState();
     unsigned long delay = WIFI_RECONNECTION_DELAY;
@@ -189,12 +208,41 @@ String WiFiSettingsService::getIP()
     {
         return WiFi.localIP().toString();
     }
+    if (_state.mode == WiFiOperatingMode::AccessPoint &&
+        _apSettingsService &&
+        _apSettingsService->isAccessPointStarted())
+    {
+        return WiFi.softAPIP().toString();
+    }
     return "Not connected";
+}
+
+WiFiOperatingMode WiFiSettingsService::getConfiguredMode() const
+{
+    return _state.mode;
 }
 
 bool WiFiSettingsService::isApModeConfigured() const
 {
-    return _state.staConnectionMode == (u_int8_t)STAConnectionMode::OFFLINE || !hasConfiguredNetworks();
+    return _state.mode == WiFiOperatingMode::AccessPoint;
+}
+
+bool WiFiSettingsService::setModeAndRestart(WiFiOperatingMode mode)
+{
+    const StateTransactionResult result = updateAndPropagate(
+        [mode](WiFiSettings& settings) {
+            if (mode == WiFiOperatingMode::Station && settings.wifiSettings.empty()) {
+                return StateUpdateResult::ERROR;
+            }
+            if (settings.mode == mode) {
+                return StateUpdateResult::UNCHANGED;
+            }
+            settings.mode = mode;
+            return StateUpdateResult::CHANGED;
+        },
+        WIFI_MODE_CHANGE_ORIGIN);
+
+    return result.outcome != StateUpdateResult::ERROR;
 }
 
 bool WiFiSettingsService::hasConfiguredNetworks() const
@@ -206,16 +254,11 @@ WiFiSettingsService::RuntimeSnapshot WiFiSettingsService::snapshotRuntimeState()
 {
     RuntimeSnapshot snapshot = {};
 
-    // Copy every runtime field under one lock so diagnostics and policy work on
-    // one consistent moment in time. The previous piecemeal reads were the core
-    // reason recovery state and dashboard telemetry could drift apart.
     portENTER_CRITICAL(&_runtimeStateLock);
     snapshot.currentNetworkIndex = _currentNetworkIndex;
     snapshot.connectionAttempts = _connectionAttempts;
     snapshot.backoffLevel = _backoffLevel;
     snapshot.connectivityState = _connectivityState;
-    snapshot.manualApOnly = _manualApOnly;
-    snapshot.rescueApActive = _rescueApActive;
     snapshot.retryCycleCompleted = _retryCycleCompleted;
     snapshot.retryBackoffActive = _retryBackoffActive;
     snapshot.recoveryRequested = _recoveryRequested;
@@ -224,10 +267,7 @@ WiFiSettingsService::RuntimeSnapshot WiFiSettingsService::snapshotRuntimeState()
     snapshot.disconnectedSince = _disconnectedSince;
     snapshot.stableConnectedSince = _stableConnectedSince;
     snapshot.lastIpChangeMs = _lastIpChangeMs;
-    snapshot.lastRescueEnterMs = _lastRescueEnterMs;
-    snapshot.lastRescueExitMs = _lastRescueExitMs;
     snapshot.lastKnownStaIp = _lastKnownStaIp;
-    copyReason(snapshot.rescueReason, _rescueReason);
     copyReason(snapshot.pendingRecoveryReason, _pendingRecoveryReason);
     copyReason(snapshot.lastRecoveryReason, _lastRecoveryReason);
     portEXIT_CRITICAL(&_runtimeStateLock);
@@ -237,14 +277,13 @@ WiFiSettingsService::RuntimeSnapshot WiFiSettingsService::snapshotRuntimeState()
 
 bool WiFiSettingsService::requestRecovery(const char* reason)
 {
-    const RuntimeSnapshot runtime = snapshotRuntimeState();
-    if (runtime.manualApOnly || _state.staConnectionMode == (u_int8_t)STAConnectionMode::OFFLINE) {
-        ESP_LOGW(SVK_TAG, "Ignoring coordinated WiFi recovery request in manual AP-only mode");
+    if (_state.mode != WiFiOperatingMode::Station) {
+        ESP_LOGW(SVK_TAG, "Ignoring WiFi recovery request outside STA mode");
         return false;
     }
 
     if (!hasConfiguredNetworks()) {
-        ESP_LOGW(SVK_TAG, "Ignoring coordinated WiFi recovery request: no configured STA networks");
+        ESP_LOGW(SVK_TAG, "Ignoring WiFi recovery request: no configured STA networks");
         return false;
     }
 
@@ -252,10 +291,6 @@ bool WiFiSettingsService::requestRecovery(const char* reason)
         return true;
     }
 
-    // Queue recovery intent instead of applying WiFi operations directly here.
-    // This keeps loop() as the single owner of state transitions and coalesces
-    // bursts of identical requests into one recovery cycle with the first
-    // reason preserved for diagnostics.
     char activeReason[32]{0};
     bool coalesced = false;
     portENTER_CRITICAL(&_runtimeStateLock);
@@ -276,35 +311,33 @@ bool WiFiSettingsService::requestRecovery(const char* reason)
         return true;
     }
 
-    ESP_LOGW(SVK_TAG, "Queued coordinated WiFi recovery request: reason=%s", activeReason);
+    ESP_LOGW(SVK_TAG, "Queued WiFi recovery request: reason=%s", activeReason);
     return true;
 }
 
 WiFiConnectivityDiagnostics WiFiSettingsService::getConnectivityDiagnostics() const
 {
     WiFiConnectivityDiagnostics diagnostics = {};
-    // Build diagnostics from one runtime snapshot so the dashboard never sees
-    // hybrid states like "connected" with stale disconnect timers, or rescue
-    // flags that belong to a different transition than the reported state.
     const RuntimeSnapshot runtime = snapshotRuntimeState();
     const bool staConnected = WiFi.isConnected();
     const IPAddress staIp = staConnected ? WiFi.localIP() : IPAddress(INADDR_NONE);
+    const wifi_mode_t currentWifiMode = WiFi.getMode();
+    const bool apActive = (_apSettingsService && _apSettingsService->isAccessPointStarted()) ||
+                          currentWifiMode == WIFI_AP ||
+                          currentWifiMode == WIFI_AP_STA;
 
     diagnostics.state = runtime.connectivityState;
-    diagnostics.apLaunchMode = _apSettingsService ? _apSettingsService->getActiveLaunchMode() : ApLaunchMode::None;
-    diagnostics.wifiMode = WiFi.getMode();
+    diagnostics.configuredMode = _state.mode;
+    diagnostics.wifiMode = currentWifiMode;
     diagnostics.staConnected = staConnected;
-    diagnostics.rescueApActive = runtime.rescueApActive;
+    diagnostics.apActive = apActive;
     diagnostics.disconnectedSinceMs = runtime.disconnectedSince;
     diagnostics.stableConnectedSinceMs = runtime.stableConnectedSince;
     diagnostics.lastIpChangeMs = runtime.lastIpChangeMs;
-    diagnostics.lastRescueEnterMs = runtime.lastRescueEnterMs;
-    diagnostics.lastRescueExitMs = runtime.lastRescueExitMs;
     diagnostics.lastDisconnectReason = SYSTEM::HEALTH::WifiHealthTracker::getHealth().lastDisconnectReason;
     diagnostics.apStationCount = static_cast<uint8_t>(WiFi.softAPgetStationNum());
     diagnostics.apIp = WiFi.softAPIP();
     diagnostics.staIp = staIp;
-    copyReason(diagnostics.rescueReason, runtime.rescueReason);
     copyReason(diagnostics.lastRecoveryReason, runtime.lastRecoveryReason);
 
     const size_t diagnosticsNetworkIndex = WIFI_DIAGNOSTICS::selectNetworkIndex(
@@ -335,12 +368,12 @@ WiFiConnectivityDiagnostics WiFiSettingsService::getConnectivityDiagnostics() co
 #endif
 
     diagnostics.portForwardingReady =
+        _state.mode == WiFiOperatingMode::Station &&
         diagnostics.staConnected &&
         diagnostics.savedStaticIpConfigured &&
         diagnostics.savedStaticIpMatches &&
         httpsRunning &&
-        !runtime.rescueApActive &&
-        !runtime.manualApOnly;
+        !diagnostics.apActive;
 
     return diagnostics;
 }
@@ -360,6 +393,10 @@ void WiFiSettingsService::observeConnectivity(unsigned long nowMs)
     if (_disconnectedSince == 0) {
         _disconnectedSince = nowMs;
     }
+
+    _connectivityState = _retryBackoffActive
+        ? WiFiConnectivityState::StaBackoff
+        : WiFiConnectivityState::StaConnecting;
     portEXIT_CRITICAL(&_runtimeStateLock);
 }
 
@@ -368,10 +405,6 @@ void WiFiSettingsService::handleConnected(unsigned long nowMs)
     const IPAddress currentIp = WiFi.localIP();
     ConnectedTransitionInfo transition = {};
 
-    // A successful STA connection is the point where we collapse any stale
-    // recovery intent, clear offline timers and restart the retry machine from
-    // a known-good baseline. Target behavior after recovery is simple:
-    // connected STA, no pending recovery, no stale disconnect window.
     portENTER_CRITICAL(&_runtimeStateLock);
     transition.previousState = _connectivityState;
     if (_disconnectedSince != 0) {
@@ -392,6 +425,7 @@ void WiFiSettingsService::handleConnected(unsigned long nowMs)
     _backoffLevel = 0;
     _recoveryRequested = false;
     _pendingRecoveryReason[0] = '\0';
+    _connectivityState = WiFiConnectivityState::StaConnected;
 
     if (_lastKnownStaIp != currentIp) {
         transition.ipChanged = true;
@@ -404,7 +438,7 @@ void WiFiSettingsService::handleConnected(unsigned long nowMs)
     if (transition.recovered) {
         ESP_LOGI(SVK_TAG, "STA recovered after %lu ms offline (state=%s)",
              transition.offlineDurationMs,
-             WIFI_CONNECTIVITY_POLICY::stateName(transition.previousState));
+             wifiConnectivityStateName(transition.previousState));
     }
 
     refreshFastReconnectCache();
@@ -420,51 +454,11 @@ void WiFiSettingsService::handleConnected(unsigned long nowMs)
     }
 }
 
-void WiFiSettingsService::applyPolicy(unsigned long nowMs)
-{
-    const RuntimeSnapshot runtime = snapshotRuntimeState();
-    WiFiConnectivityPolicyInput input = {};
-    input.hasConfiguredNetworks = hasConfiguredNetworks();
-    input.staConnected = WiFi.isConnected();
-    input.rescueApActive = runtime.rescueApActive;
-    input.manualApOnly = runtime.manualApOnly;
-    input.completedNetworkCycle = runtime.retryCycleCompleted;
-    input.nowMs = nowMs;
-    input.disconnectedSinceMs = runtime.disconnectedSince;
-    input.stableConnectedSinceMs = runtime.stableConnectedSince;
-
-    // Policy decides only high-level mode transitions: stay connecting,
-    // enter rescue AP_STA after long offline time, or leave rescue once STA is
-    // stable again. The exact thresholds live in WifiConnectivityPolicy.
-    const WiFiConnectivityPolicyDecision decision = WIFI_CONNECTIVITY_POLICY::evaluate(input);
-
-    if (decision.enterRescueAp) {
-        if (!enterRescueApSta("sta_offline_timeout")) {
-            portENTER_CRITICAL(&_runtimeStateLock);
-            _connectivityState = WiFiConnectivityState::StaConnecting;
-            portEXIT_CRITICAL(&_runtimeStateLock);
-            return;
-        }
-    }
-
-    if (decision.exitRescueAp) {
-        exitRescueApSta("sta_stable");
-    }
-
-    portENTER_CRITICAL(&_runtimeStateLock);
-    _connectivityState = decision.nextState;
-    portEXIT_CRITICAL(&_runtimeStateLock);
-}
-
 bool WiFiSettingsService::processRecoveryRequest()
 {
-    RecoveryTransitionDecision decision = {};
     const bool staConnected = WiFi.isConnected();
+    char reason[32]{0};
 
-    // Only loop() is allowed to consume queued recovery and reset the retry
-    // machine. We copy the decision under lock, clear the request there, and
-    // only then call into WiFi outside the critical section. That avoids both
-    // lost requests and long lock hold times around stack operations.
     portENTER_CRITICAL(&_runtimeStateLock);
     if (!_recoveryRequested) {
         portEXIT_CRITICAL(&_runtimeStateLock);
@@ -478,19 +472,16 @@ bool WiFiSettingsService::processRecoveryRequest()
         return false;
     }
 
-    if (_manualApOnly) {
-        decision.dropped = true;
-        copyReason(decision.reason, _pendingRecoveryReason);
+    if (_state.mode != WiFiOperatingMode::Station || _state.wifiSettings.empty()) {
+        copyReason(reason, _pendingRecoveryReason);
         _recoveryRequested = false;
         _pendingRecoveryReason[0] = '\0';
         portEXIT_CRITICAL(&_runtimeStateLock);
-        ESP_LOGW(SVK_TAG, "Dropping queued WiFi recovery request in manual AP-only mode");
+        ESP_LOGW(SVK_TAG, "Dropping WiFi recovery request outside valid STA mode: reason=%s", reason);
         return false;
     }
 
-    decision.apply = true;
-    decision.targetMode = _rescueApActive ? WIFI_AP_STA : WIFI_STA;
-    copyReason(decision.reason, _pendingRecoveryReason);
+    copyReason(reason, _pendingRecoveryReason);
     copyReason(_lastRecoveryReason, _pendingRecoveryReason);
 
     _connectingSince = 0;
@@ -502,39 +493,60 @@ bool WiFiSettingsService::processRecoveryRequest()
     _backoffLevel = 0;
     _recoveryRequested = false;
     _pendingRecoveryReason[0] = '\0';
+    _connectivityState = WiFiConnectivityState::StaConnecting;
     portEXIT_CRITICAL(&_runtimeStateLock);
 
-    ESP_LOGW(SVK_TAG, "Applying coordinated WiFi recovery: reason=%s target_mode=%d rescue=%d",
-         decision.reason,
-         static_cast<int>(decision.targetMode),
-         decision.targetMode == WIFI_AP_STA ? 1 : 0);
+    ESP_LOGW(SVK_TAG, "Applying WiFi recovery in STA-only mode: reason=%s", reason);
 
     WiFi.disconnect(false);
-    WiFi.mode(decision.targetMode);
+    WiFi.mode(WIFI_STA);
 
     return true;
+}
+
+void WiFiSettingsService::applyConfiguredMode()
+{
+    switch (_state.mode) {
+        case WiFiOperatingMode::Off:
+            switchToOffMode("configured_off");
+            return;
+
+        case WiFiOperatingMode::AccessPoint:
+            (void)switchToAPMode("configured_ap");
+            return;
+
+        case WiFiOperatingMode::Station:
+            if (_state.wifiSettings.empty()) {
+                ESP_LOGW(SVK_TAG, "Stored STA mode has no networks. Falling back to AP mode.");
+                _state.mode = WiFiOperatingMode::AccessPoint;
+                (void)switchToAPMode("sta_without_networks");
+                return;
+            }
+            if (_apSettingsService) {
+                _apSettingsService->stopAccessPoint();
+            }
+            WiFi.setHostname(_state.hostname.c_str());
+            WiFi.mode(WIFI_STA);
+            resetStaRuntime(WiFiConnectivityState::StaConnecting);
+            manageSTA();
+            return;
+    }
 }
 
 void WiFiSettingsService::manageSTA()
 {
     const RuntimeSnapshot runtime = snapshotRuntimeState();
 
-    if (runtime.manualApOnly)
+    if (_state.mode != WiFiOperatingMode::Station)
     {
-        return;
-    }
-
-    if (_state.staConnectionMode == (u_int8_t)STAConnectionMode::OFFLINE)
-    {
-        ESP_LOGI(SVK_TAG, "STA mode disabled. Switching to manual AP-only mode.");
-        switchToAPMode("sta_offline");
         return;
     }
 
     if (_state.wifiSettings.empty())
     {
-        ESP_LOGI(SVK_TAG, "No STA networks configured. Switching to manual AP-only mode.");
-        switchToAPMode("no_saved_networks");
+        ESP_LOGW(SVK_TAG, "STA mode has no networks. Switching to AP mode.");
+        _state.mode = WiFiOperatingMode::AccessPoint;
+        (void)switchToAPMode("sta_without_networks");
         return;
     }
 
@@ -549,10 +561,6 @@ void WiFiSettingsService::manageSTA()
         return;
     }
 
-    // Once the guard window has elapsed, let the local retry state machine own
-    // the next STA attempt instead of depending on a narrow wl_status_t list.
-    // Real disconnect paths can surface different transient statuses, but the
-    // reconnect rule we actually care about is simply: still offline, try next.
     connectToWiFi();
 }
 
@@ -566,7 +574,6 @@ void WiFiSettingsService::connectToWiFi()
     const size_t networkCount = _state.wifiSettings.size();
     size_t networkIndex = 0;
     uint8_t attemptNumber = 0;
-    bool rescueApActive = false;
 
     portENTER_CRITICAL(&_runtimeStateLock);
     while (_currentNetworkIndex < networkCount && _connectionAttempts >= WIFI_MAX_ATTEMPTS_PER_NETWORK)
@@ -587,6 +594,7 @@ void WiFiSettingsService::connectToWiFi()
         _connectionAttempts = 0;
         _lastConnectionAttempt = millis();
         _retryBackoffActive = true;
+        _connectivityState = WiFiConnectivityState::StaBackoff;
 
         if (_backoffLevel < 4) {
             _backoffLevel++;
@@ -603,17 +611,16 @@ void WiFiSettingsService::connectToWiFi()
     networkIndex = _currentNetworkIndex;
     _connectionAttempts++;
     attemptNumber = _connectionAttempts;
-    rescueApActive = _rescueApActive;
+    _connectivityState = WiFiConnectivityState::StaConnecting;
     portEXIT_CRITICAL(&_runtimeStateLock);
 
     wifi_settings_t &network = _state.wifiSettings[networkIndex];
 
     ESP_LOGD(SVK_TAG,
-             "Connecting to network: %s (attempt %u/%u, rescue=%d)",
+             "Connecting to network: %s (attempt %u/%u)",
              network.ssid.c_str(),
              attemptNumber,
-             WIFI_MAX_ATTEMPTS_PER_NETWORK,
-             rescueApActive ? 1 : 0);
+             WIFI_MAX_ATTEMPTS_PER_NETWORK);
 
     if (_onActivityCallback) {
         _onActivityCallback();
@@ -622,8 +629,6 @@ void WiFiSettingsService::connectToWiFi()
     configureNetwork(network);
     portENTER_CRITICAL(&_runtimeStateLock);
     _connectingSince = millis();
-    _connectivityState = _rescueApActive ? WiFiConnectivityState::RescueApSta
-                                         : WiFiConnectivityState::StaConnecting;
 
     if (_connectionAttempts >= WIFI_MAX_ATTEMPTS_PER_NETWORK)
     {
@@ -643,8 +648,7 @@ void WiFiSettingsService::configureNetwork(wifi_settings_t &network)
         WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
     }
     WiFi.setHostname(_state.hostname.c_str());
-
-    WiFi.mode(_rescueApActive ? WIFI_AP_STA : WIFI_MODE_STA);
+    WiFi.mode(WIFI_STA);
 
     const uint32_t targetSsidCrc = RTC::calculateSsidCrc(network.ssid.c_str());
 
@@ -662,108 +666,50 @@ void WiFiSettingsService::configureNetwork(wifi_settings_t &network)
         WiFi.begin(network.ssid.c_str(), network.password.c_str());
     }
 
-    // Start from a less aggressive STA power level; thermal monitor can still
-    // tighten or relax this later based on actual board temperature.
     WiFi.setTxPower(WIFI_POWER_15dBm);
     WiFi.setSleep(false);
 }
 
-void WiFiSettingsService::switchToAPMode(const char* reason)
+bool WiFiSettingsService::switchToAPMode(const char* reason)
 {
-    const RuntimeSnapshot runtime = snapshotRuntimeState();
-    if (runtime.manualApOnly) {
-        return;
-    }
-
-    ESP_LOGI(SVK_TAG, "Switching to manual AP-only mode: reason=%s", defaultReason(reason, "manual"));
+    ESP_LOGI(SVK_TAG, "Switching to AP-only mode: reason=%s", defaultReason(reason, "configured_ap"));
     WiFi.setHostname(_state.hostname.c_str());
 
-    if (!_apSettingsService ||
-        !_apSettingsService->startAccessPoint(ApLaunchMode::ManualApOnly))
+    if (!_apSettingsService || !_apSettingsService->startAccessPoint())
     {
-        // Only disable STA recovery after SoftAP startup succeeds. Otherwise a
-        // failed AP transition would leave the device in a "manual AP-only"
-        // runtime state without any working AP to reach it.
-        ESP_LOGE(SVK_TAG, "Manual AP-only transition aborted: SoftAP failed to start");
-        return;
-    }
-
-    // Manual AP-only is an operator-controlled fallback: once the AP is up we
-    // can safely stop STA retry loops and clear any stale queued recovery work.
-    portENTER_CRITICAL(&_runtimeStateLock);
-    _manualApOnly = true;
-    _rescueApActive = false;
-    _connectivityState = WiFiConnectivityState::ManualApOnly;
-    _currentNetworkIndex = 0;
-    _connectionAttempts = 0;
-    _connectingSince = 0;
-    _retryBackoffActive = false;
-    _retryCycleCompleted = false;
-    _backoffLevel = 0;
-    _recoveryRequested = false;
-    _pendingRecoveryReason[0] = '\0';
-    portEXIT_CRITICAL(&_runtimeStateLock);
-}
-
-bool WiFiSettingsService::enterRescueApSta(const char* reason)
-{
-    const RuntimeSnapshot runtime = snapshotRuntimeState();
-    if (runtime.rescueApActive) {
-        return true;
-    }
-
-    if (runtime.manualApOnly || !_apSettingsService) {
+        ESP_LOGE(SVK_TAG, "AP-only transition aborted: SoftAP failed to start");
         return false;
     }
 
-    // Rescue AP_STA is the autonomous fallback for prolonged STA outage. The
-    // target behavior is: keep trying STA in the background, but also expose an
-    // AP so the dashboard and recovery tools stay reachable in the field.
-    char rescueReason[32]{0};
-    copyReason(rescueReason, defaultReason(reason, "sta_offline_timeout"));
-    ESP_LOGW(SVK_TAG, "Entering rescue AP_STA mode: reason=%s", rescueReason);
-
-    WiFi.setHostname(_state.hostname.c_str());
-    if (!_apSettingsService->startAccessPoint(ApLaunchMode::RescueApSta)) {
-        ESP_LOGE(SVK_TAG, "Failed to start rescue AP_STA");
-        return false;
-    }
-
-    portENTER_CRITICAL(&_runtimeStateLock);
-    copyReason(_rescueReason, rescueReason);
-    _rescueApActive = true;
-    _manualApOnly = false;
-    _connectivityState = WiFiConnectivityState::RescueApSta;
-    _lastRescueEnterMs = millis();
-    _lastConnectionAttempt = 0;
-    _connectingSince = 0;
-    _retryBackoffActive = false;
-    _retryCycleCompleted = false;
-    _backoffLevel = 0;
-    portEXIT_CRITICAL(&_runtimeStateLock);
+    resetStaRuntime(WiFiConnectivityState::ApOnly);
     return true;
 }
 
-void WiFiSettingsService::exitRescueApSta(const char* reason)
+void WiFiSettingsService::switchToOffMode(const char* reason)
 {
-    const RuntimeSnapshot runtime = snapshotRuntimeState();
-    if (!runtime.rescueApActive) {
-        return;
-    }
-
-    // Exit rescue only after policy has observed a stable STA window. This
-    // avoids flapping between AP_STA and pure STA when the upstream network is
-    // still unstable right after reconnect.
-    ESP_LOGI(SVK_TAG, "Exiting rescue AP_STA mode: reason=%s", defaultReason(reason, "sta_stable"));
-
+    ESP_LOGI(SVK_TAG, "Switching WiFi off: reason=%s", defaultReason(reason, "configured_off"));
     if (_apSettingsService) {
         _apSettingsService->stopAccessPoint();
     }
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    resetStaRuntime(WiFiConnectivityState::Off);
+}
 
+void WiFiSettingsService::resetStaRuntime(WiFiConnectivityState state)
+{
     portENTER_CRITICAL(&_runtimeStateLock);
-    _rescueApActive = false;
-    _connectivityState = WiFi.isConnected() ? WiFiConnectivityState::StaConnected
-                                            : WiFiConnectivityState::StaConnecting;
-    _lastRescueExitMs = millis();
+    _currentNetworkIndex = 0;
+    _connectionAttempts = 0;
+    _backoffLevel = 0;
+    _connectivityState = state;
+    _retryCycleCompleted = false;
+    _retryBackoffActive = false;
+    _recoveryRequested = false;
+    _lastConnectionAttempt = 0;
+    _connectingSince = 0;
+    _disconnectedSince = 0;
+    _stableConnectedSince = 0;
+    _pendingRecoveryReason[0] = '\0';
     portEXIT_CRITICAL(&_runtimeStateLock);
 }

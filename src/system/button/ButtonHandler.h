@@ -29,7 +29,7 @@ public:
         std::function<bool()> isMenuEnabled;
         std::function<void()> onMenuNext;
         std::function<void()> onMenuEnter;
-        std::function<void()> onMenuExit;
+        std::function<void()> onMenuSelect;
         // Fires while the button is still held and the user is approaching the
         // factory-reset threshold. Use it to flash a heads-up on the matrix so
         // a user holding by accident knows what's about to happen.

@@ -13,13 +13,12 @@ reference notes, watch:
 
 ## First Access
 
-If the device has no saved Wi-Fi network, it starts on the local fallback
-Access Point path.
+If the device has no saved Wi-Fi network, it starts in local Access Point mode.
 
 Default first-access values:
 
-- Fallback Access Point SSID: `matrixhub.local`
-- Fallback Access Point address: `192.168.4.1`
+- Access Point SSID: `matrixhub.local`
+- Access Point address: `192.168.4.1`
 - Default hostname: `matrixhub`
 - Local mDNS address: `matrixhub.local`
 
@@ -30,8 +29,7 @@ short form `matrixhub`.
 Typical first-run flow:
 
 1. Power the device and wait for boot to complete.
-2. Connect your computer or phone to the fallback Access Point
-   `matrixhub.local`.
+2. Connect your computer or phone to the Access Point `matrixhub.local`.
 3. Open `https://matrixhub.local` or `https://192.168.4.1` in a browser.
 4. If the current build prompts for authentication, sign in.
 5. Configure your regular Wi-Fi connection, alarms, and notifications.

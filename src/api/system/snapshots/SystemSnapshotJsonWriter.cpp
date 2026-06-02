@@ -1,8 +1,6 @@
 #include "SystemSnapshotJsonWriter.h"
 
-#include <wifi/APSettingsService.h>
 #include <wifi/WiFiSettingsService.h>
-#include <wifi/WifiConnectivityPolicy.h>
 
 #include "../../../config/json/ConfigKeys.h"
 
@@ -154,16 +152,16 @@ StateHandlerResult SystemSnapshotJsonWriter::writeNetwork(
     writer.raw("{");
 
     writer.key("wifi"); writer.raw("{");
-    writer.key("state"); writer.string(WIFI_CONNECTIVITY_POLICY::stateName(wifi.state)); writer.raw(",");
+    writer.key("state"); writer.string(wifiConnectivityStateName(wifi.state)); writer.raw(",");
+    writer.key("configured_mode"); writer.string(wifiOperatingModeName(wifi.configuredMode)); writer.raw(",");
     writer.key("mode"); writer.string(wifiModeName(wifi.wifiMode)); writer.raw(",");
     writer.key("mode_id"); writer.value(static_cast<int>(wifi.wifiMode)); writer.raw(",");
     writer.key("sta_connected"); writer.value(wifi.staConnected); writer.raw(",");
-    writer.key("rescue_ap_active"); writer.value(wifi.rescueApActive); writer.raw(",");
+    writer.key("ap_active"); writer.value(wifi.apActive); writer.raw(",");
     writer.key("last_disconnect_reason"); writer.value(static_cast<unsigned long>(wifi.lastDisconnectReason)); writer.raw(",");
     writer.key("last_ip_change_ms"); writer.value(static_cast<unsigned long>(wifi.lastIpChangeMs)); writer.raw(",");
     writer.key("disconnected_since_ms"); writer.value(static_cast<unsigned long>(wifi.disconnectedSinceMs)); writer.raw(",");
     writer.key("stable_connected_since_ms"); writer.value(static_cast<unsigned long>(wifi.stableConnectedSinceMs)); writer.raw(",");
-    writer.key("rescue_reason"); writer.string(wifi.rescueReason); writer.raw(",");
     writer.key("last_recovery_reason"); writer.string(wifi.lastRecoveryReason);
     if (isSetIp(wifi.staIp)) {
         writer.raw(",");
@@ -176,8 +174,7 @@ StateHandlerResult SystemSnapshotJsonWriter::writeNetwork(
     writer.raw("},");
 
     writer.key("ap"); writer.raw("{");
-    writer.key("active"); writer.value(wifi.apLaunchMode != ApLaunchMode::None); writer.raw(",");
-    writer.key("mode"); writer.string(APSettingsService::apLaunchModeName(wifi.apLaunchMode)); writer.raw(",");
+    writer.key("active"); writer.value(wifi.apActive); writer.raw(",");
     writer.key("station_num"); writer.value(static_cast<unsigned long>(wifi.apStationCount));
     if (isSetIp(wifi.apIp)) {
         writer.raw(",");

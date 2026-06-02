@@ -14,7 +14,7 @@ Access Point mode to your normal home network.
 ## Recommended Steps
 
 1. Power the device and wait for it to boot.
-2. Connect your phone or computer to the fallback Access Point SSID
+2. Connect your phone or computer to the Access Point SSID
    `matrixhub.local`.
 3. Open `https://matrixhub.local` or `https://192.168.4.1`.
 4. If the current build or user setup requires authentication, sign in.
@@ -24,7 +24,7 @@ Access Point mode to your normal home network.
 
 6. Check the connection settings. In most cases, keep:
    - `Host Name (mDNS)` as `matrixhub`
-   - `Station (STA) Mode` as `Auto-connect`
+   - `WiFi Mode` as `Station` after you add at least one saved network
 
 ![Connection settings: mDNS and STA mode](../../screenshots/wifi/wifi-station-connection-settings-panel.png)
 
@@ -54,21 +54,21 @@ the browser address becomes `matrixhub.local`.
 12. Reconnect your phone or computer to your normal home Wi-Fi.
 13. Open `https://matrixhub.local` again, or use the IP assigned by your router.
 14. On the `WiFi Station` page, confirm that the device shows as connected and
-    no longer uses the fallback `192.168.4.1` address.
+    no longer uses the AP `192.168.4.1` address.
 15. Open `System Status` and confirm that the device is online, the Wi-Fi link
     looks healthy, and sensor updates are still arriving.
 
 ## What Happens If Wi-Fi Cannot Connect?
 
-- if `Station (STA) Mode` is set to `Offline`, the device stops trying normal
-  Wi-Fi and stays on the local fallback AP path
-- if there are no saved networks, the device also stays on the local AP path
+- after a fresh flash or factory reset with no saved networks, the device starts
+  in Access Point mode
+- `Station` mode requires at least one saved network
 - if saved networks exist but none of them work, MatrixHub keeps retrying them
   automatically instead of failing only once
-- during a longer outage, the device can expose a recovery AP while Station
-  recovery still continues in the background
-- while recovery is in progress, the matrix IP screen can show the AP fallback
-  address or `No WiFi`
+- Station retry stays STA-only; the device does not automatically start AP
+  after failures
+- use the web UI or Matrix menu to switch back to Access Point mode when local
+  setup access is needed
 
 ## Third Option: Check the Address on the Matrix Menu
 
@@ -80,15 +80,19 @@ router immediately, you can read the current address directly on the device.
 2. Use short presses to cycle through the screens until you reach the IP screen.
 3. The IP screen shows the local mDNS name and the current IP address, for
    example `https://matrixhub.local` and `https://192.168.x.x`.
-4. Press and hold `BOOT` again for about `2 seconds` to exit the menu.
+4. Continue short-pressing until `EXIT` appears, then hold `BOOT` for about
+   `2 seconds` to close the menu.
 
 Notes:
 
 - when the device is connected to your normal Wi-Fi, the menu shows the current
   station IP address
-- when the device is still in AP mode, the menu can show the fallback address
+- when the device is in AP mode, the menu can show the AP address
   such as `192.168.4.1`
 - if there is no active Wi-Fi connection, the menu shows `No WiFi`
+- the Wi-Fi mode screens (`WIFI STA`, `WIFI AP`, `WIFI OFF`) require a 2 second
+  hold followed by two short confirmation clicks before the mode is saved and
+  the device restarts
 
 ## Related Reference Sections
 

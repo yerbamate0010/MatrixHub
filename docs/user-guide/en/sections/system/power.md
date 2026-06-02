@@ -37,8 +37,8 @@ The actions card is for deliberate maintenance actions:
 
 - `Factory Reset` removes saved Wi-Fi configuration, LittleFS data, and app
   preferences
-- after factory reset, the fallback AP path becomes the normal way back into
-  the device
+- after factory reset with no saved Wi-Fi networks, the device starts in
+  Access Point mode
 - `Sleep` and `Auto-Sleep` are related, but they are not the same thing:
   `Auto-Sleep` is policy, while `Sleep` is an immediate action
 - the `Sleep` action itself may be absent on builds where sleep support is not

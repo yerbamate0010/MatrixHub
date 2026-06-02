@@ -11,7 +11,6 @@
 #define protected public
 #include "../../lib/framework/wifi/WiFiSettingsService.h"
 #include "../../lib/framework/utils/SettingValue.cpp"
-#include "../../lib/framework/wifi/WifiConnectivityPolicy.cpp"
 #include "../../lib/framework/wifi/WiFiSettingsService.cpp"
 #undef private
 #undef protected
@@ -19,8 +18,6 @@
 #include "../../src/system/rtc/types/RtcNetworkState.h"
 #include "../../src/system/health/wifi/WifiHealthTracker.h"
 #include "../../src/system/logging/Logging.h"
-// Native build now provides a shared inline RestartService fallback, so this
-// test no longer needs to declare its own local restart stubs.
 #include "../../lib/framework/services/RestartService.h"
 
 WiFiClass WiFi;
@@ -75,7 +72,6 @@ namespace {
 bool s_apStartShouldSucceed = true;
 int s_apStartCalls = 0;
 int s_apStopCalls = 0;
-ApLaunchMode s_lastApStartMode = ApLaunchMode::None;
 }
 
 APSettingsService::APSettingsService(PsychicHttpServer* server,
@@ -93,20 +89,23 @@ APSettingsService::APSettingsService(PsychicHttpServer* server,
                     APSettings::validate),
       _fsPersistence(APSettings::read, APSettings::update, this, fs, AP_SETTINGS_FILE),
       _dnsServer(nullptr) {
-    // Native tests replace the runtime AP bring-up logic below, so this
-    // lightweight constructor only needs to satisfy object layout/linking.
 }
 
-bool APSettingsService::startAccessPoint(ApLaunchMode mode) {
+bool APSettingsService::startAccessPoint() {
     ++s_apStartCalls;
-    s_lastApStartMode = mode;
-    _launchMode = s_apStartShouldSucceed ? mode : ApLaunchMode::None;
+    _apStarted = s_apStartShouldSucceed;
+    if (_apStarted) {
+        WiFi.mode(WIFI_AP);
+    }
     return s_apStartShouldSucceed;
 }
 
 void APSettingsService::stopAccessPoint() {
-    ++s_apStopCalls;
-    _launchMode = ApLaunchMode::None;
+    if (_apStarted) {
+        ++s_apStopCalls;
+    }
+    _apStarted = false;
+    WiFi.softAPdisconnect(true);
 }
 
 namespace {
@@ -124,11 +123,23 @@ wifi_settings_t configuredNetwork() {
     return network;
 }
 
-void configureService(WiFiSettingsService& service) {
+void configureStationService(WiFiSettingsService& service) {
     service._state = WiFiSettings{};
     service._state.hostname = "device";
-    service._state.staConnectionMode = static_cast<uint8_t>(STAConnectionMode::ONLINE);
+    service._state.mode = WiFiOperatingMode::Station;
     service._state.wifiSettings.push_back(configuredNetwork());
+}
+
+void configureApService(WiFiSettingsService& service) {
+    service._state = WiFiSettings{};
+    service._state.hostname = "device";
+    service._state.mode = WiFiOperatingMode::AccessPoint;
+}
+
+void configureOffService(WiFiSettingsService& service) {
+    service._state = WiFiSettings{};
+    service._state.hostname = "device";
+    service._state.mode = WiFiOperatingMode::Off;
 }
 
 }  // namespace
@@ -139,222 +150,169 @@ void setUp(void) {
     s_apStartShouldSucceed = true;
     s_apStartCalls = 0;
     s_apStopCalls = 0;
-    s_lastApStartMode = ApLaunchMode::None;
+    RestartService::restartNow();
 }
 
 void tearDown(void) {}
 
-void test_requestRecovery_coalesces_pending_reason_and_process_preserves_first_reason() {
+void test_default_settings_without_networks_start_in_ap_mode() {
+    WiFiSettings settings;
+
+    JsonDocument doc;
+    JsonObject root = doc.to<JsonObject>();
+
+    const StateUpdateResult result = WiFiSettings::update(root, settings, WIFI_SETTINGS_FILE);
+
+    TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::CHANGED), static_cast<int>(result));
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(WiFiOperatingMode::AccessPoint),
+                            static_cast<uint8_t>(settings.mode));
+    TEST_ASSERT_TRUE(settings.wifiSettings.empty());
+
     PsychicHttpServer server;
     SecurityManager security;
     FS fs;
     WiFiSettingsService service(&server, &fs, &security);
-    configureService(service);
+    APSettingsService apService(&server, &fs, &security);
+    service._state = settings;
+    service.setAPSettingsService(&apService);
+
+    service.applyConfiguredMode();
+
+    TEST_ASSERT_EQUAL(1, s_apStartCalls);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_AP), static_cast<int>(TEST_STUBS::WIFI::mode));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::ApOnly),
+                          static_cast<int>(service._connectivityState));
+}
+
+void test_station_mode_retries_sta_only_and_never_starts_ap() {
+    PsychicHttpServer server;
+    SecurityManager security;
+    FS fs;
+    WiFiSettingsService service(&server, &fs, &security);
+    APSettingsService apService(&server, &fs, &security);
+    configureStationService(service);
+    service.setAPSettingsService(&apService);
     TEST_STUBS::WIFI::connected = false;
     TEST_STUBS::WIFI::status = WL_DISCONNECTED;
 
-    TEST_ASSERT_TRUE(service.requestRecovery("api/manual"));
-    TEST_ASSERT_TRUE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("api/manual", service._pendingRecoveryReason);
-
-    TEST_ASSERT_TRUE(service.requestRecovery("health_pulse"));
-    TEST_ASSERT_TRUE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("api/manual", service._pendingRecoveryReason);
-
-    TEST_ASSERT_TRUE(service.processRecoveryRequest());
-    TEST_ASSERT_FALSE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("", service._pendingRecoveryReason);
-    TEST_ASSERT_EQUAL_STRING("api/manual", service._lastRecoveryReason);
-    TEST_ASSERT_EQUAL(1, TEST_STUBS::WIFI::disconnectCalls);
+    service.applyConfiguredMode();
+    TEST_ASSERT_EQUAL(1, TEST_STUBS::WIFI::beginCalls);
+    TEST_ASSERT_EQUAL(0, s_apStartCalls);
     TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_STA), static_cast<int>(TEST_STUBS::WIFI::mode));
+
+    service._connectingSince = 0;
+    service.connectToWiFi();
+    service._connectingSince = 0;
+    service.connectToWiFi();
+    service._connectingSince = 0;
+    service.connectToWiFi();
+
+    TEST_ASSERT_EQUAL(0, s_apStartCalls);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_STA), static_cast<int>(TEST_STUBS::WIFI::mode));
+    TEST_ASSERT_TRUE(service._retryBackoffActive);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::StaBackoff),
+                          static_cast<int>(service._connectivityState));
 }
 
-void test_handleConnected_clears_stale_pending_recovery_reason() {
-    PsychicHttpServer server;
-    SecurityManager security;
-    FS fs;
-    WiFiSettingsService service(&server, &fs, &security);
-    configureService(service);
-    TEST_STUBS::WIFI::connected = true;
-    TEST_STUBS::WIFI::status = WL_CONNECTED;
-    TEST_STUBS::WIFI::localIp = static_cast<uint32_t>(IPAddress(192, 168, 1, 77));
+void test_station_mode_without_networks_is_rejected_from_http_update() {
+    WiFiSettings settings;
 
-    service._recoveryRequested = true;
-    strlcpy(service._pendingRecoveryReason, "stale", sizeof(service._pendingRecoveryReason));
-    service._disconnectedSince = 100;
+    JsonDocument doc;
+    JsonObject root = doc.to<JsonObject>();
+    root["hostname"] = "matrixhub";
+    root["mode"] = "sta";
+    root["wifi_networks"].to<JsonArray>();
 
-    service.handleConnected(250);
+    const StateUpdateResult result = WiFiSettings::update(root, settings, HTTP_ENDPOINT_ORIGIN_ID);
 
-    TEST_ASSERT_FALSE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("", service._pendingRecoveryReason);
-    TEST_ASSERT_EQUAL(0UL, service._disconnectedSince);
-    TEST_ASSERT_TRUE(service._lastKnownStaIp == IPAddress(192, 168, 1, 77));
-    TEST_ASSERT_EQUAL(250UL, service._lastIpChangeMs);
+    TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::ERROR), static_cast<int>(result));
 }
 
-void test_switchToAPMode_keeps_recovery_alive_when_softap_start_fails() {
+void test_ap_mode_starts_ap_only_without_sta_attempts() {
     PsychicHttpServer server;
     SecurityManager security;
     FS fs;
     WiFiSettingsService service(&server, &fs, &security);
     APSettingsService apService(&server, &fs, &security);
-    configureService(service);
+    configureApService(service);
     service.setAPSettingsService(&apService);
-    service._connectivityState = WiFiConnectivityState::StaConnecting;
-    service._recoveryRequested = true;
-    strlcpy(service._pendingRecoveryReason, "queued", sizeof(service._pendingRecoveryReason));
-    s_apStartShouldSucceed = false;
 
-    service.switchToAPMode("no_saved_networks");
+    service.applyConfiguredMode();
 
     TEST_ASSERT_EQUAL(1, s_apStartCalls);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(ApLaunchMode::ManualApOnly),
-                          static_cast<int>(s_lastApStartMode));
-    TEST_ASSERT_FALSE(service._manualApOnly);
-    TEST_ASSERT_FALSE(service._rescueApActive);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::StaConnecting),
-                          static_cast<int>(service._connectivityState));
-    TEST_ASSERT_TRUE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("queued", service._pendingRecoveryReason);
-}
-
-void test_manageSTA_retries_even_when_wifi_status_is_transient() {
-    PsychicHttpServer server;
-    SecurityManager security;
-    FS fs;
-    WiFiSettingsService service(&server, &fs, &security);
-    configureService(service);
-    TEST_STUBS::WIFI::connected = false;
-    TEST_STUBS::WIFI::status = static_cast<wl_status_t>(7);
-    TEST_STUBS::ARDUINO::millisValue = 1234;
-
-    service.manageSTA();
-
-    TEST_ASSERT_EQUAL(1, TEST_STUBS::WIFI::beginCalls);
-    TEST_ASSERT_EQUAL_STRING("matrixhub", TEST_STUBS::WIFI::lastBeginSsid.c_str());
-    TEST_ASSERT_EQUAL_STRING("secret", TEST_STUBS::WIFI::lastBeginPassword.c_str());
-    TEST_ASSERT_EQUAL(1234UL, service._connectingSince);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::StaConnecting),
+    TEST_ASSERT_EQUAL(0, TEST_STUBS::WIFI::beginCalls);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_AP), static_cast<int>(TEST_STUBS::WIFI::mode));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::ApOnly),
                           static_cast<int>(service._connectivityState));
 }
 
-void test_switchToAPMode_success_clears_recovery_state_and_enters_manual_ap_only() {
+void test_off_mode_turns_radio_off_and_does_not_reconnect() {
     PsychicHttpServer server;
     SecurityManager security;
     FS fs;
     WiFiSettingsService service(&server, &fs, &security);
     APSettingsService apService(&server, &fs, &security);
-    configureService(service);
+    configureOffService(service);
     service.setAPSettingsService(&apService);
-    service._recoveryRequested = true;
-    strlcpy(service._pendingRecoveryReason, "queued", sizeof(service._pendingRecoveryReason));
+
+    service.applyConfiguredMode();
+    service.loop();
+
+    TEST_ASSERT_EQUAL(0, TEST_STUBS::WIFI::beginCalls);
+    TEST_ASSERT_EQUAL(0, s_apStartCalls);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_OFF), static_cast<int>(TEST_STUBS::WIFI::mode));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::Off),
+                          static_cast<int>(service._connectivityState));
+}
+
+void test_recovery_request_in_sta_resets_retry_without_starting_ap() {
+    PsychicHttpServer server;
+    SecurityManager security;
+    FS fs;
+    WiFiSettingsService service(&server, &fs, &security);
+    APSettingsService apService(&server, &fs, &security);
+    configureStationService(service);
+    service.setAPSettingsService(&apService);
+    TEST_STUBS::WIFI::connected = false;
+    TEST_STUBS::WIFI::status = WL_DISCONNECTED;
     service._connectionAttempts = 2;
     service._backoffLevel = 3;
     service._retryBackoffActive = true;
+    service._lastConnectionAttempt = 1234;
 
-    service.switchToAPMode("no_saved_networks");
+    TEST_ASSERT_TRUE(service.requestRecovery("health"));
+    TEST_ASSERT_TRUE(service.processRecoveryRequest());
 
-    TEST_ASSERT_EQUAL(1, s_apStartCalls);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(ApLaunchMode::ManualApOnly),
-                          static_cast<int>(s_lastApStartMode));
-    TEST_ASSERT_TRUE(service._manualApOnly);
-    TEST_ASSERT_FALSE(service._rescueApActive);
-    TEST_ASSERT_FALSE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("", service._pendingRecoveryReason);
+    TEST_ASSERT_EQUAL(0, s_apStartCalls);
+    TEST_ASSERT_EQUAL(1, TEST_STUBS::WIFI::disconnectCalls);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_STA), static_cast<int>(TEST_STUBS::WIFI::mode));
     TEST_ASSERT_EQUAL(0, service._connectionAttempts);
     TEST_ASSERT_EQUAL(0, service._backoffLevel);
     TEST_ASSERT_FALSE(service._retryBackoffActive);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::ManualApOnly),
-                          static_cast<int>(service._connectivityState));
-}
-
-void test_enterRescueApSta_sets_state_and_starts_ap_sta_fallback() {
-    PsychicHttpServer server;
-    SecurityManager security;
-    FS fs;
-    WiFiSettingsService service(&server, &fs, &security);
-    APSettingsService apService(&server, &fs, &security);
-    configureService(service);
-    service.setAPSettingsService(&apService);
-    TEST_STUBS::ARDUINO::millisValue = 5000;
-
-    const bool entered = service.enterRescueApSta("health");
-
-    TEST_ASSERT_TRUE(entered);
-    TEST_ASSERT_EQUAL(1, s_apStartCalls);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(ApLaunchMode::RescueApSta),
-                          static_cast<int>(s_lastApStartMode));
-    TEST_ASSERT_TRUE(service._rescueApActive);
-    TEST_ASSERT_FALSE(service._manualApOnly);
-    TEST_ASSERT_EQUAL_STRING("health", service._rescueReason);
-    TEST_ASSERT_EQUAL(5000UL, service._lastRescueEnterMs);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::RescueApSta),
-                          static_cast<int>(service._connectivityState));
-    TEST_ASSERT_EQUAL_STRING("device", TEST_STUBS::WIFI::hostname);
-}
-
-void test_processRecoveryRequest_uses_ap_sta_mode_when_rescue_ap_is_active() {
-    PsychicHttpServer server;
-    SecurityManager security;
-    FS fs;
-    WiFiSettingsService service(&server, &fs, &security);
-    configureService(service);
-    TEST_STUBS::WIFI::connected = false;
-    TEST_STUBS::WIFI::status = WL_DISCONNECTED;
-    TEST_STUBS::WIFI::mode = WIFI_MODE_STA;
-    service._rescueApActive = true;
-    service._recoveryRequested = true;
-    strlcpy(service._pendingRecoveryReason, "health", sizeof(service._pendingRecoveryReason));
-
-    TEST_ASSERT_TRUE(service.processRecoveryRequest());
-
-    TEST_ASSERT_EQUAL(1, TEST_STUBS::WIFI::disconnectCalls);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WIFI_AP_STA), static_cast<int>(TEST_STUBS::WIFI::mode));
-    TEST_ASSERT_FALSE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("", service._pendingRecoveryReason);
+    TEST_ASSERT_EQUAL(0UL, service._lastConnectionAttempt);
     TEST_ASSERT_EQUAL_STRING("health", service._lastRecoveryReason);
 }
 
-void test_processRecoveryRequest_drops_request_in_manual_ap_only_mode() {
+void test_recovery_request_outside_sta_mode_is_ignored() {
     PsychicHttpServer server;
     SecurityManager security;
     FS fs;
     WiFiSettingsService service(&server, &fs, &security);
-    configureService(service);
-    TEST_STUBS::WIFI::connected = false;
-    TEST_STUBS::WIFI::status = WL_DISCONNECTED;
-    service._manualApOnly = true;
-    service._recoveryRequested = true;
-    strlcpy(service._pendingRecoveryReason, "manual", sizeof(service._pendingRecoveryReason));
+    configureApService(service);
 
-    TEST_ASSERT_FALSE(service.processRecoveryRequest());
-
-    TEST_ASSERT_EQUAL(0, TEST_STUBS::WIFI::disconnectCalls);
+    TEST_ASSERT_FALSE(service.requestRecovery("health"));
     TEST_ASSERT_FALSE(service._recoveryRequested);
-    TEST_ASSERT_EQUAL_STRING("", service._pendingRecoveryReason);
 }
 
-void test_exitRescueApSta_stops_ap_and_returns_to_sta_connected_state() {
+void test_same_mode_update_does_not_schedule_restart() {
     PsychicHttpServer server;
     SecurityManager security;
     FS fs;
     WiFiSettingsService service(&server, &fs, &security);
-    APSettingsService apService(&server, &fs, &security);
-    configureService(service);
-    service.setAPSettingsService(&apService);
-    service._rescueApActive = true;
-    service._connectivityState = WiFiConnectivityState::RescueApSta;
-    TEST_STUBS::WIFI::connected = true;
-    TEST_STUBS::WIFI::status = WL_CONNECTED;
-    TEST_STUBS::ARDUINO::millisValue = 9000;
+    configureApService(service);
 
-    service.exitRescueApSta("sta_stable");
-
-    TEST_ASSERT_EQUAL(1, s_apStopCalls);
-    TEST_ASSERT_FALSE(service._rescueApActive);
-    TEST_ASSERT_EQUAL(9000UL, service._lastRescueExitMs);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(WiFiConnectivityState::StaConnected),
-                          static_cast<int>(service._connectivityState));
+    TEST_ASSERT_TRUE(service.setModeAndRestart(WiFiOperatingMode::AccessPoint));
+    TEST_ASSERT_FALSE(RestartService::isRestartPending());
 }
 
 int main(int argc, char** argv) {
@@ -362,14 +320,13 @@ int main(int argc, char** argv) {
     (void)argv;
 
     UNITY_BEGIN();
-    RUN_TEST(test_requestRecovery_coalesces_pending_reason_and_process_preserves_first_reason);
-    RUN_TEST(test_handleConnected_clears_stale_pending_recovery_reason);
-    RUN_TEST(test_switchToAPMode_keeps_recovery_alive_when_softap_start_fails);
-    RUN_TEST(test_manageSTA_retries_even_when_wifi_status_is_transient);
-    RUN_TEST(test_switchToAPMode_success_clears_recovery_state_and_enters_manual_ap_only);
-    RUN_TEST(test_enterRescueApSta_sets_state_and_starts_ap_sta_fallback);
-    RUN_TEST(test_processRecoveryRequest_uses_ap_sta_mode_when_rescue_ap_is_active);
-    RUN_TEST(test_processRecoveryRequest_drops_request_in_manual_ap_only_mode);
-    RUN_TEST(test_exitRescueApSta_stops_ap_and_returns_to_sta_connected_state);
+    RUN_TEST(test_default_settings_without_networks_start_in_ap_mode);
+    RUN_TEST(test_station_mode_retries_sta_only_and_never_starts_ap);
+    RUN_TEST(test_station_mode_without_networks_is_rejected_from_http_update);
+    RUN_TEST(test_ap_mode_starts_ap_only_without_sta_attempts);
+    RUN_TEST(test_off_mode_turns_radio_off_and_does_not_reconnect);
+    RUN_TEST(test_recovery_request_in_sta_resets_retry_without_starting_ap);
+    RUN_TEST(test_recovery_request_outside_sta_mode_is_ignored);
+    RUN_TEST(test_same_mode_update_does_not_schedule_restart);
     return UNITY_END();
 }

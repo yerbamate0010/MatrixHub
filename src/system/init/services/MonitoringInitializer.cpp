@@ -16,6 +16,7 @@
 #include "../../power/PowerManager.h"
 #include "../../watchdog/TaskWatchdog.h"
 #include "../../../sensors/SensorLoggingTask.h"
+#include "../../../matrix/menu/MatrixMenuService.h"
 #include <MatrixService.h>
 #include <wifi/WiFiSettingsService.h>
 #include <utility>
@@ -26,9 +27,46 @@
 namespace SYSTEM {
 namespace {
 
+MATRIX::WifiMenuAction wifiMenuActionFromMode(WiFiOperatingMode mode) {
+    switch (mode) {
+        case WiFiOperatingMode::Station:
+            return MATRIX::WifiMenuAction::Station;
+        case WiFiOperatingMode::AccessPoint:
+            return MATRIX::WifiMenuAction::AccessPoint;
+        case WiFiOperatingMode::Off:
+        default:
+            return MATRIX::WifiMenuAction::Off;
+    }
+}
+
+WiFiOperatingMode wifiModeFromMenuAction(MATRIX::WifiMenuAction action) {
+    switch (action) {
+        case MATRIX::WifiMenuAction::Station:
+            return WiFiOperatingMode::Station;
+        case MATRIX::WifiMenuAction::AccessPoint:
+            return WiFiOperatingMode::AccessPoint;
+        case MATRIX::WifiMenuAction::Off:
+        default:
+            return WiFiOperatingMode::Off;
+    }
+}
+
 void initializeButtonRouting(ServiceRegistry& services, ButtonHandler& buttonHandler) {
     auto* menu = services.getMatrixMenu();
     auto* powerManager = services.getPowerManager();
+    if (menu) {
+        if (auto* framework = services.getFramework()) {
+            if (auto* wifiSettings = framework->getWiFiSettingsService()) {
+                menu->setWifiModeActions(
+                    [wifiSettings]() {
+                        return wifiMenuActionFromMode(wifiSettings->getConfiguredMode());
+                    },
+                    [wifiSettings](MATRIX::WifiMenuAction action) {
+                        return wifiSettings->setModeAndRestart(wifiModeFromMenuAction(action));
+                    });
+            }
+        }
+    }
 
     // Phase 7 is the single source of truth for button side effects. If button
     // behavior regresses, debug the bindings here first before inspecting
@@ -61,9 +99,9 @@ void initializeButtonRouting(ServiceRegistry& services, ButtonHandler& buttonHan
             SensorLoggingTask::sendCommand(CMD_FORCE_READ_AND_LOG);
         }
     };
-    bindings.onMenuExit = [menu]() {
+    bindings.onMenuSelect = [menu]() {
         if (menu) {
-            menu->exitMenu();
+            menu->selectCurrent();
         }
     };
     bindings.onFactoryReset = [&services]() {

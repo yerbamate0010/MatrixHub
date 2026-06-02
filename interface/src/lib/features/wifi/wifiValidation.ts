@@ -188,7 +188,7 @@ export const WifiNetworkSchema = WifiBaseNetworkSchema.extend({
 const WifiStaSettingsSchema = z
 	.object({
 		hostname: WifiHostnameSchema,
-		connection_mode: z.number().min(0).max(1),
+		mode: z.enum(['off', 'ap', 'sta']),
 		wifi_networks: z.array(WifiNetworkSchema)
 	})
 	.superRefine((settings, ctx) => {
@@ -197,6 +197,14 @@ const WifiStaSettingsSchema = z
 				code: z.ZodIssueCode.custom,
 				path: ['wifi_networks'],
 				message: m.wifi_networks_limit_error({ max: WIFI_MAX_SAVED_NETWORKS }, localeOptions())
+			});
+		}
+
+		if (settings.mode === 'sta' && settings.wifi_networks.length === 0) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['wifi_networks'],
+				message: m.wifi_sta_requires_network(localeOptions())
 			});
 		}
 	});

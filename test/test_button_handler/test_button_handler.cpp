@@ -21,7 +21,7 @@ bool s_menuEnabled = true;
 uint32_t s_activityCount = 0;
 uint32_t s_menuNextCount = 0;
 uint32_t s_menuEnterCount = 0;
-uint32_t s_menuExitCount = 0;
+uint32_t s_menuSelectCount = 0;
 uint32_t s_factoryResetCount = 0;
 uint32_t s_resetWarningCount = 0;
 uint32_t s_resetArmedCount = 0;
@@ -58,7 +58,7 @@ void configureButton(ButtonHandler& button) {
     bindings.isMenuEnabled = []() { return s_menuEnabled; };
     bindings.onMenuNext = []() { ++s_menuNextCount; };
     bindings.onMenuEnter = []() { ++s_menuEnterCount; };
-    bindings.onMenuExit = []() { ++s_menuExitCount; };
+    bindings.onMenuSelect = []() { ++s_menuSelectCount; };
     bindings.onResetWarning = []() { ++s_resetWarningCount; };
     bindings.onResetArmed = []() { ++s_resetArmedCount; };
     bindings.onResetCancelled = []() { ++s_resetCancelledCount; };
@@ -153,7 +153,7 @@ void setUp(void) {
     s_activityCount = 0;
     s_menuNextCount = 0;
     s_menuEnterCount = 0;
-    s_menuExitCount = 0;
+    s_menuSelectCount = 0;
     s_factoryResetCount = 0;
     s_resetWarningCount = 0;
     s_resetArmedCount = 0;
@@ -229,17 +229,18 @@ void test_medium_hold_enters_menu_immediately_while_held() {
     TEST_ASSERT_TRUE(s_clicks.empty());
 }
 
-void test_medium_hold_exits_menu_immediately_when_active() {
+void test_medium_hold_selects_menu_item_immediately_when_active() {
     ButtonHandler button;
     configureButton(button);
     s_menuActive = true;
 
     press(button);
     advance(button, FACTORY::MEDIUM_PRESS_MS + 20);
-    TEST_ASSERT_EQUAL_UINT32(1, s_menuExitCount);
+    TEST_ASSERT_EQUAL_UINT32(1, s_menuSelectCount);
+    TEST_ASSERT_EQUAL_UINT32(0, s_menuNextCount);
 
     release(button);
-    TEST_ASSERT_EQUAL_UINT32(1, s_menuExitCount);
+    TEST_ASSERT_EQUAL_UINT32(1, s_menuSelectCount);
 }
 
 void test_medium_hold_does_not_enter_menu_when_disabled() {
@@ -252,7 +253,7 @@ void test_medium_hold_does_not_enter_menu_when_disabled() {
     release(button);
 
     TEST_ASSERT_EQUAL_UINT32(0, s_menuEnterCount);
-    TEST_ASSERT_EQUAL_UINT32(0, s_menuExitCount);
+    TEST_ASSERT_EQUAL_UINT32(0, s_menuSelectCount);
     TEST_ASSERT_TRUE(s_clicks.empty());
 }
 
@@ -267,7 +268,7 @@ void test_press_between_short_and_medium_threshold_is_noop() {
 
     TEST_ASSERT_EQUAL_UINT32(1, s_activityCount);
     TEST_ASSERT_EQUAL_UINT32(0, s_menuEnterCount);
-    TEST_ASSERT_EQUAL_UINT32(0, s_menuExitCount);
+    TEST_ASSERT_EQUAL_UINT32(0, s_menuSelectCount);
     TEST_ASSERT_TRUE(s_clicks.empty());
 }
 
@@ -379,7 +380,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_short_press_navigates_menu_without_multi_click_when_menu_active);
     RUN_TEST(test_multi_click_accumulates_and_caps_at_three);
     RUN_TEST(test_medium_hold_enters_menu_immediately_while_held);
-    RUN_TEST(test_medium_hold_exits_menu_immediately_when_active);
+    RUN_TEST(test_medium_hold_selects_menu_item_immediately_when_active);
     RUN_TEST(test_medium_hold_does_not_enter_menu_when_disabled);
     RUN_TEST(test_press_between_short_and_medium_threshold_is_noop);
     RUN_TEST(test_reset_warning_fires_at_7s_without_resetting);

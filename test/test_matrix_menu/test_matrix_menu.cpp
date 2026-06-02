@@ -101,6 +101,10 @@ WiFiClass WiFi;
 using namespace MATRIX;
 
 static MatrixService g_matrix;
+static WifiMenuAction g_currentWifiMode = WifiMenuAction::Station;
+static WifiMenuAction g_lastRequestedWifiMode = WifiMenuAction::Station;
+static uint32_t g_wifiModeRequestCalls = 0;
+static bool g_wifiModeRequestResult = true;
 
 void setUp(void) {
     memset(&RTC::mockStore, 0, sizeof(RTC::mockStore));
@@ -115,6 +119,10 @@ void setUp(void) {
     MATRIX_MANAGER::g_clearLayerCalls = 0;
     MATRIX_MANAGER::g_lastSetLayer = MATRIX_MANAGER::Layer::BACKGROUND;
     MATRIX_MANAGER::g_lastClearLayer = MATRIX_MANAGER::Layer::BACKGROUND;
+    g_currentWifiMode = WifiMenuAction::Station;
+    g_lastRequestedWifiMode = WifiMenuAction::Station;
+    g_wifiModeRequestCalls = 0;
+    g_wifiModeRequestResult = true;
 
 }
 
@@ -133,6 +141,22 @@ void test_menu_cycles_screens() {
 
     menu.nextScreen();
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::IP),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_STATION),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_ACCESS_POINT),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_DISABLED),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::EXIT),
                             static_cast<uint8_t>(menu.current()));
 
     menu.nextScreen();
@@ -182,6 +206,116 @@ void test_exit_menu_clears_menu_layer_when_manager_present() {
                             static_cast<uint8_t>(MATRIX_MANAGER::g_lastClearLayer));
 }
 
+void test_exit_screen_select_closes_menu() {
+    MatrixMenuService menu(&g_matrix, nullptr);
+    menu.enterMenu();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::EXIT),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.selectCurrent();
+
+    TEST_ASSERT_FALSE(menu.isActive());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::NONE),
+                            static_cast<uint8_t>(menu.current()));
+    TEST_ASSERT_TRUE(g_matrix.clearCalls > 0);
+}
+
+void test_wifi_action_requires_two_click_confirmation_then_requests_restart() {
+    MatrixMenuService menu(&g_matrix, nullptr);
+    menu.setWifiModeActions(
+        []() { return g_currentWifiMode; },
+        [](WifiMenuAction action) {
+            g_wifiModeRequestCalls++;
+            g_lastRequestedWifiMode = action;
+            return g_wifiModeRequestResult;
+        });
+
+    menu.enterMenu();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_ACCESS_POINT),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.selectCurrent();
+    TEST_ASSERT_EQUAL_STRING("RELEASE +2x", g_matrix.lastText);
+    TEST_ASSERT_EQUAL_UINT32(0, g_wifiModeRequestCalls);
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_STRING("1/2", g_matrix.lastText);
+    TEST_ASSERT_EQUAL_UINT32(0, g_wifiModeRequestCalls);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_ACCESS_POINT),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT32(1, g_wifiModeRequestCalls);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(WifiMenuAction::AccessPoint),
+                            static_cast<uint8_t>(g_lastRequestedWifiMode));
+    TEST_ASSERT_EQUAL_STRING("RESTART", g_matrix.lastText);
+}
+
+void test_wifi_confirmation_timeout_cancels_without_request() {
+    MatrixMenuService menu(&g_matrix, nullptr);
+    menu.setWifiModeActions(
+        []() { return g_currentWifiMode; },
+        [](WifiMenuAction action) {
+            g_wifiModeRequestCalls++;
+            g_lastRequestedWifiMode = action;
+            return true;
+        });
+
+    menu.enterMenu();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.selectCurrent();
+
+    _mockMillis = FACTORY::RESET_CONFIRM_WINDOW_MS + 10;
+    menu.update();
+
+    TEST_ASSERT_EQUAL_UINT32(0, g_wifiModeRequestCalls);
+    TEST_ASSERT_EQUAL_STRING("CANCEL", g_matrix.lastText);
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_DISABLED),
+                            static_cast<uint8_t>(menu.current()));
+}
+
+void test_selecting_current_wifi_mode_does_not_request_restart() {
+    MatrixMenuService menu(&g_matrix, nullptr);
+    menu.setWifiModeActions(
+        []() { return g_currentWifiMode; },
+        [](WifiMenuAction action) {
+            g_wifiModeRequestCalls++;
+            g_lastRequestedWifiMode = action;
+            return true;
+        });
+
+    menu.enterMenu();
+    menu.nextScreen();
+    menu.nextScreen();
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_STATION),
+                            static_cast<uint8_t>(menu.current()));
+
+    menu.selectCurrent();
+
+    TEST_ASSERT_EQUAL_UINT32(0, g_wifiModeRequestCalls);
+    TEST_ASSERT_EQUAL_STRING("STA ACTIVE", g_matrix.lastText);
+
+    menu.nextScreen();
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(RTC::MatrixMenuScreen::WIFI_ACCESS_POINT),
+                            static_cast<uint8_t>(menu.current()));
+}
+
 void test_invalidate_cache_forces_rerender() {
     MatrixMenuService menu(&g_matrix, nullptr);
     menu.nextScreen();
@@ -205,6 +339,10 @@ int main(int argc, char **argv) {
     RUN_TEST(test_enter_menu_opens_time_screen_without_advancing_active_menu);
     RUN_TEST(test_menu_disables_and_exits);
     RUN_TEST(test_exit_menu_clears_menu_layer_when_manager_present);
+    RUN_TEST(test_exit_screen_select_closes_menu);
+    RUN_TEST(test_wifi_action_requires_two_click_confirmation_then_requests_restart);
+    RUN_TEST(test_wifi_confirmation_timeout_cancels_without_request);
+    RUN_TEST(test_selecting_current_wifi_mode_does_not_request_restart);
     RUN_TEST(test_invalidate_cache_forces_rerender);
     return UNITY_END();
 }

@@ -26,7 +26,11 @@ enum class MatrixMenuScreen : uint8_t {
     NONE = 0,      // Menu closed - normal operation
     TIME = 1,      // Date and time display
     SENSORS = 2,   // Sensor readings display
-    IP = 3         // Network IP address display
+    IP = 3,        // Network IP address display
+    WIFI_STATION = 4,       // Switch WiFi to Station mode
+    WIFI_ACCESS_POINT = 5,  // Switch WiFi to Access Point mode
+    WIFI_DISABLED = 6,      // Turn WiFi radio off
+    EXIT = 7       // Close menu
 };
 
 /**

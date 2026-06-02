@@ -1,4 +1,4 @@
-import type { KnownNetworkItem, WifiSettings, WifiStatus } from '$lib/types/connectivity/wifi';
+import type { KnownNetworkItem, WifiMode, WifiSettings, WifiStatus } from '$lib/types/connectivity/wifi';
 import type { ApiClientOptions } from '$lib/utils';
 import { useWifiStatus } from './useWifiStatus.svelte';
 import { useWifiStaSettings } from './useWifiStaSettings.svelte';
@@ -47,8 +47,8 @@ export function useWifiManagement(apiOptions: ApiClientOptions, canManage = true
 		wifiSettings.updateHostname(value);
 	}
 
-	function updateConnectionMode(value: number) {
-		wifiSettings.updateConnectionMode(value);
+	function updateMode(value: WifiMode) {
+		wifiSettings.updateMode(value);
 	}
 
 	function updateNetworks(networks: KnownNetworkItem[]) {
@@ -95,7 +95,7 @@ export function useWifiManagement(apiOptions: ApiClientOptions, canManage = true
 		fetchStatus: wifiStatus.refresh,
 		saveSettings: wifiSettings.saveSettings,
 		updateHostname,
-		updateConnectionMode,
+		updateMode,
 		updateNetworks
 	};
 }

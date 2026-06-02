@@ -53,19 +53,11 @@ export function useSystemStatusManagement(deps: SystemStatusManagementDeps = {})
 		if (diagnostics?.ap?.active) {
 			return true;
 		}
-		if (diagnostics?.wifi?.rescueApActive) {
+		if (diagnostics?.wifi?.apActive) {
 			return true;
 		}
 		if (typeof payload.wifi_ap_mode === 'boolean') {
 			return payload.wifi_ap_mode;
-		}
-		if (payload.wifi_settings) {
-			// Legacy fallback for staggered FE/BE deploys: older firmware only told
-			// us whether STA was effectively disabled, not whether the AP was active.
-			return (
-				payload.wifi_settings.connection_mode === 0 ||
-				(payload.wifi_settings.wifi_networks?.length ?? 0) === 0
-			);
 		}
 
 		return false;

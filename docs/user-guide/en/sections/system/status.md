@@ -48,8 +48,8 @@ Open `Network Diagnostics` when the normal Wi-Fi summary is not enough.
 
 The modal shows:
 
-- current STA and AP state
-- whether rescue AP is active
+- configured Wi-Fi mode and current radio mode
+- current STA state and whether AP is active
 - forwarding readiness and static-IP-related checks
 - HTTP and WebSocket socket counters
 

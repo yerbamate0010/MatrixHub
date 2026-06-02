@@ -40,7 +40,7 @@ esp_err_t APStatus::apStatus(PsychicRequest *request)
     JsonObject root = response.getRoot();
 
     root["status"] = _apSettingsService->getAPNetworkStatus();
-    root["ap_mode"] = APSettingsService::apLaunchModeName(_apSettingsService->getActiveLaunchMode());
+    root["active"] = _apSettingsService->isAccessPointStarted();
     root["ip_address"] = WiFi.softAPIP().toString();
     root["mac_address"] = WiFi.softAPmacAddress();
     root["station_num"] = WiFi.softAPgetStationNum();

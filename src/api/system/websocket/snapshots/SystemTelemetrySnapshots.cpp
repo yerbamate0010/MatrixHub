@@ -13,9 +13,7 @@
 #include "../../../../system/rtc/RtcConfig.h"
 #include "../../../../system/health/network/HttpServerHealthTracker.h"
 
-#include <wifi/APSettingsService.h>
 #include <wifi/WiFiSettingsService.h>
-#include <wifi/WifiConnectivityPolicy.h>
 
 #include <ArduinoJson.h>
 #include <WiFi.h>
@@ -298,15 +296,15 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
     }
 
     if (ctx.wifiSettingsService) {
-        // WiFiSettingsService owns the higher-level policy state (rescue AP,
-        // forwarding readiness, stable/disconnected timestamps, station count).
+        // WiFiSettingsService owns the configured mode, reconnect state,
+        // forwarding readiness, stable/disconnected timestamps, and AP station count.
         // Folding that into system_status keeps transport simple: one snapshot,
         // one consumer contract on the frontend.
         const WiFiConnectivityDiagnostics connectivity = ctx.wifiSettingsService->getConnectivityDiagnostics();
-        wifi["state"] = WIFI_CONNECTIVITY_POLICY::stateName(connectivity.state);
+        wifi["state"] = wifiConnectivityStateName(connectivity.state);
+        wifi["configuredMode"] = wifiOperatingModeName(connectivity.configuredMode);
         wifi["mode"] = wifiModeName(connectivity.wifiMode);
-        wifi["rescueApActive"] = connectivity.rescueApActive;
-        wifi["rescueReason"] = connectivity.rescueReason;
+        wifi["apActive"] = connectivity.apActive;
         wifi["lastRecoveryReason"] = connectivity.lastRecoveryReason;
         wifi["lastIpChangeMs"] = connectivity.lastIpChangeMs;
         wifi["disconnectedSinceMs"] = connectivity.disconnectedSinceMs;
@@ -316,8 +314,7 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
         }
 
         JsonObject ap = diag["ap"].to<JsonObject>();
-        ap["active"] = connectivity.apLaunchMode != ApLaunchMode::None;
-        ap["mode"] = APSettingsService::apLaunchModeName(connectivity.apLaunchMode);
+        ap["active"] = connectivity.apActive;
         ap["stationNum"] = connectivity.apStationCount;
         uint8_t apMacAddr[6];
         if (esp_wifi_get_mac(WIFI_IF_AP, apMacAddr) == ESP_OK) {
@@ -374,9 +371,7 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
         const WiFiConnectivityDiagnostics connectivity =
             ctx.wifiSettingsService->getConnectivityDiagnostics();
 
-        // Match the shell/status cards meaning of "AP mode": any currently
-        // active AP, whether it is manual AP-only or rescue AP+STA.
-        data["wifi_ap_mode"] = connectivity.apLaunchMode != ApLaunchMode::None;
+        data["wifi_ap_mode"] = connectivity.apActive;
     }
 
     // LiveTail uses this to hydrate the current logging level without a second

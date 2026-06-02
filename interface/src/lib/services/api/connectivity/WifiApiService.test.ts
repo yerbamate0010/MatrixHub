@@ -64,6 +64,7 @@ describe('WifiApiService', () => {
 	it('should save settings, sanitize networks, and apply the matrixhub hostname fallback', async () => {
 		const settings = {
 			hostname: '',
+			mode: 'ap',
 			wifi_networks: [
 				{ ssid: 'Net1', pass: 'pass1', bssid: undefined },
 				{ ssid: 'Net2', pass: 'pass2' }
@@ -79,6 +80,7 @@ describe('WifiApiService', () => {
 			'/rest/wifiSettings',
 			expect.objectContaining({
 				hostname: 'matrixhub',
+				mode: 'ap',
 				wifi_networks: [
 					// undefined 'bssid' should be removed
 					{ ssid: 'Net1', pass: 'pass1' },

@@ -16,9 +16,11 @@ export type WifiStatus = {
 	dns_ip_2?: string;
 };
 
+export type WifiMode = 'off' | 'ap' | 'sta';
+
 export type WifiSettings = {
 	hostname: string;
-	connection_mode: number;
+	mode: WifiMode;
 	wifi_networks: KnownNetworkItem[];
 };
 

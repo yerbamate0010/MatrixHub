@@ -94,7 +94,7 @@ describe('wifiValidation', () => {
 	it('blocks Wi-Fi STA settings when one saved network is invalid', () => {
 		const result = validateWifiStaSettings({
 			hostname: 'esp32-node',
-			connection_mode: 1,
+			mode: 'sta',
 			wifi_networks: [
 				{
 					ssid: 'Home',
@@ -118,5 +118,31 @@ describe('wifiValidation', () => {
 			hostname: false,
 			wifi_networks: false
 		});
+	});
+
+	it('requires saved networks only in station mode', () => {
+		expect(
+			validateWifiStaSettings({
+				hostname: 'esp32-node',
+				mode: 'ap',
+				wifi_networks: []
+			}).valid
+		).toBe(true);
+		expect(
+			validateWifiStaSettings({
+				hostname: 'esp32-node',
+				mode: 'off',
+				wifi_networks: []
+			}).valid
+		).toBe(true);
+
+		const sta = validateWifiStaSettings({
+			hostname: 'esp32-node',
+			mode: 'sta',
+			wifi_networks: []
+		});
+
+		expect(sta.valid).toBe(false);
+		expect(sta.errors.wifi_networks).toBe(true);
 	});
 });

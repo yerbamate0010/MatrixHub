@@ -1,4 +1,4 @@
-import type { KnownNetworkItem, WifiSettings } from '$lib/types/connectivity/wifi';
+import type { KnownNetworkItem, WifiMode, WifiSettings } from '$lib/types/connectivity/wifi';
 import { WifiApiService } from '$lib/services/api/connectivity/WifiApiService';
 import type { ApiClientOptions } from '$lib/utils';
 import { createSettingsFeedback } from '$lib/utils/api/settingsFeedback';
@@ -15,7 +15,7 @@ import {
 
 const DEFAULT_SETTINGS: WifiSettings = {
 	hostname: '',
-	connection_mode: 1,
+	mode: 'ap',
 	wifi_networks: []
 };
 
@@ -27,18 +27,26 @@ function applyStaValidation(settings: WifiSettings, errors: WifiStaSettingsError
 }
 
 function resolveRestartDialog(settings: WifiSettings) {
-	const staDisabled = settings.connection_mode === 0;
-	const hasNetworks = settings.wifi_networks.length > 0;
-	const willTryConnect = !staDisabled && hasNetworks;
+	if (settings.mode === 'sta') {
+		return {
+			title: m.wifi_apply_title(),
+			message: m.wifi_sta_confirm_msg(),
+			confirmLabel: m.wifi_apply_restart_btn()
+		};
+	}
+
+	if (settings.mode === 'off') {
+		return {
+			title: m.wifi_off_mode_title(),
+			message: m.wifi_off_confirm_msg(),
+			confirmLabel: m.wifi_restart_off_btn()
+		};
+	}
 
 	return {
-		title: willTryConnect ? m.wifi_apply_title() : m.wifi_ap_mode_title(),
-		message: willTryConnect
-			? m.wifi_sta_confirm_msg()
-			: m.wifi_ap_confirm_msg({
-					status: staDisabled ? m.wifi_sta_disabled() : m.wifi_no_networks()
-				}),
-		confirmLabel: willTryConnect ? m.wifi_apply_restart_btn() : m.wifi_restart_ap_btn()
+		title: m.wifi_ap_mode_title(),
+		message: m.wifi_ap_confirm_msg(),
+		confirmLabel: m.wifi_restart_ap_btn()
 	};
 }
 
@@ -64,7 +72,9 @@ export function useWifiStaSettings(apiOptions: ApiClientOptions) {
 		}
 	);
 	const isSaveBlocked = $derived.by(
-		() => !WifiHostnameSchema.safeParse(hook.settings.hostname).success
+		() =>
+			!WifiHostnameSchema.safeParse(hook.settings.hostname).success ||
+			(hook.settings.mode === 'sta' && hook.settings.wifi_networks.length === 0)
 	);
 
 	function saveSettings() {
@@ -87,8 +97,8 @@ export function useWifiStaSettings(apiOptions: ApiClientOptions) {
 		hook.updateSetting('hostname', value);
 	}
 
-	function updateConnectionMode(value: number) {
-		hook.updateSetting('connection_mode', value);
+	function updateMode(value: WifiMode) {
+		hook.updateSetting('mode', value);
 	}
 
 	function updateNetworks(networks: KnownNetworkItem[]) {
@@ -121,7 +131,7 @@ export function useWifiStaSettings(apiOptions: ApiClientOptions) {
 		refreshSettings: hook.refreshSettings,
 		saveSettings,
 		updateHostname,
-		updateConnectionMode,
+		updateMode,
 		updateNetworks,
 		resetSettings: hook.resetSettings
 	};

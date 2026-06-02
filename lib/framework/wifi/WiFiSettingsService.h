@@ -24,11 +24,11 @@
 #include <security/SecurityManager.h>
 #include <wifi/APSettingsService.h>
 #include <wifi/WifiDiagnosticsSelector.h>
-#include <wifi/WifiConnectivityPolicy.h>
 #include <WiFi.h>
 #include <PsychicHttp.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <cstring>
 #include <functional>
 #include <string_view>
 
@@ -70,19 +70,32 @@ typedef struct
     IPAddress dnsIP2;
 } wifi_settings_t;
 
-enum class STAConnectionMode
+enum class WiFiOperatingMode : uint8_t
 {
-    OFFLINE = 0,  // STA disabled, AP mode enabled for settings access
-    ONLINE = 1    // STA enabled, auto-connect to configured networks
+    Off = 0,
+    AccessPoint = 1,
+    Station = 2
 };
+
+enum class WiFiConnectivityState : uint8_t
+{
+    Off = 0,
+    ApOnly,
+    StaConnecting,
+    StaConnected,
+    StaBackoff
+};
+
+const char* wifiOperatingModeName(WiFiOperatingMode mode);
+const char* wifiConnectivityStateName(WiFiConnectivityState state);
 
 struct WiFiConnectivityDiagnostics
 {
-    WiFiConnectivityState state = WiFiConnectivityState::StaConnecting;
-    ApLaunchMode apLaunchMode = ApLaunchMode::None;
+    WiFiConnectivityState state = WiFiConnectivityState::Off;
+    WiFiOperatingMode configuredMode = WiFiOperatingMode::AccessPoint;
     wifi_mode_t wifiMode = WIFI_MODE_NULL;
     bool staConnected = false;
-    bool rescueApActive = false;
+    bool apActive = false;
     bool savedStaticIpConfigured = false;
     bool savedStaticIpMatches = false;
     bool portForwardingReady = false;
@@ -91,12 +104,9 @@ struct WiFiConnectivityDiagnostics
     uint32_t disconnectedSinceMs = 0;
     uint32_t stableConnectedSinceMs = 0;
     uint32_t lastIpChangeMs = 0;
-    uint32_t lastRescueEnterMs = 0;
-    uint32_t lastRescueExitMs = 0;
     IPAddress staIp;
     IPAddress savedStaticIp;
     IPAddress apIp;
-    char rescueReason[32]{0};
     char lastRecoveryReason[32]{0};
 };
 
@@ -105,13 +115,13 @@ class WiFiSettings
 public:
     // core wifi configuration
     String hostname;
-    u_int8_t staConnectionMode;
+    WiFiOperatingMode mode = WiFiOperatingMode::AccessPoint;
     std::vector<wifi_settings_t> wifiSettings;
 
     static void read(WiFiSettings &settings, JsonObject &root)
     {
         root["hostname"] = settings.hostname;
-        root["connection_mode"] = settings.staConnectionMode;
+        root["mode"] = wifiOperatingModeName(settings.mode);
 
         // create JSON array from root
         JsonArray wifiNetworks = root["wifi_networks"].to<JsonArray>();
@@ -140,11 +150,11 @@ public:
 
     static StateUpdateResult update(JsonObject &root, WiFiSettings &settings, std::string_view originId)
     {
-        (void)originId;
-        settings.hostname = root["hostname"] | SettingValue::format(FACTORY_WIFI_HOSTNAME);
-        settings.staConnectionMode = root["connection_mode"] | 1;
+        const bool fromHttp = originId == HTTP_ENDPOINT_ORIGIN_ID;
 
-        settings.wifiSettings.clear();
+        WiFiSettings nextSettings = settings;
+        nextSettings.hostname = root["hostname"] | SettingValue::format(FACTORY_WIFI_HOSTNAME);
+        nextSettings.wifiSettings.clear();
 
         // create JSON array from root
         JsonArray wifiNetworks = root["wifi_networks"];
@@ -204,7 +214,7 @@ public:
                         wifiSettings.staticIPConfig = false;
                     }
 
-                    settings.wifiSettings.push_back(wifiSettings);
+                    nextSettings.wifiSettings.push_back(wifiSettings);
                 }
             }
         }
@@ -213,7 +223,7 @@ public:
             // populate with factory defaults if they are present
             if (String(FACTORY_WIFI_SSID).length() > 0)
             {
-                settings.wifiSettings.push_back(wifi_settings_t{
+                nextSettings.wifiSettings.push_back(wifi_settings_t{
                     .ssid = FACTORY_WIFI_SSID,
                     .password = FACTORY_WIFI_PASSWORD,
                     .staticIPConfig = false,
@@ -225,10 +235,102 @@ public:
                 });
             }
         }
+
+        const bool modeProvided = root["mode"].is<const char*>();
+        if (modeProvided)
+        {
+            WiFiOperatingMode requestedMode = WiFiOperatingMode::AccessPoint;
+            const char* modeValue = root["mode"];
+            if (!parseMode(modeValue, requestedMode))
+            {
+                if (fromHttp)
+                {
+                    ESP_LOGE(SVK_TAG, "Invalid WiFi mode: %s", modeValue ? modeValue : "<null>");
+                    return StateUpdateResult::ERROR;
+                }
+                requestedMode = WiFiOperatingMode::AccessPoint;
+            }
+            nextSettings.mode = requestedMode;
+        }
+        else
+        {
+            nextSettings.mode = nextSettings.wifiSettings.empty()
+                ? WiFiOperatingMode::AccessPoint
+                : WiFiOperatingMode::Station;
+        }
+
+        if (nextSettings.mode == WiFiOperatingMode::Station && nextSettings.wifiSettings.empty())
+        {
+            if (fromHttp)
+            {
+                ESP_LOGE(SVK_TAG, "Rejecting STA mode without saved WiFi networks");
+                return StateUpdateResult::ERROR;
+            }
+            nextSettings.mode = WiFiOperatingMode::AccessPoint;
+        }
+
+        const bool changed = !equals(settings, nextSettings);
+        settings = nextSettings;
         ESP_LOGV(SVK_TAG, "WiFi Settings updated");
 
-        return StateUpdateResult::CHANGED;
+        return changed ? StateUpdateResult::CHANGED : StateUpdateResult::UNCHANGED;
     };
+
+private:
+    static bool parseMode(const char* value, WiFiOperatingMode& mode)
+    {
+        if (!value)
+        {
+            return false;
+        }
+        if (strcmp(value, "off") == 0)
+        {
+            mode = WiFiOperatingMode::Off;
+            return true;
+        }
+        if (strcmp(value, "ap") == 0)
+        {
+            mode = WiFiOperatingMode::AccessPoint;
+            return true;
+        }
+        if (strcmp(value, "sta") == 0)
+        {
+            mode = WiFiOperatingMode::Station;
+            return true;
+        }
+        return false;
+    }
+
+    static bool networkEquals(const wifi_settings_t& lhs, const wifi_settings_t& rhs)
+    {
+        return lhs.ssid == rhs.ssid &&
+               lhs.password == rhs.password &&
+               lhs.staticIPConfig == rhs.staticIPConfig &&
+               lhs.localIP == rhs.localIP &&
+               lhs.gatewayIP == rhs.gatewayIP &&
+               lhs.subnetMask == rhs.subnetMask &&
+               lhs.dnsIP1 == rhs.dnsIP1 &&
+               lhs.dnsIP2 == rhs.dnsIP2;
+    }
+
+    static bool equals(const WiFiSettings& lhs, const WiFiSettings& rhs)
+    {
+        if (lhs.hostname != rhs.hostname ||
+            lhs.mode != rhs.mode ||
+            lhs.wifiSettings.size() != rhs.wifiSettings.size())
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < lhs.wifiSettings.size(); i++)
+        {
+            if (!networkEquals(lhs.wifiSettings[i], rhs.wifiSettings[i]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 class WiFiSettingsService : public StatefulService<WiFiSettings>
@@ -246,10 +348,9 @@ public:
     void delayedReconnect();
     String getHostname();
     String getIP();
-    // Snapshot-facing summary used by /ws/system. Keeping this verdict here
-    // lets the websocket stay lean without re-serializing full WiFi settings
-    // just to tell the dashboard whether the device is effectively AP-only.
+    WiFiOperatingMode getConfiguredMode() const;
     bool isApModeConfigured() const;
+    bool setModeAndRestart(WiFiOperatingMode mode);
     bool requestRecovery(const char* reason);
     WiFiConnectivityDiagnostics getConnectivityDiagnostics() const;
 
@@ -265,8 +366,6 @@ private:
         uint8_t connectionAttempts = 0;
         uint8_t backoffLevel = 0;
         WiFiConnectivityState connectivityState = WiFiConnectivityState::StaConnecting;
-        bool manualApOnly = false;
-        bool rescueApActive = false;
         bool retryCycleCompleted = false;
         bool retryBackoffActive = false;
         bool recoveryRequested = false;
@@ -275,10 +374,7 @@ private:
         unsigned long disconnectedSince = 0;
         unsigned long stableConnectedSince = 0;
         unsigned long lastIpChangeMs = 0;
-        unsigned long lastRescueEnterMs = 0;
-        unsigned long lastRescueExitMs = 0;
         IPAddress lastKnownStaIp = INADDR_NONE;
-        char rescueReason[32]{0};
         char pendingRecoveryReason[32]{0};
         char lastRecoveryReason[32]{0};
     };
@@ -299,8 +395,6 @@ private:
     uint8_t _connectionAttempts = 0;
     uint8_t _backoffLevel = 0;  // Exponential backoff: delay = BASE * 2^level, capped at MAX
     WiFiConnectivityState _connectivityState = WiFiConnectivityState::StaConnecting;
-    bool _manualApOnly = false;
-    bool _rescueApActive = false;
     bool _retryCycleCompleted = false;
     bool _retryBackoffActive = false;
     bool _recoveryRequested = false;
@@ -309,11 +403,8 @@ private:
     unsigned long _disconnectedSince = 0;
     unsigned long _stableConnectedSince = 0;
     unsigned long _lastIpChangeMs = 0;
-    unsigned long _lastRescueEnterMs = 0;
-    unsigned long _lastRescueExitMs = 0;
     String _lastAppliedHostname;
     IPAddress _lastKnownStaIp = INADDR_NONE;
-    char _rescueReason[32]{0};
     char _pendingRecoveryReason[32]{0};
     char _lastRecoveryReason[32]{0};
 
@@ -322,15 +413,15 @@ private:
     // diagnostics without holding the lock across slower WiFi/HTTP operations.
     RuntimeSnapshot snapshotRuntimeState() const;
     void observeConnectivity(unsigned long nowMs);
-    void applyPolicy(unsigned long nowMs);
     void handleConnected(unsigned long nowMs);
     bool processRecoveryRequest();
+    void applyConfiguredMode();
     void manageSTA();
     void connectToWiFi();
     void configureNetwork(wifi_settings_t &network);
-    void switchToAPMode(const char* reason);
-    bool enterRescueApSta(const char* reason);
-    void exitRescueApSta(const char* reason);
+    bool switchToAPMode(const char* reason);
+    void switchToOffMode(const char* reason);
+    void resetStaRuntime(WiFiConnectivityState state);
 };
 
 #endif // end WiFiSettingsService_h

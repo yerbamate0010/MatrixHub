@@ -58,6 +58,21 @@ The separate effects card controls idle animation behavior:
 These effects shape how the device looks when it is not actively showing menu
 or alarm content.
 
+## Physical Button Menu
+
+When the matrix menu is enabled, the physical `BOOT` button controls a compact
+on-device menu:
+
+- hold `BOOT` for about `2 seconds` outside the menu to open it
+- short-press to cycle: `TIME`, `SENSORS`, `IP`, `WIFI STA`, `WIFI AP`,
+  `WIFI OFF`, `EXIT`
+- hold `BOOT` for about `2 seconds` while a menu item is visible to select it
+- select `EXIT` to close the menu
+- selecting `WIFI STA`, `WIFI AP`, or `WIFI OFF` shows `RELEASE +2x`; release
+  the button and short-press twice to save the mode and restart
+- the factory reset gesture remains separate: a 10 second hold followed by the
+  confirmation double-click
+
 ## Important Behavior
 
 - `Matrix LED` affects the device display, not the browser theme

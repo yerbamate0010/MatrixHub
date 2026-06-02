@@ -2,8 +2,8 @@
 
 Navigation: [Home](../README.md) · [Basic Flows](../README.md#basic-use-cases) · [Additional Flows](../README.md#additional-use-cases) · [Reference](../README.md#reference-sections)
 
-This section covers the pages used to manage network access, fallback access,
-and recovery behavior.
+This section covers the pages used to manage network access, Access Point
+access, and recovery behavior.
 
 The same `WiFi` menu area also contains [Shelly devices](shelly.md),
 [Wi-Fi sensing and CSI](wifi-sensing.md), and the related `WiFi CSI` live page.
@@ -29,48 +29,49 @@ On this page you can:
 - review the current Wi-Fi status
 - check the assigned IP address
 - manage saved networks
-- control how the station mode reconnects
+- choose the Wi-Fi operating mode
 - set the hostname used for local name resolution
 - configure optional static IP settings per saved network
 
 ## Access Point
 
-The `Access Point` page controls the local fallback network used during the
-initial setup or recovery.
+The `Access Point` page controls the local network used when WiFi Mode is set
+to `Access Point`.
 
 ![Access Point page](../screenshots/wifi/wifi-access-point-page.png)
 
 Typical use cases for the Access Point page:
 
-- restoring local access when the device cannot join the normal Wi-Fi network
+- first access after a fresh flash or factory reset with no saved networks
+- local access when the operator intentionally switches WiFi Mode to
+  `Access Point`
 - checking the AP IP address and SSID
 - changing local AP parameters for service or installation work
 
-These settings matter both during first access and later recovery situations
-when MatrixHub exposes the local AP again.
+These settings matter during first access and every time MatrixHub is placed in
+AP mode.
 
 ## Connectivity Behavior
 
-MatrixHub can appear in three practical connectivity states:
+MatrixHub has one explicit Wi-Fi operating mode:
 
-- `Manual AP-only`: the local AP stays up and Station recovery is intentionally
-  stopped
-- normal `STA`: the device joins one of the saved Wi-Fi networks
-- `Rescue AP+STA`: a local AP is exposed while Station recovery continues in
-  the background
+- `off`: Wi-Fi radio is disabled. Internet, Telegram, and local Wi-Fi access
+  are unavailable until Wi-Fi is enabled again.
+- `ap`: Access Point only. STA reconnects are stopped.
+- `sta`: Station only. MatrixHub connects to saved networks and retries with
+  backoff when they fail.
 
 Important behavior:
 
-- if `Station (STA) Mode` is set to `Offline`, MatrixHub returns to
-  `Manual AP-only`
-- if no saved networks exist, MatrixHub also stays in `Manual AP-only`
-- if saved networks exist, MatrixHub tries them automatically one by one
+- after a fresh flash or factory reset with no saved networks, MatrixHub starts
+  in `ap`
+- `sta` requires at least one saved network
+- if saved networks exist, `sta` tries them automatically one by one
 - if one full cycle fails, the device waits and retries again instead of giving
   up permanently
-- during a longer outage, MatrixHub can expose a rescue AP so local recovery
-  remains possible while Station mode is still retrying
-- once the Station connection becomes stable again, the rescue AP is removed
-  and normal Station operation resumes
+- `sta` never starts AP automatically after connection failures
+- change Wi-Fi mode from the web UI or Matrix menu when you need to move
+  between `off`, `ap`, and `sta`
 
 ## Recovery and Addressing
 
@@ -78,14 +79,14 @@ The hostname stored in Wi-Fi settings is the short name, usually `matrixhub`.
 When local name resolution works, the browser address becomes
 `matrixhub.local`.
 
-Some standard builds also use `matrixhub.local` as the visible fallback AP
+Some standard builds also use `matrixhub.local` as the visible AP
 name, so the same string can appear both as a Wi-Fi network name and as a
 browser address.
 
 During setup or recovery you may therefore see:
 
 - a current router-assigned Station IP such as `192.168.x.x`
-- an AP fallback address such as `192.168.4.1`
+- an AP address such as `192.168.4.1`
 - `No WiFi` on the matrix IP screen when nothing is currently connected
 
 For a compact summary of these rules, see

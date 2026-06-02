@@ -10,50 +10,51 @@
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { useZodForm } from '$lib/utils/validation/zodForm.svelte';
+	import type { WifiMode } from '$lib/types/connectivity/wifi';
 	import { z } from 'zod';
 
 	interface Props {
 		hostname: string;
-		connectionMode: number;
+		mode: WifiMode;
 		isDirty?: boolean;
 		saveBlocked?: boolean;
 		onApply?: () => void;
 		onHostnameChange: (_value: string) => void;
-		onConnectionModeChange: (_value: number) => void;
+		onModeChange: (_value: WifiMode) => void;
 	}
 
 	let {
 		hostname,
-		connectionMode,
+		mode,
 		isDirty = false,
 		saveBlocked = false,
 		onApply,
 		onHostnameChange,
-		onConnectionModeChange
+		onModeChange
 	}: Props = $props();
 
 	// Single-field schema for just the connection settings part
 	const connectionSchema = z.object({
 		hostname: WifiHostnameSchema,
-		connectionMode: z.number().min(0).max(1)
+		mode: z.enum(['off', 'ap', 'sta'])
 	});
 
 	const form = useZodForm({
 		schema: connectionSchema,
 		// use unwrap to avoid warning about capturing initial values of props
-		initialValues: { hostname: '', connectionMode: 0 },
+		initialValues: { hostname: '', mode: 'ap' as WifiMode },
 		onSubmit: (values) => {
 			onHostnameChange(values.hostname);
-			onConnectionModeChange(values.connectionMode);
+			onModeChange(values.mode);
 		}
 	});
 
 	// Initial sync from props (one-time)
 	let initialized = $state(false);
 	$effect(() => {
-		if (!initialized && (hostname || connectionMode !== undefined)) {
+		if (!initialized && (hostname || mode !== undefined)) {
 			form.handleInput('hostname', hostname, false);
-			form.handleInput('connectionMode', connectionMode, false);
+			form.handleInput('mode', mode, false);
 			initialized = true;
 		}
 	});
@@ -64,8 +65,8 @@
 			if (hostname !== form.values.hostname) {
 				form.handleInput('hostname', hostname, false);
 			}
-			if (connectionMode !== form.values.connectionMode) {
-				form.handleInput('connectionMode', connectionMode, false);
+			if (mode !== form.values.mode) {
+				form.handleInput('mode', mode, false);
 			}
 		}
 	});
@@ -73,12 +74,13 @@
 	// Sync form values back to parent on change/blur
 	function updateParent() {
 		onHostnameChange(form.values.hostname);
-		onConnectionModeChange(form.values.connectionMode);
+		onModeChange(form.values.mode);
 	}
 
-	const connectionModes = [
-		{ id: 0, text: m.wifi_connection_mode_disabled({ locale: i18n.languageTag }) },
-		{ id: 1, text: m.wifi_connection_mode_auto({ locale: i18n.languageTag }) }
+	const wifiModes: Array<{ id: WifiMode; text: string }> = [
+		{ id: 'off', text: m.wifi_mode_off({ locale: i18n.languageTag }) },
+		{ id: 'ap', text: m.wifi_mode_ap({ locale: i18n.languageTag }) },
+		{ id: 'sta', text: m.wifi_mode_sta({ locale: i18n.languageTag }) }
 	];
 	let helpOpen = $state(false);
 	const locale = $derived(i18n.languageTag);
@@ -139,15 +141,15 @@
 
 		<ContentBox>
 			<FormSelect
-				id="apmode"
-				label={m.wifi_connection_mode_label({ locale: i18n.languageTag })}
-				value={form.values.connectionMode}
+				id="wifi-mode"
+				label={m.wifi_mode_label({ locale: i18n.languageTag })}
+				value={form.values.mode}
 				onchange={(e) => {
-					const val = Number((e.target as HTMLSelectElement).value);
-					form.handleInput('connectionMode', val);
+					const val = (e.target as HTMLSelectElement).value as WifiMode;
+					form.handleInput('mode', val);
 					updateParent();
 				}}
-				options={connectionModes.map((m) => ({ value: m.id, label: m.text }))}
+				options={wifiModes.map((mode) => ({ value: mode.id, label: mode.text }))}
 			/>
 		</ContentBox>
 

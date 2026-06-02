@@ -8,43 +8,42 @@ predict during setup, recovery, and support work.
 Use it when you want to understand what the device is likely to do after a
 settings change, loss of connectivity, or access-level restriction.
 
-## Wi-Fi Operating States
+## Wi-Fi Operating Modes
 
-MatrixHub can expose network access in three practical states:
+MatrixHub has three explicit Wi-Fi modes:
 
-- `Manual AP-only`: the local Access Point stays up and normal Wi-Fi Station
-  recovery is intentionally stopped
-- normal `STA`: the device joins one of the saved Wi-Fi networks
-- `Rescue AP+STA`: a local Access Point is exposed while Wi-Fi Station recovery
-  continues in the background
+- `off`: Wi-Fi radio is disabled. Network-dependent features such as Telegram
+  are unavailable.
+- `ap`: Access Point only. The local AP stays up and Station reconnects are
+  stopped.
+- `sta`: Station only. The device joins saved Wi-Fi networks and retries with
+  backoff when they fail.
 
-`Manual AP-only` is the clearest recovery state because the device is no longer
-trying to leave the local AP path. `Rescue AP+STA` is different: local access
-returns, but MatrixHub is still trying to restore the upstream Wi-Fi
-connection.
+`sta` never starts AP automatically after connection failures. Use the web UI,
+Matrix menu, or factory reset to move back to AP when local setup access is
+needed.
 
-## When Each State Happens
+## When Each Mode Happens
 
-- if `Station (STA) Mode` is set to `Offline`, MatrixHub switches to
-  `Manual AP-only`
-- if no saved Wi-Fi networks exist, MatrixHub also stays in `Manual AP-only`
-- if saved networks exist, MatrixHub tries them automatically one by one
+- after a fresh flash or factory reset with no saved Wi-Fi networks, MatrixHub
+  starts in `ap`
+- `off` is selected explicitly from the web UI or Matrix menu
+- `ap` is selected explicitly, or used as the first-run mode when there are no
+  saved networks
+- `sta` requires at least one saved Wi-Fi network
+- in `sta`, MatrixHub tries saved networks automatically one by one
 - if one full cycle of saved networks fails, the device waits and retries again
   later instead of giving up permanently
-- if the outage lasts longer, MatrixHub can expose `Rescue AP+STA` so local
-  recovery remains possible while Station mode is still retrying
-- once the Wi-Fi Station connection becomes stable again, the rescue AP is
-  removed and normal Station behavior resumes
 
 ## Addressing Rules
 
-- the fallback hostname stored in Wi-Fi settings is typically `matrixhub`
+- the hostname stored in Wi-Fi settings is typically `matrixhub`
 - when local name resolution works, the browser address becomes
   `matrixhub.local`
 - on standard first-access setups, the local AP can also use the visible SSID
   `matrixhub.local`
-- a common AP fallback address is `192.168.4.1`
-- the matrix IP screen can show a Station IP, an AP fallback IP, or `No WiFi`
+- a common AP address is `192.168.4.1`
+- the matrix IP screen can show a Station IP, an AP IP, or `No WiFi`
 
 The same `matrixhub.local` string can therefore appear in two different roles:
 as a local AP name and as a browser address derived from the hostname

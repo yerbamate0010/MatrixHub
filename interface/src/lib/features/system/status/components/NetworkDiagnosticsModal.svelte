@@ -148,11 +148,13 @@
 					</div>
 					<div class="font-mono">{formatOptional(health.wifi.lastDisconnectReason, '0')}</div>
 					<div class="opacity-70">
-						{m.network_diag_field_rescue_ap_active({ locale: i18n.languageTag })}
+						{m.network_diag_field_configured_mode({ locale: i18n.languageTag })}
 					</div>
+					<div class="font-mono">{formatOptional(health.wifi.configuredMode)}</div>
+					<div class="opacity-70">{m.network_diag_field_ap_active({ locale: i18n.languageTag })}</div>
 					<div>
-						<span class="badge badge-sm {boolBadgeClass(health.wifi.rescueApActive)}">
-							{formatBool(health.wifi.rescueApActive)}
+						<span class="badge badge-sm {boolBadgeClass(health.wifi.apActive)}">
+							{formatBool(health.wifi.apActive)}
 						</span>
 					</div>
 					<div class="opacity-70">
@@ -174,10 +176,6 @@
 						{formatTimestampMs(health.wifi.lastIpChangeMs, health.runtime?.uptimeMs)}
 					</div>
 					<div class="opacity-70">
-						{m.network_diag_field_rescue_reason({ locale: i18n.languageTag })}
-					</div>
-					<div class="font-mono break-all text-right">{formatReason(health.wifi.rescueReason)}</div>
-					<div class="opacity-70">
 						{m.network_diag_field_last_recovery_reason({ locale: i18n.languageTag })}
 					</div>
 					<div class="font-mono break-all text-right">
@@ -197,8 +195,6 @@
 							{formatBool(health.ap?.active)}
 						</span>
 					</div>
-					<div class="opacity-70">{m.network_diag_field_mode({ locale: i18n.languageTag })}</div>
-					<div class="font-mono">{formatOptional(health.ap?.mode)}</div>
 					<div class="opacity-70">{m.network_diag_field_ap_ip({ locale: i18n.languageTag })}</div>
 					<div class="font-mono">{formatOptional(health.ap?.ip)}</div>
 					<div class="opacity-70">
