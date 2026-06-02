@@ -1,5 +1,5 @@
 /**
- * ESP32-SvelteKit Design System
+ * MatrixHub Design System
  * Centralized design tokens and component variants for consistent styling
  *
  * This is a barrel export that re-exports all design system modules.

@@ -1,4 +1,4 @@
-# MatrixHub Monitor — Firmware for Waveshare ESP32-S3-Matrix
+# MatrixHub — Firmware for Waveshare ESP32-S3-Matrix
 
 **MatrixHub** is an open-source firmware and web dashboard for the
 [Waveshare ESP32-S3-Matrix](https://www.waveshare.com/wiki/ESP32-S3-Matrix) board.
@@ -503,7 +503,7 @@ esp32s3_matrix/
 ├── interface/              # SvelteKit web dashboard
 │   └── src/
 ├── lib/
-│   ├── framework/          # ESP32-SvelteKit base (LGPL-3.0) — do not modify
+│   ├── framework/          # Upstream web/API framework base (LGPL-3.0)
 │   ├── PsychicHttp/        # HTTPS server (MIT)
 │   ├── ArduinoJson/        # JSON (MIT)
 │   ├── NimBLE-Arduino/     # BLE stack (Apache-2.0)

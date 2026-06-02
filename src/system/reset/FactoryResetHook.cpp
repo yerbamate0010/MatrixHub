@@ -1,7 +1,7 @@
 #include "FactoryReset.h"
 #include "../Application.h"
 
-// Application hook used by the ESP32-SvelteKit framework.
+// Application hook used by the embedded web/API framework runtime.
 // When the UI calls POST /rest/factoryReset, the framework FactoryResetService
 // will delegate here (if present) instead of only deleting config files.
 // NOTE: Application::instance() is used here because this is an extern "C"

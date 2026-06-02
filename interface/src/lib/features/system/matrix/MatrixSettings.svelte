@@ -9,7 +9,12 @@
 	import IconGridDots from '~icons/tabler/grid-dots';
 	import IconEditorModal from '$lib/components/matrix/IconEditorModal.svelte';
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
-	import { fromMatrixHexColor, getMatrixCustomIcons, toMatrixHexColor } from './matrixModel';
+	import {
+		fromMatrixHexColor,
+		getMatrixCustomIcons,
+		MATRIX_MENU_BUTTON_LOCKED_ENABLED,
+		toMatrixHexColor
+	} from './matrixModel';
 
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -141,8 +146,8 @@
 					</div>
 					<FormToggle
 						label=""
-						bind:checked={store.settings.menu_enabled}
-						disabled={!canManage}
+						checked={MATRIX_MENU_BUTTON_LOCKED_ENABLED}
+						disabled={true}
 						ariaLabel={m.matrix_menu_enabled()}
 						plain={true}
 					/>

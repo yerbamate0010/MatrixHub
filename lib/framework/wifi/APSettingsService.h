@@ -26,16 +26,12 @@
 class DNSServer;
 
 #ifndef FACTORY_AP_SSID
-#define FACTORY_AP_SSID "ESP32-SvelteKit-#{unique_id}"
+#define FACTORY_AP_SSID "matrixhub.local"
 #endif
 
 #ifndef FACTORY_AP_PASSWORD
-// DEV-ONLY SECURITY EXCEPTION:
-// AP mode intentionally keeps a shared default password during
-// development so unprovisioned or recovered boards remain reachable without
-// extra onboarding steps. We are aware this is not production-safe. Routine
-// reviews can skip flagging this until the per-device bootstrap plan is ready.
-#define FACTORY_AP_PASSWORD "esp-sveltekit"
+// Default AP mode is open so factory reset and first-run setup remain reachable.
+#define FACTORY_AP_PASSWORD ""
 #endif
 
 #ifndef FACTORY_AP_LOCAL_IP

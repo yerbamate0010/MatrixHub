@@ -994,7 +994,7 @@
 	"matrix_section_menu": "Menu",
 	"matrix_section_display": "Wyświetlacz",
 	"matrix_menu_enabled": "Menu na przytrzymanie",
-	"matrix_menu_enabled_desc": "Przytrzymaj przycisk przez ~2 s, aby otworzyć menu na matrycy.",
+	"matrix_menu_enabled_desc": "Pozostaje włączone, żeby tryb WiFi dało się odzyskać z menu matrycy.",
 	"matrix_menu_text_color": "Kolor tekstu menu",
 	"matrix_menu_text_color_desc": "Kolor używany do tekstu menu na matrycy.",
 	"matrix_mode_label": "Tryb Wyświetlania Alarmów",

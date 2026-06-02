@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <esp_system.h>
 
-// Application hook used by the ESP32-SvelteKit framework.
+// Application hook used by the embedded web/API framework runtime.
 // When the UI or a settings service requests RestartService::restartNow(),
 // the framework delegates here (if present) instead of using its older,
 // framework-local WiFi teardown path.

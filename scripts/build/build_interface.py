@@ -1,8 +1,7 @@
-#   ESP32 SvelteKit --
+#   MatrixHub Interface Embedder
 #
-#   A simple, secure and extensible framework for IoT projects for ESP32 platforms
-#   with responsive Sveltekit front-end built with TailwindCSS and DaisyUI.
-#   https://github.com/theelims/ESP32-sveltekit
+#   Builds the MatrixHub SvelteKit frontend and embeds the static output for
+#   firmware delivery from PROGMEM.
 #
 #   Copyright (C) 2018 - 2023 rjwats
 #   Copyright (C) 2023 - 2024 theelims

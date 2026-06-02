@@ -39,7 +39,7 @@ Typical first-run flow:
 If you want a quick reference for the authentication screen itself, see
 [Login screen](../appendix/login.md).
 
-For the predictable runtime rules behind Wi-Fi fallback, rescue behavior, and
+For the predictable runtime rules behind Wi-Fi operating modes, reconnects, and
 page availability, see
 [Behavior and availability](../appendix/behavior-and-availability.md).
 

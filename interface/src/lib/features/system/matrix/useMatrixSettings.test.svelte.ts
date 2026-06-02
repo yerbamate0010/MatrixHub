@@ -168,4 +168,36 @@ describe('useMatrixSettings', () => {
 
 		cleanup?.();
 	});
+
+	it('keeps the matrix button menu enabled when saving from the frontend', async () => {
+		const { useMatrixSettings } = await import('./useMatrixSettings.svelte');
+		const api = {
+			getSettings: vi.fn().mockResolvedValue(createMatrixSettings({ menu_enabled: false })),
+			updateSettings: vi.fn().mockResolvedValue(createMatrixSettings({ menu_enabled: true }))
+		};
+
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const matrix = useMatrixSettings(() => api as never);
+
+				void matrix.loadSettings().then(async () => {
+					matrix.updateSetting('brightness', 88);
+					matrix.saveSettings();
+					await flushPromises();
+
+					expect(api.updateSettings).toHaveBeenCalledWith(
+						expect.objectContaining({
+							brightness: 88,
+							menu_enabled: true
+						})
+					);
+					resolve();
+				});
+			});
+		});
+
+		cleanup?.();
+	});
 });

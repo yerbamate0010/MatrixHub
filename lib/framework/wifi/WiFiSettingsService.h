@@ -41,7 +41,7 @@
 #endif
 
 #ifndef FACTORY_WIFI_HOSTNAME
-#define FACTORY_WIFI_HOSTNAME "#{platform}-#{unique_id}"
+#define FACTORY_WIFI_HOSTNAME "matrixhub"
 #endif
 
 #define WIFI_SETTINGS_FILE "/config/wifiSettings.json"

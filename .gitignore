@@ -84,4 +84,4 @@ s3_rgb_vendor/
 # Vendors (submodules or external tools)
 vendors/analysis_espectre/
 
-vendor/ESP32-sveltekit_private/
+vendor/matrixhub_private/

@@ -1,6 +1,6 @@
-# ESP32-SvelteKit Frontend
+# MatrixHub Frontend
 
-This directory contains the SvelteKit frontend for the ESP32-SvelteKit dashboard application.
+This directory contains the SvelteKit frontend for the MatrixHub dashboard application.
 
 ## Overview
 

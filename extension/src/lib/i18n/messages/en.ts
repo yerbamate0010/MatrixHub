@@ -3,7 +3,7 @@ import { plural } from "../types";
 export const enMessages = {
   app: {
     brand: "MatrixHub",
-    title: "MatrixHub Companion",
+    title: "MatrixHub",
     settingsHeading: "Settings",
     chartsHeading: "Charts",
     addDeviceSheet: {

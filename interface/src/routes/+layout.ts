@@ -7,8 +7,8 @@ export const ssr = false;
 export const load = (async () => {
 	return {
 		title: 'MatrixHub',
-		github: 'theelims/ESP32-sveltekit',
-		copyright: '2025 theelims',
+		github: 'MichalMatu/MatrixHub',
+		copyright: '2025 MatrixHub',
 		appName: 'MatrixHub'
 	};
 }) satisfies LayoutLoad;

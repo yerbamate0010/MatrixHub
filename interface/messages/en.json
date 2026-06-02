@@ -994,7 +994,7 @@
 	"matrix_section_menu": "Menu",
 	"matrix_section_display": "Display",
 	"matrix_menu_enabled": "Button Menu",
-	"matrix_menu_enabled_desc": "Hold the button for ~2 s to open the menu on the matrix.",
+	"matrix_menu_enabled_desc": "Kept enabled so WiFi mode can be recovered from the matrix menu.",
 	"matrix_menu_text_color": "Menu Text Color",
 	"matrix_menu_text_color_desc": "Color used for menu text on the matrix.",
 	"matrix_mode_label": "Alarm Display Mode",

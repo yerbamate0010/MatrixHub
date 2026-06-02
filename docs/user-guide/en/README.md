@@ -56,7 +56,7 @@ descriptions.
 - Flow guides are task-oriented and meant to answer "how do I do this?"
 - Reference sections are screen-oriented and meant to answer "what is on this page?"
 - The support appendix captures predictable runtime rules such as Wi-Fi
-  fallback and page availability
+  operating modes, reconnects, and page availability
 - Some advanced flows, such as a full `@BotFather` walkthrough for Telegram, can be expanded later without changing this structure.
 
 ## Video Demos

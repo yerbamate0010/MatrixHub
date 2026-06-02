@@ -3,7 +3,7 @@ import { createSettingsFeedback } from '$lib/utils/api/settingsFeedback';
 import { useSettings } from '$lib/utils/api/useSettings.svelte';
 import { i18n } from '$lib/i18n.svelte';
 import * as m from '$lib/paraglide/messages.js';
-import { DEFAULT_MATRIX_SETTINGS } from './matrixModel';
+import { DEFAULT_MATRIX_SETTINGS, MATRIX_MENU_BUTTON_LOCKED_ENABLED } from './matrixModel';
 
 type MatrixErrors = Record<string, never>;
 
@@ -29,7 +29,10 @@ export function useMatrixSettings(
 				return await apiFactory().getSettings();
 			},
 			save: async (settings) => {
-				return await apiFactory().updateSettings(settings);
+				return await apiFactory().updateSettings({
+					...settings,
+					menu_enabled: MATRIX_MENU_BUTTON_LOCKED_ENABLED
+				});
 			},
 			feedback
 		}

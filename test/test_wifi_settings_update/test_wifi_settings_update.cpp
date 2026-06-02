@@ -79,6 +79,22 @@ void test_update_rejects_sta_without_valid_networks() {
     TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::ERROR), static_cast<int>(result));
 }
 
+void test_update_uses_matrixhub_when_hostname_is_missing() {
+    WiFiSettings settings;
+
+    JsonDocument doc;
+    JsonObject root = doc.to<JsonObject>();
+    root["mode"] = "ap";
+    root["wifi_networks"].to<JsonArray>();
+
+    const StateUpdateResult result = WiFiSettings::update(root, settings, "fs");
+
+    TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::CHANGED), static_cast<int>(result));
+    TEST_ASSERT_EQUAL_STRING("matrixhub", settings.hostname.c_str());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(WiFiOperatingMode::AccessPoint),
+                            static_cast<uint8_t>(settings.mode));
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -87,5 +103,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_update_accepts_32_byte_ssid_and_preserves_static_ip_config);
     RUN_TEST(test_update_rejects_33_byte_ssid);
     RUN_TEST(test_update_rejects_sta_without_valid_networks);
+    RUN_TEST(test_update_uses_matrixhub_when_hostname_is_missing);
     return UNITY_END();
 }

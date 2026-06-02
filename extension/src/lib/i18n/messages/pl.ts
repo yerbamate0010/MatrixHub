@@ -7,7 +7,7 @@ type MessageCatalog = MessageCatalogShape<typeof enMessages>;
 export const plMessages = {
   app: {
     brand: "MatrixHub",
-    title: "MatrixHub Companion",
+    title: "MatrixHub",
     settingsHeading: "Ustawienia",
     chartsHeading: "Wykresy",
     addDeviceSheet: {

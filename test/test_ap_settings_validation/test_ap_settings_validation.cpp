@@ -30,7 +30,7 @@ void test_update_sanitizes_invalid_persisted_fields_to_factory_defaults() {
 
     JsonDocument doc;
     JsonObject root = doc.to<JsonObject>();
-    root["ssid"] = "Valid AP";
+    root["ssid"] = "ap";
     root["password"] = "short";
     root["channel"] = 0;
     root["max_clients"] = 99;
@@ -42,7 +42,7 @@ void test_update_sanitizes_invalid_persisted_fields_to_factory_defaults() {
         APSettings::update(root, settings, "/config/apSettings.json");
 
     TEST_ASSERT_EQUAL(static_cast<int>(StateUpdateResult::CHANGED), static_cast<int>(result));
-    TEST_ASSERT_EQUAL_STRING("Valid AP", settings.ssid.c_str());
+    TEST_ASSERT_EQUAL_STRING("matrixhub.local", settings.ssid.c_str());
     TEST_ASSERT_EQUAL_STRING(FACTORY_AP_PASSWORD, settings.password.c_str());
     TEST_ASSERT_EQUAL(FACTORY_AP_CHANNEL, settings.channel);
     TEST_ASSERT_EQUAL(FACTORY_AP_MAX_CLIENTS, settings.maxClients);

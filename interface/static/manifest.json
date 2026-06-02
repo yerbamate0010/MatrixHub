@@ -1,5 +1,6 @@
 {
-	"name": "ESP32 SvelteKit",
+	"name": "MatrixHub",
+	"short_name": "MatrixHub",
 	"icons": [
 		{
 			"src": "/favicon.png",

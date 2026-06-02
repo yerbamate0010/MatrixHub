@@ -18,6 +18,8 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	menu_scroll_speed: 20
 };
 
+export const MATRIX_MENU_BUTTON_LOCKED_ENABLED = true;
+
 // Keep this aligned with the backend validator in MatrixConfigJson.cpp.
 export const MATRIX_EFFECT_SPEED_MIN = 50;
 export const MATRIX_EFFECT_SPEED_MAX = 24 * 60 * 60 * 1000;
