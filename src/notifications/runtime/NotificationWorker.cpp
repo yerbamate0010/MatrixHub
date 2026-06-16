@@ -368,6 +368,7 @@ void NotificationWorker::taskLoop(void* param) {
     if (!self) return;
     
     LOGI("Loop started on core %d", xPortGetCoreID());
+    LOG_STACK_BUDGET(CONFIG::TASKS::STACK_BUDGET_NOTIFICATION_WORKER);
 
     auto& watchdog = SYSTEM::TaskWatchdog::instance();
     // Historical context:
@@ -417,7 +418,7 @@ void NotificationWorker::taskLoop(void* param) {
         }
 
         // Stack Monitoring
-        LOG_STACK_PERIODIC(kStackBytes);
+        LOG_STACK_BUDGET_PERIODIC(CONFIG::TASKS::STACK_BUDGET_NOTIFICATION_WORKER);
 
         self->sleepAfterCycle(didWork);
     }

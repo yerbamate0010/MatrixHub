@@ -36,6 +36,7 @@ public:
 
     // Helpers for consistent formatting
     static void logStackHwm(const char* taskName, uint32_t stackSize);
+    static void logStackHwm(const char* taskName, uint32_t stackSize, uint32_t minFreeBytes);
     static void logSection(const char* title);
 
     // Noise suppression — called from begin(), centralizes all esp_log_level_set overrides
@@ -122,6 +123,9 @@ private:
 // One-shot: log stack HWM now
 #define LOG_STACK() LOG::Logging::logStackHwm(LOG_TAG, 0)
 #define LOG_STACK_SIZE(size) LOG::Logging::logStackHwm(LOG_TAG, size)
+#define LOG_STACK_SIZE_MIN(size, minFreeBytes) LOG::Logging::logStackHwm(LOG_TAG, size, minFreeBytes)
+#define LOG_STACK_BUDGET(budget) \
+    LOG::Logging::logStackHwm(LOG_TAG, (budget).stackBytes, (budget).minFreeBytes)
 
 // To prevent all periodic logs firing at the exact same millisecond and causing a cascading delay,
 // we introduce a pseudo-random jitter (0-2000ms offset) initialized once per call site.
@@ -139,9 +143,21 @@ private:
         }                                                     \
     } while (0)
 
+#define LOG_STACK_BUDGET_PERIODIC_MS(budget, intervalMs)     \
+    do {                                                     \
+        static uint32_t _lastStackBudgetLog_ = _LOG_JITTER_OFFSET();\
+        uint32_t _now_ = (uint32_t)millis();                  \
+        if (_now_ - _lastStackBudgetLog_ >= (intervalMs)) {   \
+            LOG_STACK_BUDGET(budget);                         \
+            _lastStackBudgetLog_ = _now_;                     \
+        }                                                     \
+    } while (0)
+
 // Convenience: periodic with default interval from config
 #define LOG_STACK_PERIODIC(stackSize) \
     LOG_STACK_PERIODIC_MS(stackSize, TASK_MONITOR::STACK_LOG_INTERVAL_MS)
+#define LOG_STACK_BUDGET_PERIODIC(budget) \
+    LOG_STACK_BUDGET_PERIODIC_MS(budget, TASK_MONITOR::STACK_LOG_INTERVAL_MS)
 
 #define LOG_SECTION(title) LOG::Logging::logSection(title)
 

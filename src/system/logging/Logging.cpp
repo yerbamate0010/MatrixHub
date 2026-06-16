@@ -138,11 +138,38 @@ esp_log_level_t Logging::stringToLevel(std::string_view name, esp_log_level_t fa
 }
 
 void Logging::logStackHwm(const char* taskName, uint32_t stackSize) {
+    logStackHwm(taskName, stackSize, 0);
+}
+
+void Logging::logStackHwm(const char* taskName, uint32_t stackSize, uint32_t minFreeBytes) {
     uint32_t freeBytes = (uint32_t)uxTaskGetStackHighWaterMark(NULL);
     if (stackSize > 0) {
-        uint32_t used = stackSize - freeBytes;
-        LOGD("[STACK] %s: %u/%u bytes used (%u%%)", 
-             taskName, used, stackSize, (used * 100) / stackSize);
+        const uint32_t used = (freeBytes >= stackSize) ? 0 : (stackSize - freeBytes);
+        const uint32_t usedPct = (stackSize > 0) ? ((used * 100) / stackSize) : 0;
+
+        if (minFreeBytes > 0 && freeBytes < minFreeBytes) {
+            LOGW("[STACK] %s: %u/%u bytes used (%u%%), free=%u below min=%u",
+                 taskName,
+                 used,
+                 stackSize,
+                 usedPct,
+                 freeBytes,
+                 minFreeBytes);
+        } else if (minFreeBytes > 0) {
+            LOGD("[STACK] %s: %u/%u bytes used (%u%%), free=%u min=%u",
+                 taskName,
+                 used,
+                 stackSize,
+                 usedPct,
+                 freeBytes,
+                 minFreeBytes);
+        } else {
+            LOGD("[STACK] %s: %u/%u bytes used (%u%%)",
+                 taskName,
+                 used,
+                 stackSize,
+                 usedPct);
+        }
     } else {
         LOGD("[STACK] %s: %u bytes free", taskName, freeBytes);
     }

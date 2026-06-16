@@ -365,6 +365,7 @@ void HeartbeatWorker::finishTaskExit() {
 
 void HeartbeatWorker::taskLoop() {
     LOGI("Loop started on core %d", xPortGetCoreID());
+    LOG_STACK_BUDGET(CONFIG::TASKS::STACK_BUDGET_HEARTBEAT);
 
     auto& watchdog = SYSTEM::TaskWatchdog::instance();
     // Regression chain:
@@ -463,7 +464,7 @@ void HeartbeatWorker::taskLoop() {
             continue;
         }
 
-        LOG_STACK_PERIODIC(CONFIG::TASKS::STACK_HEARTBEAT);
+        LOG_STACK_BUDGET_PERIODIC(CONFIG::TASKS::STACK_BUDGET_HEARTBEAT);
 
         if (!idleSnapshot.hasActiveSlots()) {
             LOGI("Heartbeat config no longer has active slots, stopping worker");

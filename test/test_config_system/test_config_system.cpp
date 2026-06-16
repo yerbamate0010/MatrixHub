@@ -21,6 +21,7 @@ namespace LOG {
     void Logging::log(esp_log_level_t level, const char *tag, const char *fmt, ...) {}
     void Logging::logSection(const char* title) {}
     void Logging::logStackHwm(const char* name, uint32_t period) {}
+    void Logging::logStackHwm(const char* name, uint32_t period, uint32_t minFreeBytes) {}
     
     const char* Logging::levelToString(esp_log_level_t level) { return "info"; }
     esp_log_level_t Logging::stringToLevel(std::string_view levelStr, esp_log_level_t defaultLevel) { return ESP_LOG_DEBUG; }
@@ -109,6 +110,26 @@ void test_config_type_mismatch_safety() {
     TEST_ASSERT_EQUAL(5000, udp.intervalMs);
 }
 
+void test_task_stack_budgets_track_feature_stack_sizes() {
+    TEST_ASSERT_EQUAL_UINT32(
+        CONFIG::TASKS::STACK_SENSOR_LOGGING,
+        CONFIG::TASKS::STACK_BUDGET_SENSOR_LOGGING.stackBytes);
+    TEST_ASSERT_EQUAL_UINT32(
+        CONFIG::TASKS::STACK_NOTIFICATION_WORKER,
+        CONFIG::TASKS::STACK_BUDGET_NOTIFICATION_WORKER.stackBytes);
+    TEST_ASSERT_EQUAL_UINT32(
+        CONFIG::TASKS::STACK_HEARTBEAT,
+        CONFIG::TASKS::STACK_BUDGET_HEARTBEAT.stackBytes);
+    TEST_ASSERT_EQUAL_UINT32(
+        CONFIG::TASKS::STACK_WIFI_SENSING_CSI,
+        CONFIG::TASKS::STACK_BUDGET_WIFI_SENSING_CSI.stackBytes);
+
+    TEST_ASSERT_GREATER_THAN_UINT32(0, CONFIG::TASKS::STACK_BUDGET_SENSOR_LOGGING.minFreeBytes);
+    TEST_ASSERT_GREATER_THAN_UINT32(0, CONFIG::TASKS::STACK_BUDGET_NOTIFICATION_WORKER.minFreeBytes);
+    TEST_ASSERT_GREATER_THAN_UINT32(0, CONFIG::TASKS::STACK_BUDGET_HEARTBEAT.minFreeBytes);
+    TEST_ASSERT_GREATER_THAN_UINT32(0, CONFIG::TASKS::STACK_BUDGET_WIFI_SENSING_CSI.minFreeBytes);
+}
+
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
@@ -116,6 +137,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_config_empty_object_partial_update);
     RUN_TEST(test_config_corrupted_json_bootloop_safety);
     RUN_TEST(test_config_type_mismatch_safety);
+    RUN_TEST(test_task_stack_budgets_track_feature_stack_sizes);
     return UNITY_END();
 }
 

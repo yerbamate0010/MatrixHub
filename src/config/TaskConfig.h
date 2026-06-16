@@ -116,6 +116,11 @@ namespace TIMEOUT {
 
 namespace CONFIG {
 namespace TASKS {
+    struct StackBudget {
+        uint32_t stackBytes;
+        uint32_t minFreeBytes;
+    };
+
     // Stack sizes (bytes). ESP-IDF Xtensa uses StackType_t = uint8_t,
     // so stack depth arguments/arrays are byte-based (no word conversion).
     constexpr uint32_t STACK_TINY       = 2048;
@@ -192,6 +197,29 @@ namespace TASKS {
     // priorities inside NotificationTestJobScheduler.
     constexpr UBaseType_t PRIO_NOTIFICATION_TEST = 2;
     constexpr BaseType_t CORE_NOTIFICATION_TEST = CORE_NOTIFICATION;
+
+    // Stack HWM budgets are warning floors, not resize targets. Keep the stack
+    // sizes above unchanged until target-device logs show sustained headroom
+    // under the specific feature load.
+    constexpr uint32_t STACK_MIN_FREE_BACKGROUND = 1536;
+    constexpr uint32_t STACK_MIN_FREE_TLS        = 2048;
+    constexpr uint32_t STACK_MIN_FREE_SENSOR_FS  = 2048;
+    constexpr StackBudget STACK_BUDGET_SENSOR_LOGGING{
+        STACK_SENSOR_LOGGING,
+        STACK_MIN_FREE_SENSOR_FS
+    };
+    constexpr StackBudget STACK_BUDGET_NOTIFICATION_WORKER{
+        STACK_NOTIFICATION_WORKER,
+        STACK_MIN_FREE_TLS
+    };
+    constexpr StackBudget STACK_BUDGET_HEARTBEAT{
+        STACK_HEARTBEAT,
+        STACK_MIN_FREE_TLS
+    };
+    constexpr StackBudget STACK_BUDGET_WIFI_SENSING_CSI{
+        STACK_WIFI_SENSING_CSI,
+        STACK_MIN_FREE_BACKGROUND
+    };
 
     // WebSocket broadcast (HTTP/WS streaming)
     // Level 4: Stable I/O & streaming (CORE_PRO)

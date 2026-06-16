@@ -116,7 +116,7 @@ void SensorTaskLoop::run() {
     LOGI("Loop started (continuous polling mode, stack=%u)", SENSOR::STACK_SIZE);
     
     // Initial stack measurement
-    LOG_STACK_SIZE(SENSOR::STACK_SIZE);
+    LOG_STACK_BUDGET(CONFIG::TASKS::STACK_BUDGET_SENSOR_LOGGING);
     
     // Register with Task Watchdog early so the stabilization phase is monitored
     SYSTEM::TaskWatchdog::instance().registerCurrentTask();
@@ -407,7 +407,7 @@ void SensorTaskLoop::run() {
         }
 
         // Stack monitoring
-        LOG_STACK_PERIODIC(CONFIG::TASKS::STACK_SENSOR_LOGGING);
+        LOG_STACK_BUDGET_PERIODIC(CONFIG::TASKS::STACK_BUDGET_SENSOR_LOGGING);
         
         // Feed the watchdog - signals task is still responsive
         SYSTEM::TaskWatchdog::instance().reset();

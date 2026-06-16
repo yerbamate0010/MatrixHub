@@ -186,6 +186,7 @@ void CsiService::processingTask(void* param) {
 
     size_t batchCount = 0;
     self->_shouldExit.store(false, std::memory_order_release);
+    LOG_STACK_BUDGET(CONFIG::TASKS::STACK_BUDGET_WIFI_SENSING_CSI);
 
     // Adaptive ping state
     uint32_t nextInterval = SENSOR::WIFI_SENSING::CSI_PING_INTERVAL_MS;
@@ -248,7 +249,7 @@ void CsiService::processingTask(void* param) {
             batchCount = 0;
         }
 
-        LOG_STACK_PERIODIC(CONFIG::TASKS::STACK_WIFI_SENSING_CSI);
+        LOG_STACK_BUDGET_PERIODIC(CONFIG::TASKS::STACK_BUDGET_WIFI_SENSING_CSI);
     }
 
     LOGI("Processing Task Exiting (Clean)");
