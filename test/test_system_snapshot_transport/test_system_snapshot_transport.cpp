@@ -109,6 +109,9 @@ void WebSocketBroadcaster::broadcast(int* fds, size_t count, uint8_t* data, size
 bool WebSocketBroadcaster::broadcastSerialized(size_t reserveLen, PayloadWriter writer, httpd_ws_type_t type) {
     std::vector<uint8_t> buffer(reserveLen);
     const size_t written = writer(buffer.data(), buffer.size());
+    if (written == 0 || written > reserveLen) {
+        return false;
+    }
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen = reserveLen;
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastFd = -1;
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastType = type;
@@ -120,6 +123,9 @@ bool WebSocketBroadcaster::broadcastSerialized(int* fds, size_t count, size_t re
     TEST_ASSERT_EQUAL(1, static_cast<int>(count));
     std::vector<uint8_t> buffer(reserveLen);
     const size_t written = writer(buffer.data(), buffer.size());
+    if (written == 0 || written > reserveLen) {
+        return false;
+    }
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen = reserveLen;
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastFd = fds ? fds[0] : -1;
     TEST_STUBS::SNAPSHOT_TRANSPORT::lastType = type;
@@ -178,7 +184,7 @@ void test_send_snapshot_doc_serializes_directly_into_reserved_payload() {
     TEST_ASSERT_EQUAL(7, TEST_STUBS::SNAPSHOT_TRANSPORT::lastFd);
     TEST_ASSERT_EQUAL(HTTPD_WS_TYPE_TEXT, TEST_STUBS::SNAPSHOT_TRANSPORT::lastType);
     TEST_ASSERT_FALSE(TEST_STUBS::SNAPSHOT_TRANSPORT::lastPayload.empty());
-    TEST_ASSERT_EQUAL(measureJson(doc), TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen);
+    TEST_ASSERT_EQUAL(doc.requestedCapacityLimit(), TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen);
 
     std::string payload(
         reinterpret_cast<const char*>(TEST_STUBS::SNAPSHOT_TRANSPORT::lastPayload.data()),
@@ -197,7 +203,20 @@ void test_send_snapshot_doc_supports_large_payloads_without_scratch_pool() {
     TEST_ASSERT_TRUE(API::SYSTEM_WS::sendSnapshotDoc(&ws, 9, doc));
     TEST_ASSERT_EQUAL(9, TEST_STUBS::SNAPSHOT_TRANSPORT::lastFd);
     TEST_ASSERT_FALSE(TEST_STUBS::SNAPSHOT_TRANSPORT::lastPayload.empty());
-    TEST_ASSERT_EQUAL(measureJson(doc), TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen);
+    TEST_ASSERT_EQUAL(doc.requestedCapacityLimit(), TEST_STUBS::SNAPSHOT_TRANSPORT::lastReserveLen);
+}
+
+void test_send_snapshot_doc_drops_payloads_that_exceed_reserve() {
+    API::WebSocketBroadcaster ws("test");
+
+    SYSTEM::SpiRamJsonDocument doc(64);
+    doc["type"] = "snapshot";
+    doc["channel"] = "telemetry";
+    doc["data"]["message"] =
+        "this message is intentionally longer than the requested websocket reserve";
+
+    TEST_ASSERT_FALSE(API::SYSTEM_WS::sendSnapshotDoc(&ws, 11, doc));
+    TEST_ASSERT_TRUE(TEST_STUBS::SNAPSHOT_TRANSPORT::lastPayload.empty());
 }
 
 int main(int argc, char** argv) {
@@ -207,5 +226,6 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_send_snapshot_doc_serializes_directly_into_reserved_payload);
     RUN_TEST(test_send_snapshot_doc_supports_large_payloads_without_scratch_pool);
+    RUN_TEST(test_send_snapshot_doc_drops_payloads_that_exceed_reserve);
     return UNITY_END();
 }

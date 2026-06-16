@@ -51,6 +51,27 @@ bool isSetIp(const IPAddress& ip) {
     return static_cast<uint32_t>(ip) != 0;
 }
 
+bool formatIpAddress(const IPAddress& ip, char* out, size_t outSize) {
+    if (!out || outSize == 0 || !isSetIp(ip)) {
+        return false;
+    }
+
+    return snprintf(out,
+                    outSize,
+                    "%u.%u.%u.%u",
+                    static_cast<unsigned>(ip[0]),
+                    static_cast<unsigned>(ip[1]),
+                    static_cast<unsigned>(ip[2]),
+                    static_cast<unsigned>(ip[3])) > 0;
+}
+
+void setIpField(JsonObject obj, const char* key, const IPAddress& ip) {
+    char ipBuf[16];
+    if (formatIpAddress(ip, ipBuf, sizeof(ipBuf))) {
+        obj[key] = ipBuf;
+    }
+}
+
 void formatMacAddress(const uint8_t* mac, char* out, size_t outSize) {
     if (!mac || !out || outSize == 0) {
         return;
@@ -272,25 +293,10 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
             wifi["bssid"] = bssidBuf;
         }
 
-        IPAddress ip = WiFi.localIP();
-        if (isSetIp(ip)) {
-            wifi["ip"] = ip.toString();
-        }
-
-        const IPAddress gateway = WiFi.gatewayIP();
-        if (isSetIp(gateway)) {
-            wifi["gateway"] = gateway.toString();
-        }
-
-        const IPAddress subnet = WiFi.subnetMask();
-        if (isSetIp(subnet)) {
-            wifi["subnet"] = subnet.toString();
-        }
-
-        const IPAddress dns = WiFi.dnsIP(0);
-        if (isSetIp(dns)) {
-            wifi["dns"] = dns.toString();
-        }
+        setIpField(wifi, "ip", WiFi.localIP());
+        setIpField(wifi, "gateway", WiFi.gatewayIP());
+        setIpField(wifi, "subnet", WiFi.subnetMask());
+        setIpField(wifi, "dns", WiFi.dnsIP(0));
 
         wifi["channel"] = static_cast<int>(WiFi.channel());
     }
@@ -309,9 +315,7 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
         wifi["lastIpChangeMs"] = connectivity.lastIpChangeMs;
         wifi["disconnectedSinceMs"] = connectivity.disconnectedSinceMs;
         wifi["stableConnectedSinceMs"] = connectivity.stableConnectedSinceMs;
-        if (isSetIp(connectivity.savedStaticIp)) {
-            wifi["savedStaticIp"] = connectivity.savedStaticIp.toString();
-        }
+        setIpField(wifi, "savedStaticIp", connectivity.savedStaticIp);
 
         JsonObject ap = diag["ap"].to<JsonObject>();
         ap["active"] = connectivity.apActive;
@@ -322,9 +326,7 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
             formatMacAddress(apMacAddr, apMacBuf, sizeof(apMacBuf));
             ap["mac"] = apMacBuf;
         }
-        if (isSetIp(connectivity.apIp)) {
-            ap["ip"] = connectivity.apIp.toString();
-        }
+        setIpField(ap, "ip", connectivity.apIp);
 
         JsonObject forwarding = diag["forwarding"].to<JsonObject>();
         forwarding["ready"] = connectivity.portForwardingReady;
