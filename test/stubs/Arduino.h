@@ -9,7 +9,6 @@
 #include "esp_system.h"
 #include "esp_attr.h"
 #define PROGMEM
-#define heap_caps_realloc(ptr, size, caps) realloc(ptr, size)
 #ifndef configASSERT
 #define configASSERT(x) do { if(!(x)) {} } while(0)
 #endif

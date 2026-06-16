@@ -147,6 +147,9 @@ protected:
 
         SYSTEM::SpiRamJsonDocument doc(docSize);
         DeserializationError err = deserializeJson(doc, request->body());
+        if (err == DeserializationError::NoMemory || doc.overflowed()) {
+            return Response::error(request, 413, "input/payload_too_large");
+        }
         if (err) {
             return Response::error(request, 400, "input/invalid_json");
         }

@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define MALLOC_CAP_INTERNAL 0
 #define MALLOC_CAP_8BIT 0
@@ -16,6 +17,7 @@ uint32_t esp_get_minimum_free_heap_size();
 uint32_t esp_get_free_heap_size();
 inline void* heap_caps_malloc(size_t size, uint32_t caps) { return malloc(size); }
 inline void heap_caps_free(void* ptr) { free(ptr); }
+inline void* heap_caps_realloc(void* ptr, size_t size, uint32_t caps) { return realloc(ptr, size); }
 #ifdef __cplusplus
 }
 #endif

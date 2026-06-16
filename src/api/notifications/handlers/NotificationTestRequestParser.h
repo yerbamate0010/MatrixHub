@@ -35,6 +35,13 @@ inline bool parseJsonBodyWithConfiguredError(PsychicRequest* request,
     }
 
     DeserializationError err = deserializeJson(doc, request->body());
+    if (err == DeserializationError::NoMemory || doc.overflowed()) {
+        Response::error(request,
+                        413,
+                        "input/payload_too_large",
+                        [configured](JsonVariant& root) { root["configured"] = configured; });
+        return false;
+    }
     if (err) {
         PsychicJsonResponse response(request);
         response.setCode(400);
@@ -58,6 +65,10 @@ inline bool parseJsonBodyOrRespond(PsychicRequest* request, TDocument& doc, size
     }
 
     DeserializationError err = deserializeJson(doc, request->body());
+    if (err == DeserializationError::NoMemory || doc.overflowed()) {
+        Response::error(request, 413, "input/payload_too_large");
+        return false;
+    }
     if (err) {
         PsychicJsonResponse response(request);
         response.setCode(400);
