@@ -86,7 +86,6 @@ private:
     void checkLayerTimeouts();
     void advanceNotificationQueue();
     void applyLayerToRenderer(const LayerContent& content);
-    uint32_t computeContentHash(const LayerContent& content) const;
 };
 
 } // namespace MATRIX_MANAGER

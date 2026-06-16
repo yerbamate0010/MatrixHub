@@ -1,56 +1,82 @@
 #include "MatrixLayerManager.h"
-#include "../utils/ScopeLock.h"
+
+#include <cstddef>
 
 namespace MATRIX_MANAGER {
 
+namespace {
+
+uint32_t computeLayerHash(const LayerContent& content) {
+    uint32_t hash = 2166136261u;
+
+    auto mix = [&hash](uint32_t val) {
+        hash ^= val;
+        hash *= 16777619u;
+    };
+
+    mix(static_cast<uint32_t>(content.type));
+    mix(content.color);
+    mix(static_cast<uint32_t>(content.icon));
+    mix(content.effectMode);
+    mix(content.effectSpeed);
+    mix(content.effectColor);
+    mix(content.effectColor2);
+    mix(content.effectColor3);
+
+    for (size_t i = 0; content.text[i] != '\0'; ++i) {
+        mix(static_cast<uint32_t>(content.text[i]));
+    }
+
+    return hash;
+}
+
+} // namespace
+
 MatrixLayerManager::MatrixLayerManager() {
-    _mutex = xSemaphoreCreateMutexStatic(&_mutexBuffer);
     for (uint8_t i = 0; i < LAYER_COUNT; i++) {
         _layers[i].clear();
+        _hashes[i] = 0;
     }
 }
 
 void MatrixLayerManager::setLayer(Layer layer, const LayerContent& content) {
-    SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(50));
-    if (!lock.isLocked()) return;
-
     uint8_t idx = static_cast<uint8_t>(layer);
     if (idx >= LAYER_COUNT) return;
 
     _layers[idx] = content;
     _layers[idx].active = true;
+    _hashes[idx] = computeLayerHash(_layers[idx]);
 }
 
 void MatrixLayerManager::clearLayer(Layer layer) {
-    SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(50));
-    if (!lock.isLocked()) return;
-
     uint8_t idx = static_cast<uint8_t>(layer);
     if (idx >= LAYER_COUNT) return;
 
     _layers[idx].clear();
+    _hashes[idx] = 0;
 }
 
 bool MatrixLayerManager::getTopLayer(LayerContent& out, Layer& outLayer) const {
-    SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(50));
-    if (!lock.isLocked()) return false;
+    uint32_t ignoredHash = 0;
+    return getTopLayer(out, outLayer, ignoredHash);
+}
 
-    // Iterate from highest priority (ALARM=5) down to BACKGROUND=0
+bool MatrixLayerManager::getTopLayer(LayerContent& out, Layer& outLayer, uint32_t& outHash) const {
+    // Iterate from highest priority (MENU=5) down to BACKGROUND=0.
     for (int8_t i = LAYER_COUNT - 1; i >= 0; i--) {
         if (_layers[i].active) {
             out = _layers[i];
             outLayer = static_cast<Layer>(i);
+            outHash = _hashes[i];
             return true;
         }
     }
 
+    outHash = 0;
     return false;
 }
 
 bool MatrixLayerManager::isLayerActive(Layer layer) const {
-    SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(50));
-    if (!lock.isLocked()) return false;
-
     uint8_t idx = static_cast<uint8_t>(layer);
     if (idx >= LAYER_COUNT) return false;
 
@@ -58,16 +84,20 @@ bool MatrixLayerManager::isLayerActive(Layer layer) const {
 }
 
 bool MatrixLayerManager::getLayerContent(Layer layer, LayerContent& out) const {
-    SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(50));
-    if (!lock.isLocked()) return false;
+    uint32_t ignoredHash = 0;
+    return getLayerContent(layer, out, ignoredHash);
+}
 
+bool MatrixLayerManager::getLayerContent(Layer layer, LayerContent& out, uint32_t& outHash) const {
     uint8_t idx = static_cast<uint8_t>(layer);
     if (idx >= LAYER_COUNT) return false;
 
     if (_layers[idx].active) {
         out = _layers[idx];
+        outHash = _hashes[idx];
         return true;
     }
+    outHash = 0;
     return false;
 }
 

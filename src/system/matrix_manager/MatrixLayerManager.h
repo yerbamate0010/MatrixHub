@@ -1,8 +1,6 @@
 #pragma once
 
 #include "MatrixManagerTypes.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
 
 namespace MATRIX_MANAGER {
 
@@ -11,7 +9,9 @@ namespace MATRIX_MANAGER {
  * 
  * Each layer holds a LayerContent. Only the highest-priority active layer
  * is rendered at any time. Priority comes from the Layer enum value itself:
- * MENU is highest, BACKGROUND is lowest. Thread-safe via mutex.
+ * MENU is highest, BACKGROUND is lowest.
+ *
+ * MatrixManagerService owns this object and provides synchronization.
  */
 class MatrixLayerManager {
 public:
@@ -23,21 +23,20 @@ public:
     /// Clear a layer (marks it inactive).
     void clearLayer(Layer layer);
 
-    /// Get the highest-priority active layer. Returns nullptr if all inactive.
-    /// Caller must NOT hold this pointer across frames — copy the content.
+    /// Get the highest-priority active layer. Returns false if all inactive.
     bool getTopLayer(LayerContent& out, Layer& outLayer) const;
+    bool getTopLayer(LayerContent& out, Layer& outLayer, uint32_t& outHash) const;
 
     /// Check if a specific layer is active.
     bool isLayerActive(Layer layer) const;
 
     /// Get a copy of a specific layer's content, return true if active.
     bool getLayerContent(Layer layer, LayerContent& out) const;
+    bool getLayerContent(Layer layer, LayerContent& out, uint32_t& outHash) const;
 
 private:
     LayerContent _layers[LAYER_COUNT];
-
-    mutable SemaphoreHandle_t _mutex = nullptr;
-    StaticSemaphore_t _mutexBuffer;
+    uint32_t _hashes[LAYER_COUNT] = {0};
 };
 
 } // namespace MATRIX_MANAGER

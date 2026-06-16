@@ -100,7 +100,8 @@ void MatrixManagerService::update() {
     // Resolve the top layer first to know who gets the visible time tick
     LayerContent topContent;
     Layer topLayer;
-    bool hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer);
+    uint32_t topHash = 0;
+    bool hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
 
     if (hasActiveLayer) {
         _layerVisibleTimeMs[static_cast<uint8_t>(topLayer)] += deltaMs;
@@ -113,22 +114,21 @@ void MatrixManagerService::update() {
     checkLayerTimeouts();
 
     // The top layer might have changed due to timeouts, so resolve again
-    hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer);
+    hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
 
     if (hasActiveLayer) {
-        // Check if content changed
-        uint32_t hash = computeContentHash(topContent);
+        // Check if content changed. Layer hashes are computed on mutation.
         bool changed = !_wasRendering ||
                        topLayer != _lastRenderedLayer ||
                        topContent.type != _lastRenderedType ||
-                       hash != _lastContentHash;
+                       topHash != _lastContentHash;
 
         if (changed) {
             _lastRenderedContent = topContent;
             applyLayerToRenderer(_lastRenderedContent);
             _lastRenderedLayer = topLayer;
             _lastRenderedType = topContent.type;
-            _lastContentHash = hash;
+            _lastContentHash = topHash;
             _wasRendering = true;
             LOGD("Rendering layer %u (type=%d)", 
                  static_cast<unsigned>(topLayer), static_cast<int>(topContent.type));
@@ -150,6 +150,7 @@ void MatrixManagerService::invalidateCache() {
         return;
     }
     _lastContentHash = 0;
+    _wasRendering = false;
 }
 
 // ─── Internal Helpers ────────────────────────────────────────────
@@ -167,7 +168,8 @@ void MatrixManagerService::checkLayerTimeouts() {
             if (content.durationMs > 0) {
                 if (_layerVisibleTimeMs[i] >= content.durationMs) {
                     LOGD("Layer %u expired (dur=%ums, visible=%ums), auto-clearing", i, content.durationMs, _layerVisibleTimeMs[i]);
-                    clearLayer(layer);
+                    _layerManager.clearLayer(layer);
+                    _layerVisibleTimeMs[i] = 0;
                 }
             }
         }
@@ -235,32 +237,6 @@ void MatrixManagerService::applyLayerToRenderer(const LayerContent& content) {
         default:
             break;
     }
-}
-
-uint32_t MatrixManagerService::computeContentHash(const LayerContent& content) const {
-    // Simple FNV-1a-like hash over key fields for change detection
-    uint32_t hash = 2166136261u;
-    
-    auto mix = [&hash](uint32_t val) {
-        hash ^= val;
-        hash *= 16777619u;
-    };
-
-    mix(static_cast<uint32_t>(content.type));
-    mix(content.color);
-    mix(static_cast<uint32_t>(content.icon));
-    mix(content.effectMode);
-    mix(content.effectSpeed);
-    mix(content.effectColor);
-    mix(content.effectColor2);
-    mix(content.effectColor3);
-
-    // Hash full text content for reliable change detection
-    for (size_t i = 0; content.text[i] != '\0'; i++) {
-        mix(static_cast<uint32_t>(content.text[i]));
-    }
-
-    return hash;
 }
 
 } // namespace MATRIX_MANAGER
