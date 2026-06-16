@@ -108,7 +108,6 @@ private:
     mutable SemaphoreHandle_t _callbackMutex = nullptr;
     std::atomic<uint32_t> _runtimeStateVersion{0};
     std::atomic<uint32_t> _flushedRuntimeStateVersion{0};
-    std::atomic<uint32_t> _lastRuntimeStateFlushMs{0};
 
     // Cache Helpers
     int findOrAllocateSensorIndex(const char* mac);

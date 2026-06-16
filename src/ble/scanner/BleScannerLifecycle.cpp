@@ -79,7 +79,6 @@ void BleScanner::syncStateFromRtc() {
     _state = snapshot;
     _runtimeStateVersion.store(0, std::memory_order_relaxed);
     _flushedRuntimeStateVersion.store(0, std::memory_order_relaxed);
-    _lastRuntimeStateFlushMs.store(0, std::memory_order_relaxed);
     sanitizeLocked();
 
     if (_mutex) {
@@ -91,13 +90,6 @@ void BleScanner::flushRuntimeStateIfDirty() {
     const uint32_t currentVersion = _runtimeStateVersion.load(std::memory_order_acquire);
     const uint32_t flushedVersion = _flushedRuntimeStateVersion.load(std::memory_order_acquire);
     if (currentVersion == flushedVersion) {
-        return;
-    }
-
-    const uint32_t now = millis();
-    const uint32_t lastFlushMs = _lastRuntimeStateFlushMs.load(std::memory_order_relaxed);
-    if (lastFlushMs != 0 &&
-        (now - lastFlushMs) < BLE::kRuntimeCacheFlushIntervalMs) {
         return;
     }
 
@@ -130,7 +122,6 @@ void BleScanner::flushRuntimeStateIfDirty() {
         return;
     }
 
-    _lastRuntimeStateFlushMs.store(now, std::memory_order_relaxed);
     _flushedRuntimeStateVersion.store(capturedVersion, std::memory_order_release);
 }
 

@@ -143,7 +143,6 @@ void BleService::loop() {
 
     if (_pScanner) {
         _status.setScannerActive(_pScanner->isScanning());
-        _pScanner->flushRuntimeStateIfDirty();
     }
 }
 

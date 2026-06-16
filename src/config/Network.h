@@ -96,7 +96,6 @@ namespace BLE {
     // NimBLE Stack
     constexpr const char* kDeviceName = "MatrixHub";
     // Scanner-only runtime still initializes NimBLE with a stable device name.
-    constexpr uint32_t kRuntimeCacheFlushIntervalMs = 500;
     
     // Power
     constexpr int kTransmitPowerLevel = ESP_PWR_LVL_P9; // +9dBm
