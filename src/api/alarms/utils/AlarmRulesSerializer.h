@@ -6,7 +6,6 @@
 namespace API {
 
 struct RuleStatus {
-    char id[ALARMS::kMaxIdLen] = {0};
     bool triggered = false;
     uint32_t lastTriggered = 0;
     float currentValue = NAN;
@@ -21,8 +20,7 @@ public:
      * @param w JSON writer
      * @param rules Array of rules
      * @param count Number of rules
-     * @param statuses Optional status array (can be null)
-     * @param statusCount Number of statuses
+     * @param statuses Optional parallel status array indexed like rules (can be null)
      * @param includeStatus Whether to include runtime status fields
      * @return true on success
      */
@@ -30,7 +28,6 @@ public:
                          const ALARMS::AlarmRule* rules, 
                          uint8_t count,
                          const RuleStatus* statuses,
-                         uint8_t statusCount,
                          bool includeStatus);
 };
 

@@ -10,12 +10,12 @@
 #include "../../../../system/memory/PsramAllocator.h"
 #include "../../../../system/utils/ScopeLock.h"
 #include "../../../../wifisensing/WifiSensingService.h"
+#include "../../../alarms/utils/AlarmRulesSerializer.h"
 
 #include <ArduinoJson.h>
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <vector>
 
 namespace API::SYSTEM_WS {
@@ -42,17 +42,9 @@ void sendAlarmsSnapshot(const SnapshotContext& ctx) {
         statesCopy.assign(states, states + count);
     }
 
-    struct AlarmRuleStatus {
-        char id[ALARMS::kMaxIdLen] = {0};
-        bool triggered = false;
-        uint32_t lastTriggered = 0;
-        float currentValue = NAN;
-        bool valid = false;
-    };
-
-    std::vector<AlarmRuleStatus, SYSTEM::PsramAllocator<AlarmRuleStatus>> statuses;
+    std::vector<API::RuleStatus, SYSTEM::PsramAllocator<API::RuleStatus>> statuses;
     if (!statesCopy.empty()) {
-        statuses.reserve(statesCopy.size());
+        statuses.resize(rulesCopy.size());
         SensorSnapshot snap = SENSORS::SensorState::getSnapshot();
         auto wifiStats = ctx.wifiSensing ? ctx.wifiSensing->getStats() : WIFISENSING::RssiStats{};
 
@@ -63,13 +55,13 @@ void sendAlarmsSnapshot(const SnapshotContext& ctx) {
         inputData.wifiVariance = wifiStats.variance;
 
         const uint32_t nowMs = millis();
-        for (size_t i = 0; i < statesCopy.size(); i++) {
+        const size_t statusLimit = std::min(rulesCopy.size(), statesCopy.size());
+        for (size_t i = 0; i < statusLimit; i++) {
             if (!rulesCopy[i].isValid()) {
                 continue;
             }
 
-            AlarmRuleStatus item;
-            strlcpy(item.id, rulesCopy[i].id, sizeof(item.id));
+            API::RuleStatus& item = statuses[i];
             item.triggered = statesCopy[i].previouslyTriggered;
             item.lastTriggered = statesCopy[i].lastTriggeredMs;
             if (rulesCopy[i].isBleSource()) {
@@ -80,7 +72,6 @@ void sendAlarmsSnapshot(const SnapshotContext& ctx) {
                     ALARMS::AlarmEvaluator::getSensorValue(inputData, rulesCopy[i].source);
             }
             item.valid = true;
-            statuses.push_back(item);
         }
     }
 
@@ -114,23 +105,12 @@ void sendAlarmsSnapshot(const SnapshotContext& ctx) {
         }
 
         if (!statuses.empty()) {
-            bool found = false;
-            bool triggered = false;
-            uint32_t lastTriggered = 0;
-            float currentValue = NAN;
-            for (size_t s = 0; s < statuses.size(); s++) {
-                if (statuses[s].valid && strcmp(statuses[s].id, rule.id) == 0) {
-                    triggered = statuses[s].triggered;
-                    lastTriggered = statuses[s].lastTriggered;
-                    currentValue = statuses[s].currentValue;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                triggered = false;
-                lastTriggered = 0;
-            }
+            const API::RuleStatus& status = statuses[i];
+            const bool hasStatus = status.valid;
+            const bool triggered = hasStatus ? status.triggered : false;
+            const uint32_t lastTriggered = hasStatus ? status.lastTriggered : 0;
+            const float currentValue = hasStatus ? status.currentValue : NAN;
+
             obj["triggered"] = triggered;
             obj["last_triggered"] = static_cast<unsigned long>(lastTriggered);
             if (!std::isnan(currentValue)) {

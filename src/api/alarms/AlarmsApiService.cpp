@@ -121,7 +121,7 @@ esp_err_t AlarmsApiService::handleGetRules(PsychicRequest* request) {
     std::vector<RuleStatus, SYSTEM::PsramAllocator<RuleStatus>> statuses;
 
     if (includeStatus && !statesCopy.empty()) {
-        statuses.reserve(statesCopy.size());
+        statuses.resize(rulesCopy.size());
 
         SensorSnapshot snap = SENSORS::SensorState::getSnapshot();
         auto wifiStats = _wifiSensing ? _wifiSensing->getStats() : WIFISENSING::RssiStats{};
@@ -133,11 +133,11 @@ esp_err_t AlarmsApiService::handleGetRules(PsychicRequest* request) {
         inputData.wifiVariance = wifiStats.variance;
 
         const uint32_t nowMs = millis();
-        for (size_t i = 0; i < statesCopy.size(); i++) {
+        const size_t statusLimit = std::min(rulesCopy.size(), statesCopy.size());
+        for (size_t i = 0; i < statusLimit; i++) {
             if (!rulesCopy[i].isValid()) continue;
             
-            RuleStatus item;
-            strlcpy(item.id, rulesCopy[i].id, sizeof(item.id));
+            RuleStatus& item = statuses[i];
             item.triggered = statesCopy[i].previouslyTriggered;
             item.lastTriggered = statesCopy[i].lastTriggeredMs;
             if (rulesCopy[i].isBleSource()) {
@@ -151,7 +151,6 @@ esp_err_t AlarmsApiService::handleGetRules(PsychicRequest* request) {
                 item.currentValue = ALARMS::AlarmEvaluator::getSensorValue(inputData, rulesCopy[i].source);
             }
             item.valid = true;
-            statuses.push_back(item);
         }
     }
 
@@ -167,7 +166,6 @@ esp_err_t AlarmsApiService::handleGetRules(PsychicRequest* request) {
         rulesCopy.data(), 
         static_cast<uint8_t>(rulesCopy.size()), 
         statuses.empty() ? nullptr : statuses.data(), 
-        static_cast<uint8_t>(statuses.size()), 
         includeStatus
     );
     if (ok) {

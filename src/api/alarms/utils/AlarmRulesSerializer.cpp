@@ -15,7 +15,6 @@ bool AlarmRulesSerializer::serialize(Utils::JsonResponseWriter& w,
                                     const ALARMS::AlarmRule* rules, 
                                     uint8_t count,
                                     const RuleStatus* statuses,
-                                    uint8_t statusCount,
                                     bool includeStatus) {
     if (!rules && count > 0) return false;
 
@@ -52,25 +51,13 @@ bool AlarmRulesSerializer::serialize(Utils::JsonResponseWriter& w,
             if (!w.raw(",") || !w.key("ble_device_mac") || !w.string(rule.bleDeviceMac)) return false;
         }
 
-        if (includeStatus && statuses) {
-            bool found = false;
-            bool triggered = false;
-            uint32_t lastTriggered = 0;
-            float currentValue = NAN;
+        if (includeStatus) {
+            const RuleStatus* status = statuses ? &statuses[i] : nullptr;
+            const bool hasStatus = status && status->valid;
+            const bool triggered = hasStatus ? status->triggered : false;
+            const uint32_t lastTriggered = hasStatus ? status->lastTriggered : 0;
+            const float currentValue = hasStatus ? status->currentValue : NAN;
 
-            for (uint8_t s = 0; s < statusCount; s++) {
-                if (statuses[s].valid && strcmp(statuses[s].id, rule.id) == 0) {
-                    triggered = statuses[s].triggered;
-                    lastTriggered = statuses[s].lastTriggered;
-                    currentValue = statuses[s].currentValue;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                triggered = false;
-                lastTriggered = 0;
-            }
             if (!w.raw(",") || !w.key("triggered") || !w.value(triggered)) return false;
             if (!w.raw(",") || !w.key("last_triggered") || !w.value((unsigned long)lastTriggered)) return false;
             
