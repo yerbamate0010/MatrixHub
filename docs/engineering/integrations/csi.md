@@ -51,7 +51,9 @@ The current flow is:
 
 ## Wire format used by `/ws/csi`
 
-Each packet in the broadcast batch is encoded as:
+Each WebSocket payload contains one or more packet records concatenated back to
+back. A single-packet payload is therefore the same shape as the legacy frame.
+Each packet record is encoded as:
 
 - `uint32` timestamp
 - `int8` RSSI
@@ -65,7 +67,9 @@ Notes:
 
 - `MAX_CSI_DATA_LEN` is `512` bytes in the queue/storage layer.
 - The frontend converts I/Q pairs into amplitudes with `sqrt(re^2 + im^2)`.
-- WebSocket payloads may contain a batch of multiple CSI packets.
+- WebSocket payloads may contain a batch of multiple CSI packet records.
+- Receivers should parse records until the payload is exhausted; a partial
+  trailing record is malformed and should be dropped.
 
 ## Current limitations
 

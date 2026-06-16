@@ -17,14 +17,19 @@ export interface ParsedCsiFrame {
 
 const CSI_HEADER_BYTES = 13;
 
-export function parseCsiFrame(
-	buffer: ArrayBuffer,
-	currentBuffers: CsiAmplitudeBuffers
-): ParsedCsiFrame | null {
-	const view = new DataView(buffer);
-	if (view.byteLength < CSI_HEADER_BYTES) return null;
+interface ParsedRecord {
+	frame: ParsedCsiFrame;
+	nextOffset: number;
+}
 
-	let offset = 0;
+function parseCsiRecord(
+	view: DataView,
+	startOffset: number,
+	currentBuffers: CsiAmplitudeBuffers
+): ParsedRecord | null {
+	if (view.byteLength - startOffset < CSI_HEADER_BYTES) return null;
+
+	let offset = startOffset;
 	const timestamp = view.getUint32(offset, true);
 	offset += 4;
 
@@ -63,17 +68,50 @@ export function parseCsiFrame(
 	}
 
 	return {
-		timestamp,
-		rssi,
-		gain,
-		subcarriers,
-		amplitudes,
-		motionScore,
-		isMotionDetected,
-		buffers: {
-			bufferA,
-			bufferB,
-			flip: !currentBuffers.flip
-		}
+		frame: {
+			timestamp,
+			rssi,
+			gain,
+			subcarriers,
+			amplitudes,
+			motionScore,
+			isMotionDetected,
+			buffers: {
+				bufferA,
+				bufferB,
+				flip: !currentBuffers.flip
+			}
+		},
+		nextOffset: offset + dataLength
 	};
+}
+
+export function parseCsiFrames(
+	buffer: ArrayBuffer,
+	currentBuffers: CsiAmplitudeBuffers
+): ParsedCsiFrame[] | null {
+	const view = new DataView(buffer);
+	if (view.byteLength < CSI_HEADER_BYTES) return null;
+
+	const frames: ParsedCsiFrame[] = [];
+	let offset = 0;
+	let nextBuffers = currentBuffers;
+
+	while (offset < view.byteLength) {
+		const parsed = parseCsiRecord(view, offset, nextBuffers);
+		if (!parsed) return null;
+
+		frames.push(parsed.frame);
+		nextBuffers = parsed.frame.buffers;
+		offset = parsed.nextOffset;
+	}
+
+	return frames.length > 0 ? frames : null;
+}
+
+export function parseCsiFrame(
+	buffer: ArrayBuffer,
+	currentBuffers: CsiAmplitudeBuffers
+): ParsedCsiFrame | null {
+	return parseCsiFrames(buffer, currentBuffers)?.[0] ?? null;
 }

@@ -1,4 +1,5 @@
 #include "WifiSensingApiService.h"
+#include "CsiWireFormat.h"
 
 #include <esp_http_server.h>
 
@@ -25,6 +26,8 @@
 namespace API {
 namespace {
 constexpr const char* kWifiSensingConfigPath = "/api/wifisensing/config";
+constexpr size_t kCsiWsQueueDepth = 4;
+constexpr uint32_t kCsiWsQueueStackBytes = 4096;
 } // namespace
 
 // Constructor
@@ -112,47 +115,27 @@ void WifiSensingApiService::begin() {
     // 4. Register CSI Callback
     if (_csiService) {
         _csiService->setCsiCallback([this](const WIFISENSING::CSI::CsiPacket* batch, size_t count) {
-             if (count == 0) return;
+            if (!batch || count == 0) return;
 
-             // The worker may batch packets for efficiency, but the WebSocket wire
-             // protocol still emits one CSI frame per message. That keeps browser-side
-             // parsing and chart cadence stable even if batching changes internally.
-             for (size_t i = 0; i < count; i++) {
-                 const auto& packet = batch[i];
-                 _csiEndpoint.broadcaster().broadcastSerialized(
-                     CSI_BROADCAST_BUFFER_SIZE,
-                     [&packet](uint8_t* buffer, size_t capacity) -> size_t {
-                         size_t offset = 0;
-                         uint16_t dataLen = packet.len;
-                         if (dataLen > WIFISENSING::CSI::MAX_CSI_DATA_LEN) {
-                             dataLen = WIFISENSING::CSI::MAX_CSI_DATA_LEN;
-                         }
+            for (size_t offset = 0; offset < count;) {
+                const size_t remaining = count - offset;
+                const size_t batchCount =
+                    (remaining > WIFISENSING::CSI::MAX_CSI_BATCH_PACKETS)
+                        ? WIFISENSING::CSI::MAX_CSI_BATCH_PACKETS
+                        : remaining;
+                const auto* batchStart = batch + offset;
+                const size_t reserveLen = API::CSI_WIRE::RECORD_MAX_BYTES * batchCount;
 
-                         if (capacity < CSI_FRAME_HEADER_BYTES + dataLen) {
-                             return 0;
-                         }
+                // Keep this byte layout aligned with docs/engineering/integrations/csi.md
+                // and interface/src/lib/features/wifisensing/csi/parseCsiFrame.ts.
+                _csiEndpoint.broadcaster().broadcastSerialized(
+                    reserveLen,
+                    [batchStart, batchCount](uint8_t* buffer, size_t capacity) -> size_t {
+                        return API::CSI_WIRE::writeBatch(buffer, capacity, batchStart, batchCount);
+                    });
 
-                         // Keep this byte layout aligned with
-                         // docs/engineering/integrations/csi.md and the
-                         // frontend parser in interface/src/lib/features/wifisensing/csi/.
-                         uint32_t ts = packet.rx_ctrl.timestamp;
-                         memcpy(&buffer[offset], &ts, 4); offset += 4;
-                         buffer[offset++] = static_cast<uint8_t>(packet.rx_ctrl.rssi);
-                         memcpy(&buffer[offset], &dataLen, 2); offset += 2;
-
-                         const float gainTimesTen = packet.compensate_gain * 10.0f;
-                         const uint8_t encodedGain =
-                             (gainTimesTen <= 0.0f) ? 0 : (gainTimesTen >= 255.0f ? 255 : static_cast<uint8_t>(gainTimesTen));
-                         buffer[offset++] = encodedGain;
-
-                         memcpy(&buffer[offset], &packet.motionScore, 4); offset += 4;
-                         buffer[offset++] = packet.isMotionDetected ? 1 : 0;
-
-                         memcpy(&buffer[offset], packet.buf, dataLen);
-                         offset += dataLen;
-                         return offset;
-                     });
-             }
+                offset += batchCount;
+            }
         });
     }
 
@@ -162,13 +145,18 @@ bool WifiSensingApiService::ensureCsiTransportReady() {
     // The queue is enabled lazily on first client so CSI does not keep its
     // transport machinery alive when no frontend is listening.
     if (!_csiEndpoint.broadcaster().isQueueEnabled()) {
-        _csiEndpoint.broadcaster().enableQueue(CSI_WS_QUEUE_DEPTH, 4096, CSI_BROADCAST_BUFFER_SIZE);
+        _csiEndpoint.broadcaster().enableQueue(
+            kCsiWsQueueDepth,
+            kCsiWsQueueStackBytes,
+            API::CSI_WIRE::BATCH_MAX_BYTES);
         if (!_csiEndpoint.broadcaster().isQueueEnabled()) {
             LOGE("Failed to enable CSI WebSocket queue");
             return false;
         }
     }
-    LOGI("CSI transport ready: frame=%u bytes, queue depth=%u", CSI_BROADCAST_BUFFER_SIZE, CSI_WS_QUEUE_DEPTH);
+    LOGI("CSI transport ready: max payload=%u bytes, queue depth=%u",
+         static_cast<unsigned>(API::CSI_WIRE::BATCH_MAX_BYTES),
+         static_cast<unsigned>(kCsiWsQueueDepth));
     return true;
 }
 

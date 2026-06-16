@@ -46,11 +46,6 @@ private:
 
     JwtAuthenticator _csiAuthenticator;
     WsEndpointRuntime _csiEndpoint;
-    
-    static constexpr size_t CSI_FRAME_HEADER_BYTES = 13;
-    static constexpr size_t CSI_BROADCAST_BUFFER_SIZE =
-        CSI_FRAME_HEADER_BYTES + WIFISENSING::CSI::MAX_CSI_DATA_LEN;
-    static constexpr size_t CSI_WS_QUEUE_DEPTH = 10;
 };
 
 }  // namespace API

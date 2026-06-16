@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCsiFrame, type CsiAmplitudeBuffers } from './parseCsiFrame';
+import { parseCsiFrame, parseCsiFrames, type CsiAmplitudeBuffers } from './parseCsiFrame';
 
 function createBuffers(): CsiAmplitudeBuffers {
 	return {
@@ -48,6 +48,19 @@ function createFrame({
 	return buffer;
 }
 
+function concatFrames(...frames: ArrayBuffer[]) {
+	const totalLength = frames.reduce((sum, frame) => sum + frame.byteLength, 0);
+	const batch = new Uint8Array(totalLength);
+	let offset = 0;
+
+	for (const frame of frames) {
+		batch.set(new Uint8Array(frame), offset);
+		offset += frame.byteLength;
+	}
+
+	return batch.buffer;
+}
+
 describe('parseCsiFrame', () => {
 	it('parses metadata and amplitudes from a valid frame', () => {
 		const parsed = parseCsiFrame(createFrame({}), createBuffers());
@@ -78,5 +91,29 @@ describe('parseCsiFrame', () => {
 		expect(second).not.toBeNull();
 		expect(second!.buffers.bufferA.length).toBe(2);
 		expect(second!.buffers.bufferB.length).toBe(2);
+	});
+
+	it('parses concatenated packet batches', () => {
+		const parsed = parseCsiFrames(
+			concatFrames(
+				createFrame({ timestamp: 1, iq: [3, 4] }),
+				createFrame({ timestamp: 2, rssi: -50, iq: [5, 12] })
+			),
+			createBuffers()
+		);
+
+		expect(parsed).not.toBeNull();
+		expect(parsed).toHaveLength(2);
+		expect(parsed![0].timestamp).toBe(1);
+		expect(Array.from(parsed![0].amplitudes)).toEqual([5]);
+		expect(parsed![1].timestamp).toBe(2);
+		expect(parsed![1].rssi).toBe(-50);
+		expect(Array.from(parsed![1].amplitudes)).toEqual([13]);
+		expect(parsed![1].buffers.flip).toBe(false);
+	});
+
+	it('rejects malformed trailing batch records', () => {
+		const malformed = concatFrames(createFrame({ iq: [3, 4] }), new ArrayBuffer(4));
+		expect(parseCsiFrames(malformed, createBuffers())).toBeNull();
 	});
 });

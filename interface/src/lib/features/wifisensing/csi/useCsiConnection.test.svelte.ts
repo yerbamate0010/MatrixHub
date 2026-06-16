@@ -88,6 +88,19 @@ function createCsiFrame({
 	return buffer;
 }
 
+function concatFrames(...frames: ArrayBuffer[]) {
+	const totalLength = frames.reduce((sum, frame) => sum + frame.byteLength, 0);
+	const batch = new Uint8Array(totalLength);
+	let offset = 0;
+
+	for (const frame of frames) {
+		batch.set(new Uint8Array(frame), offset);
+		offset += frame.byteLength;
+	}
+
+	return batch.buffer;
+}
+
 describe('useCsiConnection', () => {
 	let nowMs = 0;
 
@@ -175,6 +188,36 @@ describe('useCsiConnection', () => {
 		secondSocket.emitMessage(createCsiFrame({ timestamp: 2 }));
 		expect(csi?.isConnected).toBe(true);
 		expect(csi?.fps).toBe(1);
+
+		cleanup?.();
+	});
+
+	it('counts packets inside a batched CSI websocket message', async () => {
+		let cleanup: (() => void) | undefined;
+		let csi: ReturnType<typeof useCsiConnection> | undefined;
+
+		cleanup = $effect.root(() => {
+			csi = useCsiConnection();
+		});
+
+		const socket = await vi.waitFor(() => {
+			expect(MockWebSocket.instances[0]).toBeDefined();
+			return MockWebSocket.instances[0];
+		});
+
+		socket.emitOpen();
+		nowMs = 1200;
+		socket.emitMessage(
+			concatFrames(
+				createCsiFrame({ timestamp: 10, iq: [3, 4] }),
+				createCsiFrame({ timestamp: 11, rssi: -60, iq: [5, 12] })
+			)
+		);
+
+		expect(csi?.timestamp).toBe(11);
+		expect(csi?.rssi).toBe(-60);
+		expect(csi?.fps).toBe(2);
+		expect(Array.from(csi?.amplitudes ?? [])).toEqual([13]);
 
 		cleanup?.();
 	});

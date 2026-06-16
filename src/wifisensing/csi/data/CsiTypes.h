@@ -12,6 +12,7 @@ namespace CSI {
 // driver data into the queue without any heap allocation.
 // Max HT40 CSI data is ~384 bytes. We allow some headroom.
 constexpr size_t MAX_CSI_DATA_LEN = 512;
+constexpr size_t MAX_CSI_BATCH_PACKETS = 10;
 
 struct CsiPacket {
     wifi_pkt_rx_ctrl_t rx_ctrl;

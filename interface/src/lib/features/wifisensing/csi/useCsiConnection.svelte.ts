@@ -3,7 +3,7 @@ import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 import { buildWebSocketUrl } from '$lib/utils/ws/buildWebSocketUrl';
 import { ManagedSocketTransport } from '../../../utils/ws/managedSocketTransport';
 import { SocketWatchdog } from '../../../utils/ws/socketWatchdog';
-import { parseCsiFrame, type CsiAmplitudeBuffers } from './parseCsiFrame';
+import { parseCsiFrames, type CsiAmplitudeBuffers } from './parseCsiFrame';
 
 const WATCHDOG_TIMEOUT_MS = 15000;
 const RETRY_DELAY_MS = 3000;
@@ -60,19 +60,21 @@ export function useCsiConnection() {
 	}
 
 	function processData(buffer: ArrayBuffer) {
-		const parsed = parseCsiFrame(buffer, buffers);
-		if (!parsed) return;
+		const parsedFrames = parseCsiFrames(buffer, buffers);
+		if (!parsedFrames) return;
 
-		buffers = parsed.buffers;
-		timestamp = parsed.timestamp;
-		rssi = parsed.rssi;
-		gain = parsed.gain;
-		subcarriers = parsed.subcarriers;
-		amplitudes = parsed.amplitudes;
-		motionScore = parsed.motionScore;
-		isMotionDetected = parsed.isMotionDetected;
+		for (const parsed of parsedFrames) {
+			buffers = parsed.buffers;
+			timestamp = parsed.timestamp;
+			rssi = parsed.rssi;
+			gain = parsed.gain;
+			subcarriers = parsed.subcarriers;
+			amplitudes = parsed.amplitudes;
+			motionScore = parsed.motionScore;
+			isMotionDetected = parsed.isMotionDetected;
+		}
 
-		frameCount++;
+		frameCount += parsedFrames.length;
 		const now = performance.now();
 		if (now - lastFrameTime >= 1000) {
 			fps = frameCount;

@@ -102,7 +102,7 @@ public:
     std::atomic<uint32_t> _rxCallbacksInFlight{0};
     
     CsiPacket* _batchBuffer = nullptr;
-    static constexpr size_t BATCH_CAPACITY = 10;
+    static constexpr size_t BATCH_CAPACITY = MAX_CSI_BATCH_PACKETS;
 
 };
 
