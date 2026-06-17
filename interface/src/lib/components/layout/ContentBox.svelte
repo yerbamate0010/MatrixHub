@@ -12,9 +12,9 @@
 	} = $props();
 </script>
 
-<div class="rounded-box bg-base-100 p-4 {className}">
+<div class="rounded-md border border-base-300/50 bg-base-100/25 p-4 {className}">
 	{#if title}
-		<h4 class="font-bold text-sm mb-2 opacity-70 uppercase tracking-wide">
+		<h4 class="mb-2 text-sm font-semibold text-base-content/70">
 			{title}
 		</h4>
 	{/if}

@@ -1,4 +1,5 @@
 import { createApiClient, type ApiClientOptions } from '$lib/utils';
+import { MatrixSettingsSchema } from '$lib/utils/validation/schemas';
 
 export interface MatrixSettings {
 	brightness: number;
@@ -21,16 +22,24 @@ export interface MatrixSettings {
 
 export class MatrixApiService {
 	private client;
+	private static readonly SETTINGS_TIMEOUT_MS = 20000;
+	private static readonly SAVE_TIMEOUT_MS = 20000;
 
 	constructor(options: ApiClientOptions) {
 		this.client = createApiClient(options);
 	}
 
 	async getSettings(): Promise<MatrixSettings> {
-		return this.client.get<MatrixSettings>('/api/matrix/settings');
+		return this.client.get<MatrixSettings>('/api/matrix/settings', {
+			signal: AbortSignal.timeout(MatrixApiService.SETTINGS_TIMEOUT_MS),
+			schema: MatrixSettingsSchema
+		});
 	}
 
 	async updateSettings(settings: Partial<MatrixSettings>): Promise<MatrixSettings> {
-		return this.client.post<MatrixSettings>('/api/matrix/settings', settings);
+		return this.client.post<MatrixSettings>('/api/matrix/settings', settings, {
+			signal: AbortSignal.timeout(MatrixApiService.SAVE_TIMEOUT_MS),
+			schema: MatrixSettingsSchema
+		});
 	}
 }

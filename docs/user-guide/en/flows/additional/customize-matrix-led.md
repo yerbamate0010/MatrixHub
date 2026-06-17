@@ -9,6 +9,7 @@ Use this flow to adjust how local LED alerts look on the device.
 - choose the alarm display mode
 - adjust brightness or effects
 - customize severity icons if needed
+- save or discard Matrix LED drafts deliberately
 
 ## Before You Start
 
@@ -25,6 +26,9 @@ and icon customization:
 
 ![Matrix LED page](../../screenshots/system/matrix-led-page.png)
 
+The page has separate `Save` and `Discard` actions for the main Matrix LED
+settings and Visual Effects cards.
+
 ## Step 2: Choose the main alert style
 
 On the main page, review:
@@ -35,6 +39,7 @@ On the main page, review:
 - any other top-level visual options available on your build
 
 This is the best place to make the first broad change before editing details.
+Click `Save` on the Matrix LED Settings card when the draft looks right.
 
 ## Step 3: Adjust idle look and menu readability
 
@@ -45,6 +50,9 @@ If you want a different idle look, open the effects dropdown:
 If you want the menu text to be easier to read, use the text color picker:
 
 ![Matrix LED text color picker](../../screenshots/system/matrix-led-text-color-picker.png)
+
+Effect changes stay as a draft until you click `Save` on the Visual Effects
+card. Use `Discard` if the previewed choices are not what you wanted.
 
 ## Step 4: Customize severity icons
 
@@ -65,6 +73,9 @@ Critical severity:
 Use this when you want the device to show your own icon language instead of the
 default shapes.
 
+The icon editor modal `Save` stages the icon draft on the page. Click `Save` on
+the Matrix LED Settings card to write the icons to the device.
+
 ## Important
 
 - these changes affect local device visuals, not notification delivery logic
@@ -73,6 +84,8 @@ default shapes.
   physical matrix before moving on
 - keeping `Info`, `Warning`, and `Critical` visually distinct makes daily alarm
   triage easier
+- if you leave the page with unsaved drafts, the browser asks before discarding
+  them
 
 ## Related Reference Sections
 

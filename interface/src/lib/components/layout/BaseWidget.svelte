@@ -52,7 +52,7 @@
 {#if href}
 	<a
 		{href}
-		class="card bg-base-200 card-shadow-base transition-transform cursor-pointer hover:scale-[1.02] h-full min-h-[180px]"
+		class="card bg-base-200 card-shadow-base cursor-pointer h-full min-h-[180px]"
 		class:card-shadow-error={shadowColor === 'error'}
 		class:card-shadow-info={shadowColor === 'info'}
 		class:card-shadow-warning={shadowColor === 'warning'}

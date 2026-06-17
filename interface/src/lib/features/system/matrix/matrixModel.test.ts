@@ -2,14 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
 	MATRIX_EFFECT_SPEED_SCALE_CONFIG,
 	MATRIX_EFFECT_SPEED_SCALES,
+	MATRIX_COLOR_PRESETS,
+	MATRIX_EFFECT_CATEGORIES,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
 	MATRIX_EFFECT_SPEED_MAX,
 	MATRIX_EFFECT_SPEED_MIN,
 	fromMatrixEffectSpeedScaleValue,
 	fromMatrixHexColor,
+	getPreferredMatrixEffectCategory,
 	getPreferredMatrixEffectSpeedScale,
 	getMatrixCustomIcons,
+	matrixEffectCategoryContainsEffect,
 	normalizeMatrixEffectSpeedForScale,
 	toMatrixEffectSpeedScaleValue,
 	toMatrixHexColor
@@ -26,6 +30,25 @@ describe('matrixModel', () => {
 	it('contains one compact matrix effect range', () => {
 		expect(MATRIX_EFFECT_MODE_MAX).toBe(69);
 		expect(MATRIX_EFFECT_IDS).toEqual(Array.from({ length: 70 }, (_, effectId) => effectId));
+	});
+
+	it('keeps effect categories and color presets in the model layer', () => {
+		expect(MATRIX_EFFECT_CATEGORIES.at(-1)).toEqual({
+			value: 'all',
+			effectIds: MATRIX_EFFECT_IDS
+		});
+		expect(matrixEffectCategoryContainsEffect('recommended', 11)).toBe(true);
+		expect(matrixEffectCategoryContainsEffect('calm', 69)).toBe(false);
+		expect(getPreferredMatrixEffectCategory(11)).toBe('recommended');
+		expect(getPreferredMatrixEffectCategory(69)).toBe('dynamic');
+		expect(MATRIX_COLOR_PRESETS.map((preset) => preset.id)).toEqual([
+			'alert',
+			'forest',
+			'ocean',
+			'sunset',
+			'neon',
+			'aurora'
+		]);
 	});
 
 	it('keeps the matrix effect speed range aligned with firmware', () => {

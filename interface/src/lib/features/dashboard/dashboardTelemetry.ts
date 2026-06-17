@@ -1,6 +1,6 @@
 export const DASHBOARD_HISTORY_POINTS = 48;
 
-export interface DashboardMetricHistory {
+interface DashboardMetricHistory {
 	values: number[];
 	timestamps: number[];
 }
@@ -32,7 +32,7 @@ function isFiniteNumber(value: number | null | undefined): value is number {
 	return value !== null && value !== undefined && Number.isFinite(value);
 }
 
-export function normalizeMetricHistory(
+function normalizeMetricHistory(
 	values: Array<number | null> | undefined,
 	timestamps: number[] | undefined,
 	maxPoints = DASHBOARD_HISTORY_POINTS

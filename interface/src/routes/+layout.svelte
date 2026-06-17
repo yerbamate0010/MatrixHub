@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Modals } from 'svelte-modals';
 	import { appFeatures } from '$lib/stores/appFeatures.svelte';
@@ -8,6 +10,8 @@
 	import { fade } from 'svelte/transition';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
+	import { unsavedChanges } from '$lib/stores/unsavedChanges.svelte';
+	import { markAppPerformance, measureAppPerformance } from '$lib/utils/performanceMarks';
 	import '../app.css';
 	import AppShell from './AppShell.svelte';
 	import Login from './login.svelte';
@@ -25,8 +29,39 @@
 	let { children }: Props = $props();
 	const session = useSessionAccess();
 
+	if (browser) {
+		beforeNavigate((navigation) => {
+			if (!unsavedChanges.hasChanges) return;
+			if (window.confirm(m.unsaved_changes_confirm({ locale: i18n.languageTag }))) return;
+			navigation.cancel();
+		});
+	}
+
 	onMount(() => {
+		markAppPerformance('matrixhub:boot:layout-mounted', { once: true });
 		appFeatures.ensureBoot();
+
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			if (!unsavedChanges.hasChanges) return;
+			event.preventDefault();
+			event.returnValue = m.unsaved_changes_confirm({ locale: i18n.languageTag });
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+		};
+	});
+
+	$effect(() => {
+		if (!session.isAuthenticated) return;
+		if (markAppPerformance('matrixhub:auth:ready', { once: true })) {
+			measureAppPerformance(
+				'matrixhub:boot-to-auth-ready',
+				'matrixhub:boot:start',
+				'matrixhub:auth:ready'
+			);
+		}
 	});
 </script>
 

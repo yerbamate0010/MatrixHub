@@ -16,6 +16,7 @@
 		suffix = '',
 		valueClass = '',
 		id = undefined,
+		ariaLabel = undefined,
 		...rest
 	}: {
 		value: number;
@@ -30,6 +31,7 @@
 		suffix?: string;
 		valueClass?: string;
 		id?: string;
+		ariaLabel?: string;
 		oninput?: (e: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
 		onchange?: (e: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
 	} = $props();
@@ -52,6 +54,7 @@
 			{step}
 			{disabled}
 			{id}
+			aria-label={ariaLabel || label || undefined}
 			{...rest}
 		/>
 		{#if suffix}

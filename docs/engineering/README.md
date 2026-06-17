@@ -21,10 +21,15 @@ material that supports implementation, debugging, and validation.
 
 ## Operations
 
+- [frontend-quality.md](frontend-quality.md) - frontend quality gates, CI checks, and review rules
 - [operations/security_hardening.md](operations/security_hardening.md) - security model and hardening notes
 - [operations/testing.md](operations/testing.md) - backend and frontend validation
 - [operations/dram_optimizations.md](operations/dram_optimizations.md) - DRAM usage guidance
 - [operations/hygienic_sleep.md](operations/hygienic_sleep.md) - hygiene sleep and maintenance restart flow
+
+## Release notes
+
+- [frontend-ux-release-notes.md](frontend-ux-release-notes.md) - user-facing UX changes from the Matrix LED refactor
 
 ## Planning
 

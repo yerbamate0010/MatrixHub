@@ -1,26 +1,30 @@
 <script lang="ts">
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
-	import { FormButton, FormRange, FormSelect, FormToggle } from '$lib/components/shared/forms';
+	import { FormRange, FormSelect, FormToggle } from '$lib/components/shared/forms';
 	import { Spinner } from '$lib/components/common';
-	import DeviceFloppy from '~icons/tabler/device-floppy';
 	import IconWand from '~icons/tabler/wand';
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import {
+		MATRIX_COLOR_PRESETS,
+		MATRIX_EFFECT_CATEGORIES,
 		type MatrixEffectSpeedScale,
+		type MatrixEffectCategoryId,
+		type MatrixColorPresetDefinition,
 		fromMatrixHexColor,
 		MATRIX_EFFECT_IDS,
 		MATRIX_EFFECT_SPEED_SCALE_CONFIG,
 		MATRIX_EFFECT_SPEED_SCALES,
 		fromMatrixEffectSpeedScaleValue,
+		getMatrixEffectCategory,
 		getPreferredMatrixEffectSpeedScale,
+		getPreferredMatrixEffectCategory,
+		matrixEffectCategoryContainsEffect,
 		normalizeMatrixEffectSpeedForScale,
 		toMatrixHexColor
 	} from './matrixModel';
-
-	type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seasonal' | 'all';
 
 	type MatrixEffectCategory = {
 		value: MatrixEffectCategoryId;
@@ -28,10 +32,8 @@
 		effectIds: number[];
 	};
 
-	type MatrixColorPreset = {
-		id: string;
+	type MatrixColorPreset = MatrixColorPresetDefinition & {
 		label: string;
-		colors: [number, number, number];
 	};
 
 	let {
@@ -51,86 +53,46 @@
 	let speedScaleInitialized = $state(false);
 	let effectCategory = $state<MatrixEffectCategoryId>('recommended');
 	let effectCategoryInitialized = $state(false);
-	let pendingEffectAutosave = $state(false);
 
-	const effectCategories = $derived.by<MatrixEffectCategory[]>(() => [
-		{
-			value: 'recommended',
-			label: m.matrix_effect_category_recommended({ locale: i18n.languageTag }),
-			effectIds: [2, 11, 44, 48, 65]
-		},
-		{
-			value: 'calm',
-			label: m.matrix_effect_category_calm({ locale: i18n.languageTag }),
-			effectIds: [0, 1, 2, 15, 18, 40, 64]
-		},
-		{
-			value: 'dynamic',
-			label: m.matrix_effect_category_dynamic({ locale: i18n.languageTag }),
-			effectIds: [3, 11, 12, 16, 17, 31, 33, 44, 67, 69]
-		},
-		{
-			value: 'seasonal',
-			label: m.matrix_effect_category_seasonal({ locale: i18n.languageTag }),
-			effectIds: [45, 47, 48, 49, 50, 52, 56, 63]
-		},
-		{
-			value: 'all',
-			label: m.matrix_effect_category_all({ locale: i18n.languageTag }),
-			effectIds: MATRIX_EFFECT_IDS
-		}
-	]);
+	const effectCategories = $derived.by<MatrixEffectCategory[]>(() =>
+		MATRIX_EFFECT_CATEGORIES.map((category) => ({
+			...category,
+			label: getEffectCategoryLabel(category.value)
+		}))
+	);
 
-	const colorPresets = $derived.by<MatrixColorPreset[]>(() => [
-		{
-			id: 'alert',
-			label: m.matrix_effect_palette_alert({ locale: i18n.languageTag }),
-			colors: [0x7f0000, 0xff5a36, 0xffd166]
-		},
-		{
-			id: 'forest',
-			label: m.matrix_effect_palette_forest({ locale: i18n.languageTag }),
-			colors: [0x0b3d20, 0x2e7d32, 0xa5d6a7]
-		},
-		{
-			id: 'ocean',
-			label: m.matrix_effect_palette_ocean({ locale: i18n.languageTag }),
-			colors: [0x003049, 0x0077b6, 0x90e0ef]
-		},
-		{
-			id: 'sunset',
-			label: m.matrix_effect_palette_sunset({ locale: i18n.languageTag }),
-			colors: [0x5f0f40, 0xfb8b24, 0xffbe0b]
-		},
-		{
-			id: 'neon',
-			label: m.matrix_effect_palette_neon({ locale: i18n.languageTag }),
-			colors: [0xff006e, 0x8338ec, 0x3a86ff]
-		},
-		{
-			id: 'aurora',
-			label: m.matrix_effect_palette_aurora({ locale: i18n.languageTag }),
-			colors: [0x2ec4b6, 0x7b2cbf, 0xc2f970]
-		}
-	]);
+	const colorPresets = $derived.by<MatrixColorPreset[]>(() =>
+		MATRIX_COLOR_PRESETS.map((preset) => ({
+			...preset,
+			label: getColorPresetLabel(preset.id)
+		}))
+	);
 
 	function getCategoryById(categoryId: MatrixEffectCategoryId): MatrixEffectCategory | undefined {
 		return effectCategories.find((category) => category.value === categoryId);
 	}
 
-	function categoryContainsEffect(categoryId: MatrixEffectCategoryId, effectId: number): boolean {
-		return getCategoryById(categoryId)?.effectIds.includes(effectId) ?? false;
+	function getEffectCategoryLabel(categoryId: MatrixEffectCategoryId): string {
+		const labels: Record<MatrixEffectCategoryId, string> = {
+			recommended: m.matrix_effect_category_recommended({ locale: i18n.languageTag }),
+			calm: m.matrix_effect_category_calm({ locale: i18n.languageTag }),
+			dynamic: m.matrix_effect_category_dynamic({ locale: i18n.languageTag }),
+			seasonal: m.matrix_effect_category_seasonal({ locale: i18n.languageTag }),
+			all: m.matrix_effect_category_all({ locale: i18n.languageTag })
+		};
+		return labels[categoryId];
 	}
 
-	function getPreferredEffectCategory(effectId: number): MatrixEffectCategoryId {
-		for (const category of effectCategories) {
-			if (category.value === 'all') continue;
-			if (category.effectIds.includes(effectId)) {
-				return category.value;
-			}
-		}
-
-		return 'all';
+	function getColorPresetLabel(presetId: string): string {
+		const labels: Record<string, string> = {
+			alert: m.matrix_effect_palette_alert({ locale: i18n.languageTag }),
+			forest: m.matrix_effect_palette_forest({ locale: i18n.languageTag }),
+			ocean: m.matrix_effect_palette_ocean({ locale: i18n.languageTag }),
+			sunset: m.matrix_effect_palette_sunset({ locale: i18n.languageTag }),
+			neon: m.matrix_effect_palette_neon({ locale: i18n.languageTag }),
+			aurora: m.matrix_effect_palette_aurora({ locale: i18n.languageTag })
+		};
+		return labels[presetId] ?? presetId;
 	}
 
 	// Watch for external updates to sync input
@@ -149,7 +111,7 @@
 				MATRIX_EFFECT_SPEED_SCALE_CONFIG[speedScale].unitMs;
 
 			if (!effectCategoryInitialized) {
-				effectCategory = getPreferredEffectCategory(store.settings.effect_mode);
+				effectCategory = getPreferredMatrixEffectCategory(store.settings.effect_mode);
 				effectCategoryInitialized = true;
 			}
 		}
@@ -159,13 +121,6 @@
 		if (store.loading) {
 			speedScaleInitialized = false;
 			effectCategoryInitialized = false;
-		}
-	});
-
-	$effect(() => {
-		if (!store.saving && pendingEffectAutosave) {
-			pendingEffectAutosave = false;
-			void saveSelectedEffectSilently();
 		}
 	});
 
@@ -214,26 +169,12 @@
 		}
 	}
 
-	async function saveSelectedEffectSilently() {
-		if (!canManage) return;
-		if (store.saving) {
-			pendingEffectAutosave = true;
-			return;
-		}
-
-		const saved = await store.saveSettingsSilentlyNow();
-		if (!saved && store.hasChanges) {
-			pendingEffectAutosave = true;
-		}
-	}
-
-	async function applySelectedEffect(effectId: number) {
+	function applySelectedEffect(effectId: number) {
 		if (!canManage || store.settings.effect_mode === effectId) {
 			return;
 		}
 
 		store.updateSetting('effect_mode', effectId);
-		await saveSelectedEffectSilently();
 	}
 
 	function handleEffectCategoryChange(e: Event) {
@@ -241,13 +182,13 @@
 		effectCategory = nextCategory;
 		effectCategoryInitialized = true;
 
-		if (categoryContainsEffect(nextCategory, store.settings.effect_mode)) {
+		if (matrixEffectCategoryContainsEffect(nextCategory, store.settings.effect_mode)) {
 			return;
 		}
 
-		const nextEffect = getCategoryById(nextCategory)?.effectIds[0];
+		const nextEffect = getMatrixEffectCategory(nextCategory)?.effectIds[0];
 		if (nextEffect !== undefined && canManage) {
-			void applySelectedEffect(nextEffect);
+			applySelectedEffect(nextEffect);
 		}
 	}
 
@@ -354,6 +295,7 @@
 	);
 
 	const speedScaleConfig = $derived.by(() => MATRIX_EFFECT_SPEED_SCALE_CONFIG[speedScale]);
+	const effectControlsDisabled = $derived(!canManage || !store.settings.effect_enabled);
 	const activeColorPresetId = $derived.by(() => {
 		const activePreset = colorPresets.find(
 			(preset) =>
@@ -366,7 +308,17 @@
 	});
 </script>
 
-<BaseCard title={m.matrix_effects_title()} icon={IconWand}>
+<SettingsCard
+	title={m.matrix_effects_title()}
+	icon={IconWand}
+	hasChanges={store.hasChanges}
+	loading={store.loading}
+	saving={store.saving}
+	disabled={!canManage}
+	error={store.error}
+	onSave={store.saveSettingsNow}
+	onReset={store.resetSettings}
+>
 	<div class="flex w-full flex-col gap-1">
 		{#if store.loading}
 			<div class="flex justify-center items-center py-8">
@@ -397,14 +349,15 @@
 			<div
 				class="flex flex-col gap-1 transition-opacity duration-200 {store.settings.effect_enabled
 					? 'opacity-100'
-					: 'opacity-50 pointer-events-none'}"
+					: 'opacity-50'}"
+				aria-disabled={!store.settings.effect_enabled}
 			>
 				<ContentBox>
 					<FormSelect
 						label={m.matrix_effect_category()}
 						value={effectCategory}
 						options={effectCategoryOptions}
-						disabled={!canManage}
+						disabled={effectControlsDisabled}
 						onchange={handleEffectCategoryChange}
 					/>
 				</ContentBox>
@@ -417,7 +370,7 @@
 						value={store.settings.effect_mode}
 						options={effectOptions}
 						help={m.matrix_effect_mode_live_desc({ locale: i18n.languageTag })}
-						disabled={!canManage}
+						disabled={effectControlsDisabled}
 						onchange={(e) =>
 							void applySelectedEffect(Number((e.target as HTMLSelectElement).value))}
 					/>
@@ -433,7 +386,7 @@
 						step={speedScaleConfig.step}
 						suffix={speedScaleConfig.suffix}
 						valueClass="w-20"
-						disabled={!canManage}
+						disabled={effectControlsDisabled}
 						bind:value={speedSliderValue}
 						oninput={handleEffectSpeedChange}
 					/>
@@ -445,7 +398,7 @@
 								scale
 									? 'btn-primary'
 									: 'btn-outline btn-primary'}"
-								disabled={!canManage}
+								disabled={effectControlsDisabled}
 								aria-pressed={speedScale === scale}
 								onclick={() => selectSpeedScale(scale)}
 							>
@@ -470,7 +423,7 @@
 								preset.id
 									? 'btn-primary'
 									: 'btn-outline btn-primary'}"
-								disabled={!canManage}
+								disabled={effectControlsDisabled}
 								aria-pressed={activeColorPresetId === preset.id}
 								onclick={() => applyColorPreset(preset)}
 							>
@@ -500,7 +453,7 @@
 								type="color"
 								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
 								value={hexColor}
-								disabled={!canManage}
+								disabled={effectControlsDisabled}
 								aria-label={m.matrix_effect_color_primary({ locale: i18n.languageTag })}
 								oninput={handleColorChange}
 							/>
@@ -511,7 +464,7 @@
 								type="color"
 								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
 								value={hexColor2}
-								disabled={!canManage}
+								disabled={effectControlsDisabled}
 								aria-label={m.matrix_effect_color_secondary({ locale: i18n.languageTag })}
 								oninput={handleColorChange2}
 							/>
@@ -522,7 +475,7 @@
 								type="color"
 								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
 								value={hexColor3}
-								disabled={!canManage}
+								disabled={effectControlsDisabled}
 								aria-label={m.matrix_effect_color_tertiary({ locale: i18n.languageTag })}
 								oninput={handleColorChange3}
 							/>
@@ -532,14 +485,4 @@
 			</div>
 		{/if}
 	</div>
-
-	<div class="mt-4 flex justify-end px-1">
-		<FormButton
-			onclick={store.saveSettings}
-			disabled={!canManage || store.saving || !store.hasChanges || store.loading}
-			loading={store.saving}
-			label={m.action_save()}
-			icon={DeviceFloppy}
-		/>
-	</div>
-</BaseCard>
+</SettingsCard>

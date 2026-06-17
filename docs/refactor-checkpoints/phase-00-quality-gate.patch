@@ -1,0 +1,269 @@
+diff --git a/interface/knip.json b/interface/knip.json
+index 7827635..9f3f3bb 100644
+--- a/interface/knip.json
++++ b/interface/knip.json
+@@ -12,12 +12,7 @@
+ 	],
+ 	"ignore": [".svelte-kit/**", "build/**", "src/lib/paraglide/**", "test-connection.js"],
+ 	"ignoreFiles": [".svelte-kit/**", "build/**", "src/lib/paraglide/**", "test-connection.js"],
+-	"ignoreDependencies": [
+-		"@rollup/rollup-darwin-arm64",
+-		"@iconify-json/tabler",
+-		"daisyui",
+-		"tailwindcss"
+-	],
++	"ignoreDependencies": ["@iconify-json/tabler", "daisyui", "tailwindcss"],
+ 	"ignoreBinaries": ["dot"],
+ 	"ignoreIssues": {
+ 		"src/mocks/appEnvironment.ts": ["exports"],
+diff --git a/interface/package-lock.json b/interface/package-lock.json
+index 474226a..536635a 100644
+--- a/interface/package-lock.json
++++ b/interface/package-lock.json
+@@ -9,7 +9,6 @@
+ 			"version": "0.2.0",
+ 			"dependencies": {
+ 				"glob": "^13.0.0",
+-				"jwt-decode": "^4.0.0",
+ 				"simple-keyboard": "^3.8.93",
+ 				"svelte-modals": "^2.0.1",
+ 				"uplot": "^1.6.32",
+@@ -7412,15 +7411,6 @@
+ 				"node": ">=0.6.0"
+ 			}
+ 		},
+-		"node_modules/jwt-decode": {
+-			"version": "4.0.0",
+-			"resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-4.0.0.tgz",
+-			"integrity": "sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==",
+-			"license": "MIT",
+-			"engines": {
+-				"node": ">=18"
+-			}
+-		},
+ 		"node_modules/keyv": {
+ 			"version": "4.5.4",
+ 			"resolved": "https://registry.npmjs.org/keyv/-/keyv-4.5.4.tgz",
+diff --git a/interface/package.json b/interface/package.json
+index 836efbe..d642f3e 100644
+--- a/interface/package.json
++++ b/interface/package.json
+@@ -77,7 +77,6 @@
+ 	"type": "module",
+ 	"dependencies": {
+ 		"glob": "^13.0.0",
+-		"jwt-decode": "^4.0.0",
+ 		"simple-keyboard": "^3.8.93",
+ 		"svelte-modals": "^2.0.1",
+ 		"uplot": "^1.6.32",
+diff --git a/interface/src/lib/features/dashboard/dashboardTelemetry.ts b/interface/src/lib/features/dashboard/dashboardTelemetry.ts
+index 716a2d0..40fbdc7 100644
+--- a/interface/src/lib/features/dashboard/dashboardTelemetry.ts
++++ b/interface/src/lib/features/dashboard/dashboardTelemetry.ts
+@@ -1,6 +1,6 @@
+ export const DASHBOARD_HISTORY_POINTS = 48;
+ 
+-export interface DashboardMetricHistory {
++interface DashboardMetricHistory {
+ 	values: number[];
+ 	timestamps: number[];
+ }
+@@ -32,7 +32,7 @@ function isFiniteNumber(value: number | null | undefined): value is number {
+ 	return value !== null && value !== undefined && Number.isFinite(value);
+ }
+ 
+-export function normalizeMetricHistory(
++function normalizeMetricHistory(
+ 	values: Array<number | null> | undefined,
+ 	timestamps: number[] | undefined,
+ 	maxPoints = DASHBOARD_HISTORY_POINTS
+diff --git a/interface/src/lib/features/dashboard/widgets/alarms/index.ts b/interface/src/lib/features/dashboard/widgets/alarms/index.ts
+index f24db39..9cccb2a 100644
+--- a/interface/src/lib/features/dashboard/widgets/alarms/index.ts
++++ b/interface/src/lib/features/dashboard/widgets/alarms/index.ts
+@@ -1,2 +1 @@
+ export { default as AlarmsWidget } from './AlarmsWidget.svelte';
+-export { useAlarmsWidgetManagement } from './useAlarmsWidgetManagement.svelte';
+diff --git a/interface/src/lib/features/dashboard/widgets/ble/index.ts b/interface/src/lib/features/dashboard/widgets/ble/index.ts
+index 8564e15..fa4f5f4 100644
+--- a/interface/src/lib/features/dashboard/widgets/ble/index.ts
++++ b/interface/src/lib/features/dashboard/widgets/ble/index.ts
+@@ -1,2 +1 @@
+ export { default as BleWidget } from './BleWidget.svelte';
+-export { useBleWidgetManagement } from './useBleWidgetManagement.svelte';
+diff --git a/interface/src/lib/features/dashboard/widgets/index.ts b/interface/src/lib/features/dashboard/widgets/index.ts
+index 5520ca8..66d6ce8 100644
+--- a/interface/src/lib/features/dashboard/widgets/index.ts
++++ b/interface/src/lib/features/dashboard/widgets/index.ts
+@@ -1,5 +1,5 @@
+-export { BleWidget, useBleWidgetManagement } from './ble';
+-export { ShellyWidget, useShellyWidgetManagement } from './shelly';
+-export { AlarmsWidget, useAlarmsWidgetManagement } from './alarms';
+-export { WifiSensingWidget, useWifiSensingWidgetManagement } from './wifi-sensing';
++export { BleWidget } from './ble';
++export { ShellyWidget } from './shelly';
++export { AlarmsWidget } from './alarms';
++export { WifiSensingWidget } from './wifi-sensing';
+ export { useDashboardWidgetVisibility } from './useDashboardWidgetVisibility.svelte';
+diff --git a/interface/src/lib/features/dashboard/widgets/shelly/index.ts b/interface/src/lib/features/dashboard/widgets/shelly/index.ts
+index 559bca3..df04eef 100644
+--- a/interface/src/lib/features/dashboard/widgets/shelly/index.ts
++++ b/interface/src/lib/features/dashboard/widgets/shelly/index.ts
+@@ -1,2 +1 @@
+ export { default as ShellyWidget } from './ShellyWidget.svelte';
+-export { useShellyWidgetManagement } from './useShellyWidgetManagement.svelte';
+diff --git a/interface/src/lib/features/dashboard/widgets/wifi-sensing/index.ts b/interface/src/lib/features/dashboard/widgets/wifi-sensing/index.ts
+index 82f4e19..e7126da 100644
+--- a/interface/src/lib/features/dashboard/widgets/wifi-sensing/index.ts
++++ b/interface/src/lib/features/dashboard/widgets/wifi-sensing/index.ts
+@@ -1,2 +1 @@
+ export { default as WifiSensingWidget } from './WifiSensingWidget.svelte';
+-export { useWifiSensingWidgetManagement } from './useWifiSensingWidgetManagement.svelte';
+diff --git a/interface/src/lib/features/navigation/featureRegistry.ts b/interface/src/lib/features/navigation/featureRegistry.ts
+index 69064e0..458b427 100644
+--- a/interface/src/lib/features/navigation/featureRegistry.ts
++++ b/interface/src/lib/features/navigation/featureRegistry.ts
+@@ -368,7 +368,6 @@ const helpGroupDefinitions = {
+ 	}
+ } satisfies Record<string, HelpLinkGroupDefinition>;
+ 
+-export const dashboardHelpLinkIds: FeatureLinkId[] = ['charts', 'alarms', 'logs', 'help'];
+ export const shellyHelpLinkIds: FeatureLinkId[] = ['alarms', 'help'];
+ export const wifiSensingHelpLinkIds: FeatureLinkId[] = ['wifi_csi', 'status', 'help'];
+ export const powerHelpLinkIds: FeatureLinkId[] = ['status', 'help'];
+@@ -422,11 +421,7 @@ function resolveDisabledReason(
+ 	return null;
+ }
+ 
+-export function getFeatureLinkDefinition(id: FeatureLinkId) {
+-	return getLeaf(id);
+-}
+-
+-export function createFeatureLink(id: FeatureLinkId, locale?: string): FeatureLink {
++function createFeatureLink(id: FeatureLinkId, locale?: string): FeatureLink {
+ 	const definition = getLeaf(id);
+ 	return {
+ 		href: definition.href,
+@@ -439,7 +434,7 @@ export function createFeatureLinks(ids: FeatureLinkId[], locale?: string): Featu
+ 	return ids.map((id) => createFeatureLink(id, locale));
+ }
+ 
+-export function createHelpLinkGroup(groupId: keyof typeof helpGroupDefinitions, locale?: string) {
++function createHelpLinkGroup(groupId: keyof typeof helpGroupDefinitions, locale?: string) {
+ 	const definition = helpGroupDefinitions[groupId];
+ 	return {
+ 		title: resolveLabel(definition.title, locale),
+diff --git a/interface/src/lib/features/system/status/components/NetworkDiagnosticsModal.svelte b/interface/src/lib/features/system/status/components/NetworkDiagnosticsModal.svelte
+index 29c8b4c..82206c3 100644
+--- a/interface/src/lib/features/system/status/components/NetworkDiagnosticsModal.svelte
++++ b/interface/src/lib/features/system/status/components/NetworkDiagnosticsModal.svelte
+@@ -151,7 +151,9 @@
+ 						{m.network_diag_field_configured_mode({ locale: i18n.languageTag })}
+ 					</div>
+ 					<div class="font-mono">{formatOptional(health.wifi.configuredMode)}</div>
+-					<div class="opacity-70">{m.network_diag_field_ap_active({ locale: i18n.languageTag })}</div>
++					<div class="opacity-70">
++						{m.network_diag_field_ap_active({ locale: i18n.languageTag })}
++					</div>
+ 					<div>
+ 						<span class="badge badge-sm {boolBadgeClass(health.wifi.apActive)}">
+ 							{formatBool(health.wifi.apActive)}
+diff --git a/interface/src/lib/features/wifi/sta/useWifiManagement.svelte.ts b/interface/src/lib/features/wifi/sta/useWifiManagement.svelte.ts
+index 96c172c..53b0b74 100644
+--- a/interface/src/lib/features/wifi/sta/useWifiManagement.svelte.ts
++++ b/interface/src/lib/features/wifi/sta/useWifiManagement.svelte.ts
+@@ -1,4 +1,9 @@
+-import type { KnownNetworkItem, WifiMode, WifiSettings, WifiStatus } from '$lib/types/connectivity/wifi';
++import type {
++	KnownNetworkItem,
++	WifiMode,
++	WifiSettings,
++	WifiStatus
++} from '$lib/types/connectivity/wifi';
+ import type { ApiClientOptions } from '$lib/utils';
+ import { useWifiStatus } from './useWifiStatus.svelte';
+ import { useWifiStaSettings } from './useWifiStaSettings.svelte';
+diff --git a/interface/src/lib/services/api/monitoring/AlarmsApiService.ts b/interface/src/lib/services/api/monitoring/AlarmsApiService.ts
+index f03ca93..34ea785 100644
+--- a/interface/src/lib/services/api/monitoring/AlarmsApiService.ts
++++ b/interface/src/lib/services/api/monitoring/AlarmsApiService.ts
+@@ -1,9 +1,6 @@
+ import { createApiClient, type ApiClientOptions } from '$lib/utils';
+ import type { AlarmRulesConfig } from '$lib/types/domain/alarms';
+ 
+-// Re-export types for convenience
+-export type { AlarmRule, AlarmRulesConfig } from '$lib/types/domain/alarms';
+-
+ export class AlarmsApiService {
+ 	private client;
+ 	private static readonly GET_RULES_TIMEOUT_MS = 20000;
+diff --git a/interface/src/lib/stores/system/transportState.svelte.ts b/interface/src/lib/stores/system/transportState.svelte.ts
+index 51455ad..1574ccc 100644
+--- a/interface/src/lib/stores/system/transportState.svelte.ts
++++ b/interface/src/lib/stores/system/transportState.svelte.ts
+@@ -4,19 +4,10 @@ interface SystemTransportStateLike {
+ 	readonly isConnected: boolean;
+ }
+ 
+-interface SystemTransportControllerLike {
+-	ensureConnected(): void;
+-	connect(): void;
+-}
+-
+ interface SystemTransportStateDeps {
+ 	runtime?: SystemTransportStateLike;
+ }
+ 
+-interface SystemTransportControllerDeps {
+-	runtime?: SystemTransportControllerLike;
+-}
+-
+ export function useSystemTransportState(deps: SystemTransportStateDeps = {}) {
+ 	const runtime = deps.runtime ?? systemStatus;
+ 
+@@ -26,16 +17,3 @@ export function useSystemTransportState(deps: SystemTransportStateDeps = {}) {
+ 		}
+ 	};
+ }
+-
+-export function useSystemTransportController(deps: SystemTransportControllerDeps = {}) {
+-	const runtime = deps.runtime ?? systemStatus;
+-
+-	return {
+-		ensureConnected() {
+-			runtime.ensureConnected();
+-		},
+-		connect() {
+-			runtime.connect();
+-		}
+-	};
+-}
+diff --git a/interface/src/lib/utils/api/useSettings.svelte.ts b/interface/src/lib/utils/api/useSettings.svelte.ts
+index 95b1136..718f044 100644
+--- a/interface/src/lib/utils/api/useSettings.svelte.ts
++++ b/interface/src/lib/utils/api/useSettings.svelte.ts
+@@ -61,8 +61,6 @@ export interface UseSettingsResult<T, E> {
+ 	resetSettings: () => void;
+ }
+ 
+-export type SettingsController<T extends object, E extends object> = UseSettingsResult<T, E>;
+-
+ export function useSettings<T extends object, E extends object>(
+ 	defaultSettings: T,
+ 	defaultErrors: E,
+diff --git a/interface/src/routes/+page.svelte b/interface/src/routes/+page.svelte
+index 45e3b21..8405edb 100644
+--- a/interface/src/routes/+page.svelte
++++ b/interface/src/routes/+page.svelte
+@@ -61,10 +61,7 @@
+ 	});
+ 
+ 	const sparklineDomains = $derived({
+-		co2: resolveDashboardSparklineDomain(
+-			history.co2.values,
+-			DASHBOARD_SPARKLINE_SCALE_CONFIGS.co2
+-		),
++		co2: resolveDashboardSparklineDomain(history.co2.values, DASHBOARD_SPARKLINE_SCALE_CONFIGS.co2),
+ 		temp: resolveDashboardSparklineDomain(
+ 			history.temp.values,
+ 			DASHBOARD_SPARKLINE_SCALE_CONFIGS.temp

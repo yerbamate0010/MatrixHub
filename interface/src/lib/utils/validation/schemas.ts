@@ -78,3 +78,31 @@ export const BleSettingsSchema = z.object({
 		)
 		.optional()
 });
+
+const MatrixColorSchema = z.number().int().min(0).max(0xffffff);
+const MatrixCustomIconSchema = z
+	.array(MatrixColorSchema)
+	.refine((pixels) => pixels.length === 0 || pixels.length === 64, {
+		message: 'Matrix custom icon slots must be empty or contain 64 pixels'
+	});
+
+export const MatrixSettingsSchema = z.object({
+	brightness: z.number().int().min(2).max(255),
+	alarm_mode: z.number().int().min(0).max(2),
+	rotation: z.number().int().min(0).max(3),
+	auto_rotate: z.boolean(),
+	effect_enabled: z.boolean(),
+	effect_mode: z.number().int().min(0).max(69),
+	effect_speed: z
+		.number()
+		.int()
+		.min(50)
+		.max(24 * 60 * 60 * 1000),
+	effect_color: MatrixColorSchema,
+	effect_color_2: MatrixColorSchema,
+	effect_color_3: MatrixColorSchema,
+	custom_icons: z.array(MatrixCustomIconSchema).length(3).optional(),
+	menu_enabled: z.boolean(),
+	menu_text_color: MatrixColorSchema,
+	menu_scroll_speed: z.number().int().min(20).max(120)
+});

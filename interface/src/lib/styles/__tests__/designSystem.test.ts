@@ -15,7 +15,7 @@ describe('design system barrel exports', () => {
 		expect(designSystem.getInputClasses(true, false, 'xs')).toContain('border-error');
 		expect(designSystem.getInputClasses(false, true, 'lg')).toContain('max-w-xs');
 		expect(designSystem.getInputClasses(true, true, 'sm')).toContain('border-error');
-		expect(designSystem.cardVariants.interactive).toContain('hover:shadow-2xl');
+		expect(designSystem.cardVariants.interactive).toContain('hover:shadow-md');
 		expect(designSystem.dialogVariants.md).toContain('max-w-md');
 		expect(designSystem.formVariants.actions).toContain('justify-end');
 

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import ContentBox from '$lib/components/layout/ContentBox.svelte';
-
 	// Toggle moved into shared/forms so all basic form controls now come from one
 	// primitive layer and one public import path through $lib/components.
 	let {
@@ -55,7 +53,9 @@
 		{@render inner()}
 	</div>
 {:else}
-	<ContentBox class="flex items-center justify-between px-4 !py-2 {className}">
+	<div
+		class="flex items-center justify-between gap-3 rounded-md border border-base-300/60 bg-base-100/30 px-4 py-3 {className}"
+	>
 		{@render inner()}
-	</ContentBox>
+	</div>
 {/if}

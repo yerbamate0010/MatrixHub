@@ -4,8 +4,9 @@
 
 // Card variants
 export const cardVariants = {
-	base: 'card bg-base-100 shadow-xl',
-	interactive: 'card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow',
+	base: 'card bg-base-100 shadow-sm border border-base-300/60',
+	interactive:
+		'card bg-base-100 shadow-sm border border-base-300/60 hover:shadow-md transition-shadow',
 	outline: 'card bg-base-100 border border-base-300'
 } as const;
 

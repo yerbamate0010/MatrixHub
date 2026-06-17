@@ -61,10 +61,7 @@
 	});
 
 	const sparklineDomains = $derived({
-		co2: resolveDashboardSparklineDomain(
-			history.co2.values,
-			DASHBOARD_SPARKLINE_SCALE_CONFIGS.co2
-		),
+		co2: resolveDashboardSparklineDomain(history.co2.values, DASHBOARD_SPARKLINE_SCALE_CONFIGS.co2),
 		temp: resolveDashboardSparklineDomain(
 			history.temp.values,
 			DASHBOARD_SPARKLINE_SCALE_CONFIGS.temp

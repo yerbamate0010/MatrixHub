@@ -1,6 +1,17 @@
 import type { MatrixSettings } from '$lib/services/api/core/MatrixApiService';
 
 export type MatrixEffectSpeedScale = 'ms' | 's' | 'm' | 'h';
+export type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seasonal' | 'all';
+
+export type MatrixEffectCategoryDefinition = {
+	value: MatrixEffectCategoryId;
+	effectIds: number[];
+};
+
+export type MatrixColorPresetDefinition = {
+	id: string;
+	colors: [number, number, number];
+};
 
 export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	brightness: 20,
@@ -17,8 +28,6 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	menu_text_color: 0xffffff,
 	menu_scroll_speed: 20
 };
-
-export const MATRIX_MENU_BUTTON_LOCKED_ENABLED = true;
 
 // Keep this aligned with the backend validator in MatrixConfigJson.cpp.
 export const MATRIX_EFFECT_SPEED_MIN = 50;
@@ -44,6 +53,80 @@ export const MATRIX_EFFECT_IDS = Array.from(
 	{ length: MATRIX_EFFECT_MODE_MAX + 1 },
 	(_, effectId) => effectId
 );
+
+export const MATRIX_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
+	{
+		value: 'recommended',
+		effectIds: [2, 11, 44, 48, 65]
+	},
+	{
+		value: 'calm',
+		effectIds: [0, 1, 2, 15, 18, 40, 64]
+	},
+	{
+		value: 'dynamic',
+		effectIds: [3, 11, 12, 16, 17, 31, 33, 44, 67, 69]
+	},
+	{
+		value: 'seasonal',
+		effectIds: [45, 47, 48, 49, 50, 52, 56, 63]
+	},
+	{
+		value: 'all',
+		effectIds: MATRIX_EFFECT_IDS
+	}
+];
+
+export const MATRIX_COLOR_PRESETS: MatrixColorPresetDefinition[] = [
+	{
+		id: 'alert',
+		colors: [0x7f0000, 0xff5a36, 0xffd166]
+	},
+	{
+		id: 'forest',
+		colors: [0x0b3d20, 0x2e7d32, 0xa5d6a7]
+	},
+	{
+		id: 'ocean',
+		colors: [0x003049, 0x0077b6, 0x90e0ef]
+	},
+	{
+		id: 'sunset',
+		colors: [0x5f0f40, 0xfb8b24, 0xffbe0b]
+	},
+	{
+		id: 'neon',
+		colors: [0xff006e, 0x8338ec, 0x3a86ff]
+	},
+	{
+		id: 'aurora',
+		colors: [0x2ec4b6, 0x7b2cbf, 0xc2f970]
+	}
+];
+
+export function getMatrixEffectCategory(
+	categoryId: MatrixEffectCategoryId
+): MatrixEffectCategoryDefinition | undefined {
+	return MATRIX_EFFECT_CATEGORIES.find((category) => category.value === categoryId);
+}
+
+export function matrixEffectCategoryContainsEffect(
+	categoryId: MatrixEffectCategoryId,
+	effectId: number
+): boolean {
+	return getMatrixEffectCategory(categoryId)?.effectIds.includes(effectId) ?? false;
+}
+
+export function getPreferredMatrixEffectCategory(effectId: number): MatrixEffectCategoryId {
+	for (const category of MATRIX_EFFECT_CATEGORIES) {
+		if (category.value === 'all') continue;
+		if (category.effectIds.includes(effectId)) {
+			return category.value;
+		}
+	}
+
+	return 'all';
+}
 
 function clampMatrixEffectSpeed(value: number): number {
 	if (!Number.isFinite(value)) return DEFAULT_MATRIX_SETTINGS.effect_speed;

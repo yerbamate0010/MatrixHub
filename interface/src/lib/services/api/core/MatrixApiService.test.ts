@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { MatrixSettingsSchema } from '$lib/utils/validation/schemas';
 import { MatrixApiService, type MatrixSettings } from './MatrixApiService';
 
 const mockClient = {
@@ -45,7 +46,10 @@ describe('MatrixApiService', () => {
 
 		const result = await service.getSettings();
 
-		expect(mockClient.get).toHaveBeenCalledWith('/api/matrix/settings');
+		expect(mockClient.get).toHaveBeenCalledWith(
+			'/api/matrix/settings',
+			expect.objectContaining({ schema: MatrixSettingsSchema })
+		);
 		expect(result).toBe(settings);
 	});
 
@@ -55,7 +59,11 @@ describe('MatrixApiService', () => {
 
 		const result = await service.updateSettings(payload);
 
-		expect(mockClient.post).toHaveBeenCalledWith('/api/matrix/settings', payload);
+		expect(mockClient.post).toHaveBeenCalledWith(
+			'/api/matrix/settings',
+			payload,
+			expect.objectContaining({ schema: MatrixSettingsSchema })
+		);
 		expect(result).toBe(payload);
 	});
 });

@@ -61,8 +61,6 @@ export interface UseSettingsResult<T, E> {
 	resetSettings: () => void;
 }
 
-export type SettingsController<T extends object, E extends object> = UseSettingsResult<T, E>;
-
 export function useSettings<T extends object, E extends object>(
 	defaultSettings: T,
 	defaultErrors: E,

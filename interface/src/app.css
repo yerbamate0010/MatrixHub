@@ -54,16 +54,21 @@
 	}
 }
 
-/* Card shadow effects with smooth color transitions */
+/* Quiet card surfaces for dense operational screens */
 .card-shadow-base {
 	--shadow-color: 59 130 246;
-	box-shadow: 0 0 20px 2px rgb(var(--shadow-color) / 0.25) !important;
-	transition: all 0.3s ease-in-out;
+	box-shadow:
+		0 1px 2px rgb(15 23 42 / 0.08),
+		0 0 0 1px rgb(var(--shadow-color) / 0.12) !important;
+	transition:
+		box-shadow 0.2s ease,
+		border-color 0.2s ease;
 }
 
 .card-shadow-base:hover {
-	box-shadow: 0 0 30px 4px rgb(var(--shadow-color) / 0.45) !important;
-	transform: translateY(-2px);
+	box-shadow:
+		0 4px 12px rgb(15 23 42 / 0.1),
+		0 0 0 1px rgb(var(--shadow-color) / 0.18) !important;
 }
 
 .card-shadow-error {
@@ -120,34 +125,10 @@
 	animation-duration: var(--animation-input) !important;
 }
 
-/* 
- * App Background Gradient
- * Adds subtle color blobs behind the content
- */
+/* Keep the app background calm; data and controls carry the visual weight. */
 body {
-	background-image:
-		radial-gradient(
-			at 0% 0%,
-			color-mix(in srgb, var(--color-primary), transparent 97%) 0,
-			transparent 50%
-		),
-		radial-gradient(
-			at 100% 0%,
-			color-mix(in srgb, var(--color-secondary), transparent 97%) 0,
-			transparent 50%
-		),
-		radial-gradient(
-			at 100% 100%,
-			color-mix(in srgb, var(--color-accent), transparent 97%) 0,
-			transparent 50%
-		),
-		radial-gradient(
-			at 0% 100%,
-			color-mix(in srgb, var(--color-neutral), transparent 98%) 0,
-			transparent 50%
-		);
-	background-attachment: fixed;
-	background-size: cover;
+	background-color: var(--color-base-100);
+	background-image: none;
 }
 
 .drawer,

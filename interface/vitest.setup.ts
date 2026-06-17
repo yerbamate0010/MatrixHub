@@ -22,6 +22,19 @@ Object.defineProperty(window, 'matchMedia', {
 	}))
 });
 
+Object.defineProperty(Element.prototype, 'animate', {
+	writable: true,
+	value: vi.fn().mockImplementation(() => ({
+		cancel: vi.fn(),
+		finish: vi.fn(),
+		play: vi.fn(),
+		pause: vi.fn(),
+		addEventListener: vi.fn(),
+		removeEventListener: vi.fn(),
+		onfinish: null
+	}))
+});
+
 // Cleanup after each test
 afterEach(() => {
 	cleanup();

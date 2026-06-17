@@ -1,5 +1,5 @@
-export { BleWidget, useBleWidgetManagement } from './ble';
-export { ShellyWidget, useShellyWidgetManagement } from './shelly';
-export { AlarmsWidget, useAlarmsWidgetManagement } from './alarms';
-export { WifiSensingWidget, useWifiSensingWidgetManagement } from './wifi-sensing';
+export { BleWidget } from './ble';
+export { ShellyWidget } from './shelly';
+export { AlarmsWidget } from './alarms';
+export { WifiSensingWidget } from './wifi-sensing';
 export { useDashboardWidgetVisibility } from './useDashboardWidgetVisibility.svelte';

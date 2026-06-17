@@ -25,6 +25,9 @@
 		"deps:baseline": "npm run i18n:build && dependency-cruiser --output-type baseline src > .dependency-cruiser-known-violations.json",
 		"deps:graph": "npm run i18n:build && dependency-cruiser --output-type dot src | dot -T svg > dependency-graph.svg",
 		"unused:check": "knip --reporter symbols --no-progress --exclude unresolved",
+		"quality:frontend:fast": "npm run lint && npm run check && npm run test:run && npm run unused:check",
+		"quality:frontend": "npm run quality:frontend:fast && npm run deps:check && npm run build && node ./scripts/check-build-size.mjs",
+		"quality:frontend:e2e": "playwright test tests/e2e/matrix.spec.ts tests/e2e/ux-a11y.spec.ts",
 		"deps:update": "ncu -u",
 		"bundle:analyze": "bundle-wizard",
 		"lhci": "lhci autorun",
@@ -77,7 +80,6 @@
 	"type": "module",
 	"dependencies": {
 		"glob": "^13.0.0",
-		"jwt-decode": "^4.0.0",
 		"simple-keyboard": "^3.8.93",
 		"svelte-modals": "^2.0.1",
 		"uplot": "^1.6.32",

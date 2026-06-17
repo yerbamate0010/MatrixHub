@@ -151,7 +151,9 @@
 						{m.network_diag_field_configured_mode({ locale: i18n.languageTag })}
 					</div>
 					<div class="font-mono">{formatOptional(health.wifi.configuredMode)}</div>
-					<div class="opacity-70">{m.network_diag_field_ap_active({ locale: i18n.languageTag })}</div>
+					<div class="opacity-70">
+						{m.network_diag_field_ap_active({ locale: i18n.languageTag })}
+					</div>
 					<div>
 						<span class="badge badge-sm {boolBadgeClass(health.wifi.apActive)}">
 							{formatBool(health.wifi.apActive)}

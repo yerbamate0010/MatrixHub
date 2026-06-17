@@ -1,9 +1,6 @@
 import { createApiClient, type ApiClientOptions } from '$lib/utils';
 import type { AlarmRulesConfig } from '$lib/types/domain/alarms';
 
-// Re-export types for convenience
-export type { AlarmRule, AlarmRulesConfig } from '$lib/types/domain/alarms';
-
 export class AlarmsApiService {
 	private client;
 	private static readonly GET_RULES_TIMEOUT_MS = 20000;

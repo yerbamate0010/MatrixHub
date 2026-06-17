@@ -84,10 +84,7 @@
 	}
 </script>
 
-<a
-	{href}
-	class="card bg-base-200 card-shadow-base card-shadow-{shadowColor} transition-transform cursor-pointer hover:scale-[1.02]"
->
+<a {href} class="card bg-base-200 card-shadow-base card-shadow-{shadowColor} cursor-pointer">
 	<div class="card-body p-4 sm:p-5 pb-2 sm:pb-3">
 		<!-- Header -->
 		<div class="flex items-center justify-between gap-2 mb-2">

@@ -12,12 +12,7 @@
 	],
 	"ignore": [".svelte-kit/**", "build/**", "src/lib/paraglide/**", "test-connection.js"],
 	"ignoreFiles": [".svelte-kit/**", "build/**", "src/lib/paraglide/**", "test-connection.js"],
-	"ignoreDependencies": [
-		"@rollup/rollup-darwin-arm64",
-		"@iconify-json/tabler",
-		"daisyui",
-		"tailwindcss"
-	],
+	"ignoreDependencies": ["@iconify-json/tabler", "daisyui", "tailwindcss"],
 	"ignoreBinaries": ["dot"],
 	"ignoreIssues": {
 		"src/mocks/appEnvironment.ts": ["exports"],

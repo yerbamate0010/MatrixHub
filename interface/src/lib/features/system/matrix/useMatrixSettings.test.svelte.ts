@@ -169,11 +169,11 @@ describe('useMatrixSettings', () => {
 		cleanup?.();
 	});
 
-	it('keeps the matrix button menu enabled when saving from the frontend', async () => {
+	it('preserves the matrix button menu state when saving from the frontend', async () => {
 		const { useMatrixSettings } = await import('./useMatrixSettings.svelte');
 		const api = {
 			getSettings: vi.fn().mockResolvedValue(createMatrixSettings({ menu_enabled: false })),
-			updateSettings: vi.fn().mockResolvedValue(createMatrixSettings({ menu_enabled: true }))
+			updateSettings: vi.fn().mockResolvedValue(createMatrixSettings({ menu_enabled: false }))
 		};
 
 		let cleanup: (() => void) | undefined;
@@ -190,7 +190,7 @@ describe('useMatrixSettings', () => {
 					expect(api.updateSettings).toHaveBeenCalledWith(
 						expect.objectContaining({
 							brightness: 88,
-							menu_enabled: true
+							menu_enabled: false
 						})
 					);
 					resolve();

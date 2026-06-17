@@ -368,7 +368,6 @@ const helpGroupDefinitions = {
 	}
 } satisfies Record<string, HelpLinkGroupDefinition>;
 
-export const dashboardHelpLinkIds: FeatureLinkId[] = ['charts', 'alarms', 'logs', 'help'];
 export const shellyHelpLinkIds: FeatureLinkId[] = ['alarms', 'help'];
 export const wifiSensingHelpLinkIds: FeatureLinkId[] = ['wifi_csi', 'status', 'help'];
 export const powerHelpLinkIds: FeatureLinkId[] = ['status', 'help'];
@@ -422,11 +421,7 @@ function resolveDisabledReason(
 	return null;
 }
 
-export function getFeatureLinkDefinition(id: FeatureLinkId) {
-	return getLeaf(id);
-}
-
-export function createFeatureLink(id: FeatureLinkId, locale?: string): FeatureLink {
+function createFeatureLink(id: FeatureLinkId, locale?: string): FeatureLink {
 	const definition = getLeaf(id);
 	return {
 		href: definition.href,
@@ -439,7 +434,7 @@ export function createFeatureLinks(ids: FeatureLinkId[], locale?: string): Featu
 	return ids.map((id) => createFeatureLink(id, locale));
 }
 
-export function createHelpLinkGroup(groupId: keyof typeof helpGroupDefinitions, locale?: string) {
+function createHelpLinkGroup(groupId: keyof typeof helpGroupDefinitions, locale?: string) {
 	const definition = helpGroupDefinitions[groupId];
 	return {
 		title: resolveLabel(definition.title, locale),

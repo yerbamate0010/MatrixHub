@@ -2,6 +2,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { useSystemTransportManagement } from '$lib/features/system/status/useSystemTransportManagement.svelte';
 	import { setGlobalUnauthorizedHandler } from '$lib/utils/api/apiClient';
+	import { markAppPerformance, measureAppPerformance } from '$lib/utils/performanceMarks';
 	import type { SessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import Menu from './menu.svelte';
 	import Statusbar from './statusbar.svelte';
@@ -22,6 +23,22 @@
 	let menuOpen = $state(false);
 
 	onMount(() => {
+		markAppPerformance('matrixhub:app-shell:mounted', { once: true });
+		const scheduleFrame =
+			typeof requestAnimationFrame === 'function'
+				? requestAnimationFrame
+				: (callback: (time: number) => void) =>
+						window.setTimeout(() => callback(performance.now()), 0);
+
+		scheduleFrame(() => {
+			if (markAppPerformance('matrixhub:first-page-interactive', { once: true })) {
+				measureAppPerformance(
+					'matrixhub:boot-to-first-page-interactive',
+					'matrixhub:boot:start',
+					'matrixhub:first-page-interactive'
+				);
+			}
+		});
 		// The authenticated shell owns the core system_status lease so the topbar
 		// and other shell-level UI do not depend on whichever page happens to be open.
 		systemTransport.subscribeChannel('system_status');

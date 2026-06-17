@@ -5,6 +5,7 @@ import { user } from './user';
 import { SystemSocketTransport } from './system/socketTransport';
 import { parseBinaryPacket } from './system/parsers';
 import type { SystemEvent } from './system/types';
+import { markAppPerformance, measureAppPerformance } from '$lib/utils/performanceMarks';
 
 export class SystemEventBus {
 	private subscribers = new Set<(value: SystemEvent | null) => void>();
@@ -196,6 +197,17 @@ export class SystemStatusStore {
 		try {
 			const msg = JSON.parse(frame);
 			if (msg.type === 'snapshot' && typeof msg.channel === 'string') {
+				if (
+					msg.channel === 'system_status' &&
+					markAppPerformance('matrixhub:first-system-status', { once: true })
+				) {
+					measureAppPerformance(
+						'matrixhub:boot-to-first-system-status',
+						'matrixhub:boot:start',
+						'matrixhub:first-system-status'
+					);
+				}
+
 				// One incoming snapshot fans out in two directions:
 				// 1. cache it for late subscribers via getSnapshot()
 				// 2. publish an event so already-mounted hooks update immediately

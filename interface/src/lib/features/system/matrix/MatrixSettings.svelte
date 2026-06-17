@@ -1,5 +1,5 @@
 <script lang="ts">
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { FormButton, FormRange, FormToggle } from '$lib/components/shared/forms';
 	import { Spinner } from '$lib/components/common';
@@ -9,12 +9,7 @@
 	import IconGridDots from '~icons/tabler/grid-dots';
 	import IconEditorModal from '$lib/components/matrix/IconEditorModal.svelte';
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
-	import {
-		fromMatrixHexColor,
-		getMatrixCustomIcons,
-		MATRIX_MENU_BUTTON_LOCKED_ENABLED,
-		toMatrixHexColor
-	} from './matrixModel';
+	import { fromMatrixHexColor, getMatrixCustomIcons, toMatrixHexColor } from './matrixModel';
 
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -61,12 +56,21 @@
 	async function handleIconsSave(newIcons: number[][]) {
 		if (!canManage) return false;
 		store.settings = { ...store.settings, custom_icons: newIcons };
-		if (!store.hasChanges) return true;
-		return await store.saveSettingsNow();
+		return true;
 	}
 </script>
 
-<BaseCard title={m.matrix_title()} icon={IconGridDots}>
+<SettingsCard
+	title={m.matrix_title()}
+	icon={IconGridDots}
+	hasChanges={store.hasChanges}
+	loading={store.loading}
+	saving={store.saving}
+	disabled={!canManage}
+	error={store.error}
+	onSave={store.saveSettingsNow}
+	onReset={store.resetSettings}
+>
 	<div class="flex w-full flex-col gap-1">
 		{#if store.loading}
 			<div class="flex justify-center items-center py-8">
@@ -146,8 +150,8 @@
 					</div>
 					<FormToggle
 						label=""
-						checked={MATRIX_MENU_BUTTON_LOCKED_ENABLED}
-						disabled={true}
+						bind:checked={store.settings.menu_enabled}
+						disabled={!canManage}
 						ariaLabel={m.matrix_menu_enabled()}
 						plain={true}
 					/>
@@ -220,4 +224,4 @@
 			</ContentBox>
 		{/if}
 	</div>
-</BaseCard>
+</SettingsCard>
