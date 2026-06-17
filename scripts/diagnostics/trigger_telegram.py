@@ -1,52 +1,48 @@
-import requests
-import json
-import time
+#!/usr/bin/env python3
+"""Enable/disable Telegram notification flag and optionally trigger hygiene sleep."""
+
+from __future__ import annotations
+
+import argparse
 import sys
+from pathlib import Path
 
-# Default host from user request
-HOST = "http://192.168.0.55"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def main():
+
+def request_hygiene_sleep(client: DeviceClient) -> None:
     try:
-        # 1. Sign In
-        print(f"Signing in to {HOST}...")
-        resp = requests.post(f"{HOST}/rest/signIn", json={"username":"admin","password":"admin"}, timeout=5)
-        resp.raise_for_status()
-        token = resp.json().get("access_token")
-        if not token:
-            print(f"ERROR: No token received in login response. Status: {resp.status_code}")
-            print(f"Response: {resp.text}")
-            sys.exit(1)
-        
-        headers = {"Authorization": f"Bearer {token}"}
-        print("Success: Signed in")
+        client.post("/rest/power/hygieneSleep", timeout=2)
+    except Exception:
+        pass
 
-        # 2. Enable Telegram
-        print("Enabling Telegram mode...")
-        # Only sending mode to preserve existing credentials if any
-        payload = {"mode": 1}
-        resp = requests.post(f"{HOST}/api/notifications/settings", json=payload, headers=headers, timeout=5)
-        
-        if resp.status_code == 200:
-            print("Success: Notification mode disabled")
-        else:
-            print(f"Failed to set mode: {resp.status_code} {resp.text}")
-            # Continue anyway to try restart? No, better check.
-        
-        # 3. Restart (Hygiene Sleep)
-        print("Triggering Hygiene Restart (reboot)...")
-        try:
-            resp = requests.post(f"{HOST}/rest/power/hygieneSleep", headers=headers, timeout=2)
-        except requests.exceptions.ReadTimeout:
-            # Expected, device might reset immediately
-            print("Success: Restart triggered (timeout expected)")
-        
-        if resp.status_code == 200:
-             print("Success: Restart command accepted")
 
-    except Exception as e:
-        print(f"Exception: {e}")
-        sys.exit(1)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--enable", action="store_true")
+    mode.add_argument("--disable", action="store_true")
+    parser.add_argument("--commands", action="store_true", help="Also enable Telegram commands.")
+    parser.add_argument("--no-restart", action="store_true")
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
+    payload = {"telegram_enabled": bool(args.enable)}
+    if args.enable and args.commands:
+        payload["commands_enabled"] = True
+    try:
+        result = client.json("POST", "/api/notifications/settings", json=payload)
+        if not args.no_restart:
+            request_hygiene_sleep(client)
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print_json({"notifications": result, "restart_requested": not args.no_restart})
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

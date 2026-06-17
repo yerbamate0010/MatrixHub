@@ -1,46 +1,45 @@
-import requests
-import json
+#!/usr/bin/env python3
+"""Remove a diagnostic Shelly device and optionally trigger hygiene sleep."""
+
+from __future__ import annotations
+
+import argparse
 import sys
+from pathlib import Path
 
-# Default host
-HOST = "http://192.168.0.55"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def main():
+
+def request_hygiene_sleep(client: DeviceClient) -> None:
     try:
-        # 1. Sign In
-        print(f"Signing in to {HOST}...")
-        resp = requests.post(f"{HOST}/rest/signIn", json={"username":"admin","password":"admin"}, timeout=5)
-        resp.raise_for_status()
-        token = resp.json().get("access_token")
-        if not token:
-            print("ERROR: No token received")
-            sys.exit(1)
-        
-        headers = {"Authorization": f"Bearer {token}"}
+        client.post("/rest/power/hygieneSleep", timeout=2)
+    except Exception:
+        pass
 
-        # 2. Remove Shelly Device
-        print("Removing fake Shelly device...")
-        # API expects DELETE /api/shelly/devices with query param id
-        resp = requests.delete(f"{HOST}/api/shelly/devices", params={"id": "shelly-fake-01"}, headers=headers, timeout=5)
-        
-        if resp.status_code == 200:
-            print("Success: Shelly device removed")
-        else:
-            print(f"Failed to remove device: {resp.status_code} {resp.text}")
 
-        # 3. Restart (Hygiene Sleep)
-        print("Triggering Hygiene Restart (reboot)...")
-        try:
-            resp = requests.post(f"{HOST}/rest/power/hygieneSleep", headers=headers, timeout=2)
-        except requests.exceptions.ReadTimeout:
-            print("Success: Restart triggered (timeout expected)")
-            
-        if resp is not None and resp.status_code == 200:
-             print("Success: Restart command accepted")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument("--id", default="shelly-fake-01")
+    parser.add_argument("--no-restart", action="store_true")
+    args = parser.parse_args(argv)
 
-    except Exception as e:
-        print(f"Exception: {e}")
-        sys.exit(1)
+    client = DeviceClient.from_args(args)
+    try:
+        response = client.delete("/api/shelly/devices", params={"id": args.id})
+        if response.status_code != 200:
+            raise DeviceClientError(f"DELETE /api/shelly/devices failed: HTTP {response.status_code} {response.text[:200]}")
+        result = response.json()
+        if not args.no_restart:
+            request_hygiene_sleep(client)
+    except (DeviceClientError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print_json({"shelly": result, "restart_requested": not args.no_restart})
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

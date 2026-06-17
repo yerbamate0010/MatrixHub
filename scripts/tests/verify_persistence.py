@@ -1,123 +1,78 @@
+#!/usr/bin/env python3
+"""Verify BLE scanner settings survive a controlled restart."""
 
-import requests
-import time
-import sys
+from __future__ import annotations
+
+import argparse
 import json
+import sys
+import time
+from pathlib import Path
 
-BASE_URL = "http://192.168.0.55"
-AUTH_PAYLOAD = {"username": "admin", "password": "admin"}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args  # noqa: E402
 
-session = requests.Session()
-token = None
 
-def login():
-    global token
-    print(f"[*] Logging in to {BASE_URL}/rest/signIn...")
-    r = session.post(f"{BASE_URL}/rest/signIn", json=AUTH_PAYLOAD, timeout=10)
-    r.raise_for_status()
-    data = r.json()
-    token = data.get("access_token")
-    if token:
-        print("[+] Login successful! Token acquired.")
-        session.headers.update({"Authorization": f"Bearer {token}"})
-    else:
-        print("[!] Login failed: No access_token in response.")
-        sys.exit(1)
-
-def get_settings():
-    print(f"[*] Fetching BLE settings...")
-    r = session.get(f"{BASE_URL}/api/ble/settings", timeout=10)
-    if r.status_code == 401:
-        login()
-        r = session.get(f"{BASE_URL}/api/ble/settings", timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-def normalize_settings(settings):
-    sensors = []
-    for sensor in settings.get("sensors", []):
-        sensors.append({
-            "mac": sensor.get("mac", ""),
-            "alias": sensor.get("alias", "")
-        })
-
+def normalize_settings(settings: dict) -> dict:
     return {
         "enabled": bool(settings.get("enabled", False)),
-        "sensors": sensors
+        "sensors": [
+            {"mac": sensor.get("mac", ""), "alias": sensor.get("alias", "")}
+            for sensor in settings.get("sensors", [])
+        ],
     }
 
-def save_settings(settings):
-    print(f"[*] Saving BLE settings...")
-    # BLE is scanner-only now. Persist only the live contract and avoid sending
-    # removed peripheral/passkey fields back into the endpoint.
-    payload = normalize_settings(settings)
-    r = session.post(f"{BASE_URL}/api/ble/settings", json=payload, timeout=10)
-    r.raise_for_status()
-    return r.json()
 
-def restart_device():
-    print(f"[*] Requesting device restart...")
-    try:
-        session.post(f"{BASE_URL}/rest/restart", timeout=2)
-    except requests.exceptions.RequestException:
-        pass
-
-def wait_for_online(timeout=90):
-    print(f"[*] Waiting for device to come back online (up to {timeout}s)...")
-    start = time.time()
-    while time.time() - start < timeout:
+def wait_for_online(client: DeviceClient, timeout: float) -> bool:
+    start = time.monotonic()
+    while time.monotonic() - start < timeout:
         try:
-            login()
-            r = session.get(f"{BASE_URL}/api/ble/settings", timeout=2)
-            if r.status_code == 200:
-                print("[+] Device is back online!")
+            client.login(force=True)
+            response = client.get("/api/ble/settings", timeout=3)
+            if response.status_code == 200:
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(5)
     return False
 
-def main():
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument("--restart-timeout", type=float, default=90.0)
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
     try:
-        # 1. Get initial state
-        initial = get_settings()
-        print(f"[DEBUG] Initial Settings: {json.dumps(initial, indent=2)}")
+        initial = client.json("GET", "/api/ble/settings")
         baseline = normalize_settings(initial)
+        print(f"[BASELINE] {json.dumps(baseline, sort_keys=True)}")
 
-        # 2. Save the current scanner-only settings back verbatim. This exercises
-        # the persistence path without reintroducing removed BLE peripheral fields.
-        save_settings(baseline)
-        print("[+] Scanner-only BLE settings saved back successfully")
+        client.json("POST", "/api/ble/settings", json=baseline)
+        print("[RESTART] requesting /rest/restart")
+        try:
+            client.post("/rest/restart", timeout=2)
+        except Exception:
+            pass
 
-        # 3. Restart
-        restart_device()
-        time.sleep(5) # Give it time to start shutdown
-        
-        if not wait_for_online():
-            print("[!] ERROR: Device failed to come back online within timeout.")
-            sys.exit(1)
+        if not wait_for_online(client, args.restart_timeout):
+            print("ERROR: device did not return online in time", file=sys.stderr)
+            return 1
 
-        # 4. Verify
-        print("[*] Verifying persistence...")
-        post_restart = get_settings()
-        print(f"[DEBUG] Post-Restart Settings: {json.dumps(post_restart, indent=2)}")
-        persisted = normalize_settings(post_restart)
+        persisted = normalize_settings(client.json("GET", "/api/ble/settings"))
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
-        if persisted == baseline:
-            print("==================================================")
-            print("   SUCCESS: BLE Scanner Settings Persisted!      ")
-            print("==================================================")
-        else:
-            print("==================================================")
-            print("   FAILED: BLE Scanner Settings Drifted!         ")
-            print(f"   Expected: {json.dumps(baseline, indent=2)}")
-            print(f"   Got:      {json.dumps(persisted, indent=2)}")
-            print("==================================================")
-            sys.exit(1)
+    if persisted != baseline:
+        print("FAILED: BLE scanner settings drifted", file=sys.stderr)
+        print(f"expected={json.dumps(baseline, sort_keys=True)}", file=sys.stderr)
+        print(f"actual={json.dumps(persisted, sort_keys=True)}", file=sys.stderr)
+        return 1
+    print("PASS: BLE scanner settings persisted")
+    return 0
 
-    except Exception as e:
-        print(f"[!] TEST ERROR: {e}")
-        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

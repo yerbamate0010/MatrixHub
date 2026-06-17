@@ -25,7 +25,6 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime
-import os
 import re
 import signal
 import statistics
@@ -34,13 +33,8 @@ import time
 from pathlib import Path
 from typing import Iterable
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
-DEFAULT_HOST = os.environ.get("DEVICE_URL", "http://192.168.0.55")
-DEFAULT_USER = os.environ.get("DEVICE_USER", "admin")
-DEFAULT_PASSWORD = os.environ.get("DEVICE_PASSWORD", "admin")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args  # noqa: E402
 
 CSV_FIELDS = [
     "timestamp_iso",
@@ -79,56 +73,15 @@ def parse_interval(text: str) -> float:
     return seconds
 
 
-def build_session() -> requests.Session:
-    session = requests.Session()
-    retry = Retry(
-        total=3,
-        backoff_factor=0.5,
-        status_forcelist=(500, 502, 503, 504),
-        allowed_methods=frozenset({"GET", "POST"}),
-    )
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-    session.verify = False
-    return session
-
-
-def login(session: requests.Session, host: str, user: str, password: str) -> str:
-    response = session.post(
-        f"{host}/rest/signIn",
-        json={"username": user, "password": password},
-        timeout=10,
-    )
-    response.raise_for_status()
-    token = response.json().get("access_token")
-    if not token:
-        raise RuntimeError("signIn succeeded but no access_token in response")
-    return token
-
-
 def get_with_auth(
-    session: requests.Session,
-    host: str,
+    client: DeviceClient,
     path: str,
-    token_holder: dict,
-    creds: tuple[str, str],
 ) -> dict | None:
-    headers = {"Authorization": f"Bearer {token_holder['token']}"}
     try:
-        response = session.get(f"{host}{path}", headers=headers, timeout=10)
-    except requests.RequestException as exc:
+        response = client.get(path)
+    except Exception as exc:
         print(f"  warning: GET {path} failed: {exc}", file=sys.stderr)
         return None
-
-    if response.status_code == 401:
-        try:
-            token_holder["token"] = login(session, host, *creds)
-            headers["Authorization"] = f"Bearer {token_holder['token']}"
-            response = session.get(f"{host}{path}", headers=headers, timeout=10)
-        except Exception as exc:
-            print(f"  warning: re-auth failed: {exc}", file=sys.stderr)
-            return None
 
     if not response.ok:
         print(
@@ -265,9 +218,7 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--host", default=DEFAULT_HOST, help="Base URL incl. scheme.")
-    parser.add_argument("--user", default=DEFAULT_USER)
-    parser.add_argument("--password", default=DEFAULT_PASSWORD)
+    add_common_device_args(parser)
     parser.add_argument(
         "--interval",
         type=parse_interval,
@@ -302,14 +253,11 @@ def main(argv: list[str] | None = None) -> int:
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     output_path = Path(args.output) if args.output else Path(f"soak_{stamp}.csv")
 
-    session = build_session()
+    client = DeviceClient.from_args(args)
     try:
-        token = login(session, args.host, args.user, args.password)
-    except Exception as exc:
+        client.login()
+    except DeviceClientError as exc:
         sys.exit(f"login failed: {exc}")
-
-    token_holder = {"token": token}
-    creds = (args.user, args.password)
 
     interrupted = {"stop": False}
 
@@ -323,7 +271,7 @@ def main(argv: list[str] | None = None) -> int:
     deadline = time.monotonic() + args.duration if args.duration > 0 else None
 
     print(
-        f"polling {args.host} every {args.interval:.0f}s, "
+        f"polling {client.base_url} every {args.interval:.0f}s, "
         f"duration={'infinite' if deadline is None else f'{args.duration:.0f}s'}, "
         f"output={output_path}"
     )
@@ -334,12 +282,8 @@ def main(argv: list[str] | None = None) -> int:
 
         while not interrupted["stop"]:
             sample_start = time.monotonic()
-            info = get_with_auth(
-                session, args.host, "/api/system/info", token_holder, creds
-            )
-            tasks = get_with_auth(
-                session, args.host, "/api/system/tasks", token_holder, creds
-            )
+            info = get_with_auth(client, "/api/system/info")
+            tasks = get_with_auth(client, "/api/system/tasks?details=1")
             sample = extract_sample(info, tasks)
             samples.append(sample)
             writer.writerow(sample)

@@ -1,127 +1,126 @@
-import requests
-import time
+#!/usr/bin/env python3
+"""HTTPS/JWT endpoint stress smoke for MatrixHub."""
+
+from __future__ import annotations
+
+import argparse
 import json
-import threading
 import sys
+import time
+from pathlib import Path
 
-# Configuration
-DEVICE_IP = "192.168.0.55"
-BASE_URL = f"http://{DEVICE_IP}"
-USERNAME = "admin"
-PASSWORD = "admin"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args  # noqa: E402
 
-# Endpoints Config
-# List of (method, url, safe_for_stress)
+
 ENDPOINTS = [
-    # Power
-    ("GET", "/rest/power/status", True),
-    # WiFi Sensing
-    ("GET", "/api/wifisensing", True),
-    # BLE
-    ("GET", "/api/ble/status", True),
-    # UDP
-    ("GET", "/api/udp", True),
-    # Config
-    ("GET", "/api/config", True),
-    # Alarms
-    ("GET", "/api/alarms/rules", True),
-    ("GET", "/api/alarms/status", True),
-    # Heartbeat
-    ("GET", "/api/heartbeat", True),
-    # System
-    ("GET", "/api/system/tasks", True),
-    # Logs
-    ("GET", "/api/logs", True),
-    ("GET", "/rest/logs/tail", True), # High frequency allowed
+    ("GET", "/api/system/info"),
+    ("GET", "/api/system/tasks?details=1"),
+    ("GET", "/api/system/network"),
+    ("GET", "/api/config"),
+    ("GET", "/rest/power/status"),
+    ("GET", "/api/ble/status"),
+    ("GET", "/api/ble/settings"),
+    ("GET", "/api/alarms/rules?includeStatus=1"),
+    ("GET", "/api/matrix/settings"),
+    ("GET", "/api/wifisensing/config"),
+    ("GET", "/api/heartbeat"),
+    ("GET", "/api/udp"),
+    ("GET", "/api/notifications/settings"),
+    ("GET", "/api/macros/status"),
+    ("GET", "/api/logs"),
+    ("GET", "/rest/logs/tail"),
 ]
 
-def login():
-    url = f"{BASE_URL}/rest/signIn"
-    start = time.time()
-    try:
-        response = requests.post(url, json={"username": USERNAME, "password": PASSWORD}, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        token = data.get("access_token")
-        duration = (time.time() - start) * 1000
-        print(f"[AUTH] Login successful in {duration:.2f}ms")
-        return token
-    except Exception as e:
-        print(f"[AUTH] Failed: {e}")
-        sys.exit(1)
 
-def test_endpoint(endpoint, token, verbose=True):
-    method, path, safe = endpoint
-    url = f"{BASE_URL}{path}"
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    start = time.time()
-    try:
-        if method == "GET":
-            response = requests.get(url, headers=headers, timeout=5)
-        else:
-            print(f"[SKIP] Skipping non-GET {method} {path}")
-            return False, 0
+def hit(client: DeviceClient, method: str, path: str) -> dict:
+    start = time.perf_counter()
+    response = client.request(method, path)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    return {
+        "method": method,
+        "path": path,
+        "status": response.status_code,
+        "ok": response.status_code == 200,
+        "latency_ms": round(elapsed_ms, 2),
+        "bytes": len(response.content),
+    }
 
-        duration = (time.time() - start) * 1000
-        
-        if response.status_code == 200:
+
+def run(client: DeviceClient, cycles: int, delay: float, verbose: bool) -> tuple[list[dict], int]:
+    results: list[dict] = []
+    failures = 0
+    total = cycles * len(ENDPOINTS)
+    request_no = 0
+    for _ in range(cycles):
+        for method, path in ENDPOINTS:
+            request_no += 1
+            try:
+                result = hit(client, method, path)
+            except Exception as exc:
+                result = {
+                    "method": method,
+                    "path": path,
+                    "status": None,
+                    "ok": False,
+                    "latency_ms": 0,
+                    "bytes": 0,
+                    "error": str(exc),
+                }
+            results.append(result)
+            failures += 0 if result["ok"] else 1
             if verbose:
-                print(f"[PASS] {method} {path} - {response.status_code} ({duration:.2f}ms) - {len(response.content)} bytes")
-            return True, duration
-        else:
-            print(f"[FAIL] {method} {path} - {response.status_code} ({duration:.2f}ms)")
-            return False, duration
-            
-    except Exception as e:
-        print(f"[ERR ] {method} {path} - {e}")
-        return False, 0
+                label = "PASS" if result["ok"] else "FAIL"
+                print(
+                    f"[{label}] {method} {path} status={result['status']} "
+                    f"{result['latency_ms']:.2f}ms bytes={result['bytes']}"
+                )
+            elif request_no % 10 == 0:
+                print(f"  progress: {request_no}/{total} requests", end="\r")
+            if delay > 0:
+                time.sleep(delay)
+    if not verbose:
+        print()
+    return results, failures
 
-def stress_test(token, cycles=50, delay=0.1):
-    print(f"\n[STRESS] Starting stress test ({cycles} cycles, {delay}s delay)...")
-    
-    success_count = 0
-    fail_count = 0
-    total_latency = 0
-    request_count = 0
-    
-    start_time = time.time()
-    
-    for i in range(cycles):
-        for endpoint in ENDPOINTS:
-            method, path, safe = endpoint
-            if not safe: continue
-            
-            ok, duration = test_endpoint((method, path, safe), token, verbose=False)
-            request_count += 1
-            if ok:
-                success_count += 1
-                total_latency += duration
-            else:
-                fail_count += 1
-            
-            time.sleep(delay)
-            
-            if request_count % 10 == 0:
-                print(f"  Progress: {request_count} requests...", end='\r')
 
-    total_time = time.time() - start_time
-    avg_latency = total_latency / success_count if success_count > 0 else 0
-    
-    print(f"\n[STRESS] Completed in {total_time:.2f}s")
-    print(f"  Requests: {request_count}")
-    print(f"  Success:  {success_count} ({success_count/request_count*100:.1f}%)")
-    print(f"  Failed:   {fail_count}")
-    print(f"  Avg Lat:  {avg_latency:.2f}ms")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument("--cycles", type=int, default=20, help="Stress cycles. Default: 20.")
+    parser.add_argument("--delay", type=float, default=0.05, help="Delay between requests. Default: 0.05.")
+    parser.add_argument("--quiet", action="store_true", help="Only print summary.")
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
+    try:
+        client.login()
+    except DeviceClientError as exc:
+        print(f"[AUTH] {exc}", file=sys.stderr)
+        return 1
+
+    print(f"Target: {client.base_url}")
+    results, failures = run(client, max(1, args.cycles), max(0.0, args.delay), not args.quiet)
+    successes = len(results) - failures
+    avg_latency = (
+        sum(r["latency_ms"] for r in results if r["ok"]) / successes if successes else 0.0
+    )
+    summary = {
+        "target": client.base_url,
+        "requests": len(results),
+        "success": successes,
+        "failed": failures,
+        "avg_latency_ms": round(avg_latency, 2),
+    }
+    if args.json:
+        print(json.dumps({"summary": summary, "results": results}, indent=2, sort_keys=True))
+    else:
+        print(
+            f"[STRESS] requests={summary['requests']} success={successes} "
+            f"failed={failures} avg_latency={avg_latency:.2f}ms"
+        )
+    return 1 if failures else 0
+
 
 if __name__ == "__main__":
-    print(f"Target: {BASE_URL}")
-    token = login()
-    
-    print("\n[TEST] Verifying all endpoints once...")
-    for ep in ENDPOINTS:
-        test_endpoint(ep, token)
-        
-    print("\n[PROMPT] Perform stress test? (50 cycles) [y/N]")
-    # For automated running, we skip input and just do it
-    stress_test(token, cycles=20, delay=0.05)
+    sys.exit(main())

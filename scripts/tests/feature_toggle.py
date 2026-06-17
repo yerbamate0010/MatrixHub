@@ -1,114 +1,70 @@
+#!/usr/bin/env python3
+"""Toggle selected feature settings off/on through the real HTTPS API."""
 
-import requests
-import time
+from __future__ import annotations
+
+import argparse
+import copy
 import sys
-import json
+import time
+from pathlib import Path
 
-BASE_URL = "http://192.168.0.22"
-AUTH_PAYLOAD = {"username": "admin", "password": "admin"}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args  # noqa: E402
 
-session = requests.Session()
 
-def login():
-    print(f"[*] Logging in to {BASE_URL}/rest/signIn...")
-    try:
-        r = session.post(f"{BASE_URL}/rest/signIn", json=AUTH_PAYLOAD, timeout=5)
-        r.raise_for_status()
-        token = r.json().get("access_token")
-        if token:
-            session.headers.update({"Authorization": f"Bearer {token}"})
-            print("[+] Login successful.")
-        else:
-            print("[!] Login failed: No token.")
-            sys.exit(1)
-    except Exception as e:
-        print(f"[!] Login error: {e}")
-        sys.exit(1)
+FEATURES = {
+    "ble": ("/api/ble/settings", "enabled"),
+    "wifisensing": ("/api/wifisensing/config", "enabled"),
+}
 
-def toggle_feature(name, api_endpoint, key, current_state):
-    print(f"\n[*] Toggling {name} {'OFF' if current_state else 'ON'}...")
-    try:
-        # Fetch current config first to preserve other fields
-        r = session.get(f"{BASE_URL}{api_endpoint}", timeout=5)
-        r.raise_for_status()
-        config = r.json()
-        
-        # Toggle
-        new_state = not current_state
-        config[key] = new_state
-        
-        # Send update
-        r = session.post(f"{BASE_URL}{api_endpoint}", json=config, timeout=5)
-        r.raise_for_status()
-        
-        print(f"[+] {name} set to {new_state}. Check Serial Monitor for confirmation logs.")
-        return new_state
-    except Exception as e:
-        print(f"[!] Failed to toggle {name}: {e}")
-        return current_state
 
-def main():
-    login()
-    
-    # 1. BLE Toggle
-    # Assumes /api/ble/settings and key "enabled"
-    # First get current state
-    try:
-        r = session.get(f"{BASE_URL}/api/ble/settings")
-        ble_enabled = r.json().get("enabled", True)
-        print(f"[*] Current BLE State: {ble_enabled}")
-        
-        # Toggle OFF then ON
-        ble_enabled = toggle_feature("BLE", "/api/ble/settings", "enabled", ble_enabled)
-        time.sleep(2)
-        ble_enabled = toggle_feature("BLE", "/api/ble/settings", "enabled", ble_enabled)
-        
-    except Exception as e:
-        print(f"[!] BLE Test Error: {e}")
+def toggle_feature(client: DeviceClient, name: str, delay: float) -> bool:
+    endpoint, key = FEATURES[name]
+    original = client.json("GET", endpoint)
+    if key not in original:
+        raise DeviceClientError(f"{endpoint} response has no {key!r} field")
 
-    # 2. WiFi Sensing Toggle
-    try:
-        endpoint = "/api/wifisensing/config"
-        r = session.get(f"{BASE_URL}{endpoint}")
-        if r.status_code == 200:
-            ws_enabled = r.json().get("enabled", True)
-            print(f"[*] Current WiFi Sensing State: {ws_enabled}")
-            
-            ws_enabled = toggle_feature("WiFi Sensing", endpoint, "enabled", ws_enabled)
-            time.sleep(2)
-            ws_enabled = toggle_feature("WiFi Sensing", endpoint, "enabled", ws_enabled)
-        else:
-            print(f"[!] WiFi Sensing endpoint not found (Status {r.status_code})")
+    first = copy.deepcopy(original)
+    first[key] = not bool(original[key])
+    client.json("POST", endpoint, json=first)
+    time.sleep(delay)
 
-    except Exception as e:
-        print(f"[!] WiFi Sensing Test Error: {e}")
+    restored = copy.deepcopy(original)
+    client.json("POST", endpoint, json=restored)
+    time.sleep(delay)
 
-    # 3. Telegram (Notifications)
-    try:
-        endpoint = "/api/notifications/settings"
-        r = session.get(f"{BASE_URL}{endpoint}")
-        if r.status_code == 200:
-            notif_config = r.json()
-            # Telegram usually under "telegram" object or similar. 
-            # If flat structure: "telegram_enabled". If nested: config["telegram"]["enabled"]
-            # Let's inspect response
-            print(f"[*] Notification Config Keys: {notif_config.keys()}")
-            
-            # Simple toggle of global notification enabled if exists, or telegram specific
-            target_key = "telegram_enabled" if "telegram_enabled" in notif_config else "enabled"
-            
-            val = notif_config.get(target_key, False)
-            print(f"[*] Current Notification/Telegram State: {val}")
-            
-            toggle_feature("Notifications", endpoint, target_key, val)
-            time.sleep(2)
-            toggle_feature("Notifications", endpoint, target_key, not val)
-            
-        else:
-            print(f"[!] Notifications endpoint not found (Status {r.status_code})")
-            
-    except Exception as e:
-        print(f"[!] Notifications Test Error: {e}")
+    final = client.json("GET", endpoint)
+    if bool(final.get(key)) != bool(original[key]):
+        raise DeviceClientError(f"{name} did not restore {key}: {final.get(key)} != {original[key]}")
+    return True
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument(
+        "--feature",
+        choices=tuple(FEATURES) + ("all",),
+        default="all",
+        help="Feature to toggle. Default: all.",
+    )
+    parser.add_argument("--delay", type=float, default=2.0, help="Delay after each update.")
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
+    selected = list(FEATURES) if args.feature == "all" else [args.feature]
+    failures = 0
+    for feature in selected:
+        try:
+            print(f"[TOGGLE] {feature} via {client.base_url}")
+            toggle_feature(client, feature, max(0.0, args.delay))
+            print(f"[PASS] {feature}")
+        except Exception as exc:
+            failures += 1
+            print(f"[FAIL] {feature}: {exc}", file=sys.stderr)
+    return 1 if failures else 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

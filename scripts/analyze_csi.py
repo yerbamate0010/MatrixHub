@@ -1,158 +1,106 @@
-import asyncio
-import struct
-import time
-import sys
+#!/usr/bin/env python3
+"""Collect a short CSI stream sample and print wire-format statistics."""
 
-# Try to import websockets library
-try:
-    import websockets
-    import requests
-    import json
-except ImportError:
-    print("Error: 'websockets' or 'requests' library not found.")
-    print("Please run: pip3 install websockets requests")
-    sys.exit(1)
+from __future__ import annotations
 
 import argparse
+import asyncio
+import struct
+import sys
+import time
+from pathlib import Path
 
-# Default config
-HOST = "192.168.0.22"
-URL_LOGIN = f"http://{HOST}/rest/signIn"
-WS_URL_BASE = f"ws://{HOST}/ws/csi"
-USERNAME = "admin"
-PASSWORD = "admin"
+try:
+    import websockets
+except ImportError:
+    print("Install dependency: pip install websockets", file=sys.stderr)
+    sys.exit(1)
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description='Analyze CSI data stream.')
-    parser.add_argument('--duration', type=int, default=5, help='Duration of analysis in seconds')
-    return parser.parse_args()
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from device_client import DeviceClient, add_common_device_args  # noqa: E402
 
-args = parse_arguments()
-DURATION = args.duration  # seconds
-EXPECTED_SUBCARRIERS = 64
 
-def get_access_token():
-    print(f"Logging in to {URL_LOGIN}...")
+def connect_ws(uri: str, headers: dict[str, str], ssl_context):
     try:
-        resp = requests.post(
-            URL_LOGIN, 
-            json={"username": USERNAME, "password": PASSWORD}, 
-            timeout=5
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        token = data.get("access_token")
-        if not token:
-            print("Login failed: No access_token in response")
-            sys.exit(1)
-        print("Login successful. Token obtained.")
-        return token
-    except Exception as e:
-        print(f"Login failed: {e}")
-        sys.exit(1)
+        return websockets.connect(uri, additional_headers=headers, ssl=ssl_context)
+    except TypeError:
+        return websockets.connect(uri, extra_headers=headers, ssl=ssl_context)
 
-async def analyze_csi():
-    # 1. Get Token
-    token = get_access_token()
-    
-    # 2. Connect with Token
-    ws_url = f"{WS_URL_BASE}?access_token={token}"
-    print(f"Connecting to WS...")
-    
-    try:
-        async with websockets.connect(ws_url) as websocket:
-            print("Connected! collecting data for 5 seconds...")
-            
-            start_time = time.time()
-            packet_count = 0
-            total_bytes = 0
-            
-            min_amp = float('inf')
-            max_amp = float('-inf')
-            avg_amp_sum = 0
-            avg_amp_count = 0
-            
-            while time.time() - start_time < DURATION:
-                try:
-                    message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
-                    total_bytes += len(message)
-                    packet_count += 1
-                    
-                    # Parse Header (WifiSensingApiService.cpp)
-                    # [0-3] Timestamp (uint32)
-                    # [4] RSSI (uint8)
-                    # [5-6] Data Len (uint16)
-                    # [7] Gain Comp (uint8)
-                    # [8-11] Motion Score (float)
-                    # [12] Is Motion (uint8)
-                    # [13...] Data
-                    
-                    HEADER_SIZE = 13
-                    offset = 0
-                    total_len = len(message)
-                    
-                    while offset < total_len:
-                        if total_len - offset < HEADER_SIZE:
-                            break
 
-                        header = message[offset:offset+HEADER_SIZE]
-                        # < I B H B f B (Big/Little endian? ESP32 is Little Endian "<")
-                        ts, rssi, data_len, gain_scaled, motion_score, is_motion = struct.unpack("<IBHBfB", header)
-                        gain_comp = gain_scaled / 10.0
-                        
-                        payload_start = offset + HEADER_SIZE
-                        
-                        if total_len - payload_start < data_len:
-                            print(f"Warning: Incomplete payload. Need {data_len}, have {total_len - payload_start}")
-                            break
-                            
-                        # Parse Amplitudes/Process Packet
-                        # Just update stats for now
-                        
-                        offset += (HEADER_SIZE + data_len)
-                        
-                        # --- Stats Update ---
-                        # We use the LAST packet in batch for visualization to keep it simple
-                        if offset >= total_len:
-                             if data_len > 0:
-                                values = struct.unpack(f"{data_len}b", message[payload_start:payload_start+data_len])
-                                current_min = min(values)
-                                current_max = max(values)
-                                current_avg = sum(map(abs, values)) / len(values)
-                                
-                                min_amp = min(min_amp, current_min)
-                                max_amp = max(max_amp, current_max)
-                                avg_amp_sum += current_avg
-                                avg_amp_count += 1
-                        
-                except asyncio.TimeoutError:
-                    continue
-                except Exception as e:
-                    print(f"Error receiving: {e}")
+async def analyze_csi(client: DeviceClient, duration: float) -> int:
+    uri = client.ws_url("/ws/csi")
+    packet_count = 0
+    total_bytes = 0
+    min_amp = float("inf")
+    max_amp = float("-inf")
+    avg_amp_sum = 0.0
+    avg_amp_count = 0
+    last_motion_score = 0.0
+    last_is_motion = 0
+
+    async with connect_ws(uri, client.ws_cookie_header(), client.ws_ssl_context()) as websocket:
+        print(f"Connected to {uri}; collecting for {duration:.1f}s")
+        start_time = time.time()
+        while time.time() - start_time < duration:
+            try:
+                message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
+            except asyncio.TimeoutError:
+                continue
+            if not isinstance(message, bytes):
+                continue
+            total_bytes += len(message)
+            packet_count += 1
+            offset = 0
+            header_size = 13
+            while offset + header_size <= len(message):
+                ts, rssi, data_len, gain_scaled, motion_score, is_motion = struct.unpack(
+                    "<IBHBfB", message[offset : offset + header_size]
+                )
+                (ts, rssi, gain_scaled)  # keep unpack names visible for future debugging
+                payload_start = offset + header_size
+                payload_end = payload_start + data_len
+                if payload_end > len(message):
                     break
-            
-            duration = time.time() - start_time
-            fps = packet_count / duration
-            kbps = (total_bytes * 8) / 1000 / duration
-            
-            print("-" * 40)
-            print(f"Analysis Results ({duration:.2f}s):")
-            print(f"Packets Received: {packet_count}")
-            print(f"Rate: {fps:.2f} FPS (Target: ~100Hz but throttled to 10 in CsiService?)") 
-            # CsiService has SEND_INTERVAL_MS = 100 -> 10 FPS limit!
-            print(f"Bandwidth: {kbps:.2f} kbps")
-            print(f"Avg Packet Size: {total_bytes / packet_count:.1f} bytes")
-            if avg_amp_count > 0:
-                print(f"Raw Amplitudes (int8): Min={min_amp}, Max={max_amp}, AvgMagnitude={avg_amp_sum/avg_amp_count:.2f}")
-            
-            # Print last motion stats
-            print(f"MVS Motion Score: {motion_score:.4f} (IsMotion: {is_motion})")
-            print("-" * 40)
+                payload = message[payload_start:payload_end]
+                if payload:
+                    values = struct.unpack(f"{len(payload)}b", payload)
+                    min_amp = min(min_amp, min(values))
+                    max_amp = max(max_amp, max(values))
+                    avg_amp_sum += sum(map(abs, values)) / len(values)
+                    avg_amp_count += 1
+                last_motion_score = motion_score
+                last_is_motion = is_motion
+                offset = payload_end
 
-    except Exception as e:
-        print(f"Connection failed: {e}")
-        # Hint about network
-        print("Make sure the ESP32 is running and reachable at 192.168.0.22")
+    elapsed = max(0.001, duration)
+    print("-" * 40)
+    print(f"Packets received: {packet_count}")
+    print(f"Rate: {packet_count / elapsed:.2f} FPS")
+    print(f"Bandwidth: {(total_bytes * 8) / 1000 / elapsed:.2f} kbps")
+    if packet_count:
+        print(f"Avg packet size: {total_bytes / packet_count:.1f} bytes")
+    if avg_amp_count:
+        print(
+            f"Raw amplitudes: min={min_amp}, max={max_amp}, "
+            f"avgMagnitude={avg_amp_sum / avg_amp_count:.2f}"
+        )
+    print(f"Motion score: {last_motion_score:.4f} is_motion={last_is_motion}")
+    print("-" * 40)
+    return 0 if packet_count else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument("--duration", type=float, default=5.0)
+    args = parser.parse_args(argv)
+    client = DeviceClient.from_args(args)
+    try:
+        return asyncio.run(analyze_csi(client, max(0.1, args.duration)))
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
 
 if __name__ == "__main__":
-    asyncio.run(analyze_csi())
+    sys.exit(main())

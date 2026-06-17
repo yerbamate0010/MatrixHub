@@ -1,45 +1,46 @@
-import requests
+#!/usr/bin/env python3
+"""Enable/disable WiFi sensing and optionally trigger hygiene sleep."""
+
+from __future__ import annotations
+
+import argparse
 import sys
+from pathlib import Path
 
-# Default host
-HOST = "http://192.168.0.55"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def main():
+
+def request_hygiene_sleep(client: DeviceClient) -> None:
     try:
-        # 1. Sign In
-        print(f"Signing in to {HOST}...")
-        resp = requests.post(f"{HOST}/rest/signIn", json={"username":"admin","password":"admin"}, timeout=5)
-        resp.raise_for_status()
-        token = resp.json().get("access_token")
-        if not token:
-            print("ERROR: No token received")
-            sys.exit(1)
-        
-        headers = {"Authorization": f"Bearer {token}"}
+        client.post("/rest/power/hygieneSleep", timeout=2)
+    except Exception:
+        pass
 
-        # 2. Update WiFi Sensing
-        print("Disabling Wifi Sensing...")
-        payload = {"enabled": False}
-        resp = requests.post(f"{HOST}/api/wifisensing/config", json=payload, headers=headers, timeout=5)
-        
-        if resp.status_code == 200:
-            print("Success: WiFi Sensing updated")
-        else:
-            print(f"Failed to set config: {resp.status_code} {resp.text}")
-        
-        # 3. Restart (Hygiene Sleep)
-        print("Triggering Hygiene Restart (reboot)...")
-        try:
-            resp = requests.post(f"{HOST}/rest/power/hygieneSleep", headers=headers, timeout=2)
-        except requests.exceptions.ReadTimeout:
-            print("Success: Restart triggered (timeout expected)")
-        
-        if resp is not None and resp.status_code == 200:
-             print("Success: Restart command accepted")
 
-    except Exception as e:
-        print(f"Exception: {e}")
-        sys.exit(1)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--enable", action="store_true")
+    mode.add_argument("--disable", action="store_true")
+    parser.add_argument("--no-restart", action="store_true")
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
+    try:
+        current = client.json("GET", "/api/wifisensing/config")
+        current["enabled"] = bool(args.enable)
+        result = client.json("POST", "/api/wifisensing/config", json=current)
+        if not args.no_restart:
+            request_hygiene_sleep(client)
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print_json({"wifisensing": result, "restart_requested": not args.no_restart})
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

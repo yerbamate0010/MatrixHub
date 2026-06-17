@@ -1,53 +1,52 @@
-import requests
-import json
+#!/usr/bin/env python3
+"""Add a diagnostic Shelly device and optionally trigger hygiene sleep."""
+
+from __future__ import annotations
+
+import argparse
 import sys
-import time
+from pathlib import Path
 
-# Default host
-HOST = "http://192.168.0.55"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def main():
+
+def request_hygiene_sleep(client: DeviceClient) -> None:
     try:
-        # 1. Sign In
-        print(f"Signing in to {HOST}...")
-        resp = requests.post(f"{HOST}/rest/signIn", json={"username":"admin","password":"admin"}, timeout=5)
-        resp.raise_for_status()
-        token = resp.json().get("access_token")
-        if not token:
-            print("ERROR: No token received")
-            sys.exit(1)
-        
-        headers = {"Authorization": f"Bearer {token}"}
+        client.post("/rest/power/hygieneSleep", timeout=2)
+    except Exception:
+        pass
 
-        # 2. Add Shelly Device
-        print("Adding fake Shelly device...")
-        payload = {
-            "id": "shelly-fake-01",
-            "name": "Memory Test Device",
-            "ip": "192.168.0.222", # Fake IP in private range
-            "enabled": True,
-            "relay_index": 0
-        }
-        res = requests.post(f"{HOST}/api/shelly/devices", json=payload, headers=headers, timeout=5)
-        
-        if res.status_code == 200:
-            print("Success: Shelly device added")
-        else:
-            print(f"Failed to add device: {res.status_code} {res.text}")
-        
-        # 3. Restart (Hygiene Sleep)
-        print("Triggering Hygiene Restart (reboot)...")
-        try:
-            res = requests.post(f"{HOST}/rest/power/hygieneSleep", headers=headers, timeout=2)
-        except requests.exceptions.ReadTimeout:
-            print("Success: Restart triggered (timeout expected)")
-        
-        if res is not None and res.status_code == 200:
-             print("Success: Restart command accepted")
 
-    except Exception as e:
-        print(f"Exception: {e}")
-        sys.exit(1)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    parser.add_argument("--id", default="shelly-fake-01")
+    parser.add_argument("--name", default="Diagnostics Shelly")
+    parser.add_argument("--ip", default="192.168.0.222")
+    parser.add_argument("--relay-index", type=int, default=0)
+    parser.add_argument("--no-restart", action="store_true")
+    args = parser.parse_args(argv)
+
+    payload = {
+        "id": args.id,
+        "name": args.name,
+        "ip": args.ip,
+        "enabled": True,
+        "relay_index": args.relay_index,
+    }
+    client = DeviceClient.from_args(args)
+    try:
+        result = client.json("POST", "/api/shelly/devices", json=payload)
+        if not args.no_restart:
+            request_hygiene_sleep(client)
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    print_json({"shelly": result, "restart_requested": not args.no_restart})
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

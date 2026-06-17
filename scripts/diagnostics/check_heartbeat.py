@@ -1,81 +1,59 @@
 #!/usr/bin/env python3
-import requests
-import json
+"""Read or update heartbeat settings over HTTPS/JWT."""
+
+from __future__ import annotations
+
 import argparse
 import sys
+from pathlib import Path
 
-DEVICE_IP = "192.168.0.55"
-BASE_URL = f"http://{DEVICE_IP}/api"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def get_token():
+
+def disabled_slots(count: int = 4) -> list[dict]:
+    return [
+        {"enabled": False, "name": "", "url": "", "allow_insecure": False}
+        for _ in range(count)
+    ]
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--enable", action="store_true", help="Enable a single diagnostic slot.")
+    mode.add_argument("--disable", action="store_true", help="Disable all heartbeat slots.")
+    parser.add_argument("--url", default="https://example.com/", help="URL for --enable.")
+    parser.add_argument("--interval-ms", type=int, default=60000)
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
     try:
-        auth_data = {"username": "admin", "password": "admin"}
-        response = requests.post(f"http://{DEVICE_IP}/rest/signIn", json=auth_data, timeout=5)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        print(f"Login failed: {response.status_code}")
-        return None
-    except Exception as e:
-        print(f"Login error: {e}")
-        return None
-
-def get_config(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    try:
-        response = requests.get(f"{BASE_URL}/heartbeat", headers=headers, timeout=5)
-        if response.status_code == 200:
-            print(json.dumps(response.json(), indent=2))
-        else:
-            print(f"Error getting config: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"Connection error: {e}")
-
-def set_config(token, enable, url=None):
-    headers = {"Authorization": f"Bearer {token}"}
-    payload = {
-        "interval_ms": 60000,
-        "slots": [
-            {
-                "enabled": enable,
-                "name": "AuditTest",
-                "url": url if url else "http://google.com" 
+        if args.enable or args.disable:
+            payload = {
+                "interval_ms": max(1000, args.interval_ms),
+                "slots": disabled_slots(),
             }
-        ]
-    }
-    
-    # Disable remaining slots
-    for _ in range(3):
-        payload["slots"].append({"enabled": False, "name": "", "url": ""})
-
-    try:
-        print(f"Setting Heartbeat: enabled={enable}")
-        response = requests.post(f"{BASE_URL}/heartbeat", json=payload, headers=headers, timeout=5)
-        if response.status_code == 200:
-            print("Success!")
-            print(json.dumps(response.json(), indent=2))
+            if args.enable:
+                payload["slots"][0] = {
+                    "enabled": True,
+                    "name": "Diagnostics",
+                    "url": args.url,
+                    "allow_insecure": False,
+                }
+            result = client.json("POST", "/api/heartbeat", json=payload)
         else:
-            print(f"Error setting config: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"Connection error: {e}")
+            result = client.json("GET", "/api/heartbeat")
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
-def main():
-    parser = argparse.ArgumentParser(description="Heartbeat Config Tool")
-    parser.add_argument("--enable", action="store_true", help="Enable test slot")
-    parser.add_argument("--disable", action="store_true", help="Disable all slots")
-    parser.add_argument("--check", action="store_true", help="Check current config")
-    
-    args = parser.parse_args()
-    
-    token = get_token()
-    if not token:
-        sys.exit(1)
-        
-    if args.enable:
-        set_config(token, True)
-    elif args.disable:
-        set_config(token, False)
-    else:
-        get_config(token)
+    if not args.json:
+        print(f"Target: {client.base_url}")
+    print_json(result)
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,76 +1,51 @@
 #!/usr/bin/env python3
-import requests
-import json
+"""Read or update UDP push settings over HTTPS/JWT."""
+
+from __future__ import annotations
+
 import argparse
 import sys
+from pathlib import Path
 
-DEVICE_IP = "192.168.0.55"
-BASE_URL = f"http://{DEVICE_IP}/api"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, DeviceClientError, add_common_device_args, print_json  # noqa: E402
 
-def get_token():
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_common_device_args(parser)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--enable", action="store_true", help="Enable UDP push.")
+    mode.add_argument("--disable", action="store_true", help="Disable UDP push.")
+    parser.add_argument("--target-host", default="192.168.0.25")
+    parser.add_argument("--target-port", type=int, default=8094)
+    parser.add_argument("--format", choices=("line", "json", "csv"), default="line")
+    parser.add_argument("--interval-ms", type=int, default=60000)
+    args = parser.parse_args(argv)
+
+    client = DeviceClient.from_args(args)
     try:
-        auth_data = {"username": "admin", "password": "admin"}
-        response = requests.post(f"http://{DEVICE_IP}/rest/signIn", json=auth_data, timeout=5)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        print(f"Login failed: {response.status_code}")
-        return None
-    except Exception as e:
-        print(f"Login error: {e}")
-        return None
-
-def get_config(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    try:
-        response = requests.get(f"{BASE_URL}/udp", headers=headers, timeout=5)
-        if response.status_code == 200:
-            print(json.dumps(response.json(), indent=2))
+        if args.enable or args.disable:
+            current = client.json("GET", "/api/udp")
+            payload = {
+                "enabled": bool(args.enable),
+                "host": args.target_host if args.enable else current.get("host", args.target_host),
+                "port": args.target_port if args.enable else current.get("port", args.target_port),
+                "format": args.format if args.enable else current.get("format", args.format),
+                "interval_ms": max(1000, args.interval_ms if args.enable else current.get("interval_ms", args.interval_ms)),
+            }
+            result = client.json("POST", "/api/udp", json=payload)
         else:
-            print(f"Error getting config: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"Connection error: {e}")
+            result = client.json("GET", "/api/udp")
+    except DeviceClientError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
-def set_config(token, enable):
-    headers = {"Authorization": f"Bearer {token}"}
-    # Enable with dummy host, line protocol
-    payload = {
-        "enabled": enable,
-        "host": "192.168.0.25", # Twoj adres IP (Mac)
-        "port": 8094,
-        "format": "line",
-        "interval_ms": 60000
-    }
+    if not args.json:
+        print(f"Target: {client.base_url}")
+    print_json(result)
+    return 0
 
-    try:
-        print(f"Setting UDP: enabled={enable}")
-        response = requests.post(f"{BASE_URL}/udp", json=payload, headers=headers, timeout=5)
-        if response.status_code == 200:
-            print("Success!")
-            print(json.dumps(response.json(), indent=2))
-        else:
-            print(f"Error setting config: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"Connection error: {e}")
-
-def main():
-    parser = argparse.ArgumentParser(description="UDP Config Tool")
-    parser.add_argument("--enable", action="store_true", help="Enable UDP")
-    parser.add_argument("--disable", action="store_true", help="Disable UDP")
-    parser.add_argument("--check", action="store_true", help="Check current config")
-    
-    args = parser.parse_args()
-    
-    token = get_token()
-    if not token:
-        sys.exit(1)
-        
-    if args.enable:
-        set_config(token, True)
-    elif args.disable:
-        set_config(token, False)
-
-    else:
-        get_config(token)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

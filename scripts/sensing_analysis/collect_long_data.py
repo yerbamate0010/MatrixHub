@@ -6,9 +6,11 @@ import time
 from pathlib import Path
 
 import requests
+from urllib3.exceptions import InsecureRequestWarning
 
 FIELDNAMES = ["timestamp", "rssi", "variance", "motion"]
 DEFAULT_OUTPUT_FILE = Path(__file__).with_name("raw_capture.csv")
+DEFAULT_DEVICE_URL = "https://192.168.0.30"
 
 
 def parse_args():
@@ -17,8 +19,8 @@ def parse_args():
     )
     parser.add_argument(
         "--base-url",
-        default=os.environ.get("DEVICE_URL"),
-        help="Device base URL, for example http://192.168.0.22",
+        default=os.environ.get("DEVICE_URL", DEFAULT_DEVICE_URL),
+        help="Device base URL, for example https://192.168.0.30",
     )
     parser.add_argument(
         "--username",
@@ -54,14 +56,14 @@ def parse_args():
         help="CSV output path.",
     )
     args = parser.parse_args()
-    if not args.base_url:
-        parser.error("provide --base-url or set DEVICE_URL")
     args.base_url = args.base_url.rstrip("/")
     return args
 
 
 def create_session(args):
     session = requests.Session()
+    session.verify = False
+    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
     if args.token:
         session.headers.update({"Authorization": f"Bearer {args.token}"})
         return session
