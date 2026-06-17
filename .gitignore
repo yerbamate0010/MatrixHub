@@ -48,6 +48,7 @@ node_modules/
 /src/config/certificates.local.h
 
 # Misc
+/artifacts/
 *.log
 /scenariusz*.out
 /scripts/sensing_analysis/raw_*.csv
