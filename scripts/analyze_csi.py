@@ -54,7 +54,7 @@ async def analyze_csi(client: DeviceClient, duration: float) -> int:
             header_size = 13
             while offset + header_size <= len(message):
                 ts, rssi, data_len, gain_scaled, motion_score, is_motion = struct.unpack(
-                    "<IBHBfB", message[offset : offset + header_size]
+                    "<IbHBfB", message[offset : offset + header_size]
                 )
                 (ts, rssi, gain_scaled)  # keep unpack names visible for future debugging
                 payload_start = offset + header_size

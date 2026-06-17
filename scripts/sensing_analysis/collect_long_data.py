@@ -1,42 +1,26 @@
 import argparse
+import asyncio
 import csv
-import os
 import struct
 import time
 from pathlib import Path
+import sys
 
-import requests
-from urllib3.exceptions import InsecureRequestWarning
+import websockets
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from device_client import DeviceClient, add_common_device_args  # noqa: E402
 
 FIELDNAMES = ["timestamp", "rssi", "variance", "motion"]
 DEFAULT_OUTPUT_FILE = Path(__file__).with_name("raw_capture.csv")
-DEFAULT_DEVICE_URL = "https://192.168.0.30"
+CSI_HEADER_BYTES = 13
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Collect raw WiFi sensing binary snapshots and save them as CSV."
+        description="Collect WiFi CSI WebSocket samples and save them as CSV."
     )
-    parser.add_argument(
-        "--base-url",
-        default=os.environ.get("DEVICE_URL", DEFAULT_DEVICE_URL),
-        help="Device base URL, for example https://192.168.0.30",
-    )
-    parser.add_argument(
-        "--username",
-        default=os.environ.get("DEVICE_USERNAME", "admin"),
-        help="Username used for /rest/signIn when --token is not provided.",
-    )
-    parser.add_argument(
-        "--password",
-        default=os.environ.get("DEVICE_PASSWORD", "admin"),
-        help="Password used for /rest/signIn when --token is not provided.",
-    )
-    parser.add_argument(
-        "--token",
-        default=os.environ.get("DEVICE_TOKEN"),
-        help="Optional bearer token. If omitted, the script logs in first.",
-    )
+    add_common_device_args(parser)
     parser.add_argument(
         "--duration",
         type=float,
@@ -47,7 +31,7 @@ def parse_args():
         "--poll-interval",
         type=float,
         default=2.0,
-        help="Delay between requests in seconds.",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--output",
@@ -55,56 +39,37 @@ def parse_args():
         default=DEFAULT_OUTPUT_FILE,
         help="CSV output path.",
     )
-    args = parser.parse_args()
-    args.base_url = args.base_url.rstrip("/")
-    return args
+    return parser.parse_args()
 
 
-def create_session(args):
-    session = requests.Session()
-    session.verify = False
-    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-    if args.token:
-        session.headers.update({"Authorization": f"Bearer {args.token}"})
-        return session
-
-    response = session.post(
-        f"{args.base_url}/rest/signIn",
-        json={"username": args.username, "password": args.password},
-        timeout=5,
-    )
-    response.raise_for_status()
-    token = response.json().get("access_token")
-    if not token:
-        raise RuntimeError("signIn succeeded but no access_token was returned")
-    session.headers.update({"Authorization": f"Bearer {token}"})
-    return session
+def connect_ws(uri: str, headers: dict[str, str], ssl_context):
+    try:
+        return websockets.connect(uri, additional_headers=headers, ssl=ssl_context)
+    except TypeError:
+        return websockets.connect(uri, extra_headers=headers, ssl=ssl_context)
 
 
-def iter_new_samples(payload, seen_timestamps):
-    if len(payload) <= 27:
-        return
+def iter_new_samples(payload: bytes, seen_timestamps: set[int]):
+    offset = 0
+    while offset + CSI_HEADER_BYTES <= len(payload):
+        timestamp, rssi, data_len, _gain_scaled, motion_score, is_motion = struct.unpack_from(
+            "<IbHBfB", payload, offset
+        )
+        payload_start = offset + CSI_HEADER_BYTES
+        payload_end = payload_start + data_len
+        if data_len == 0 or payload_end > len(payload):
+            break
+        offset = payload_end
 
-    ssid_len = payload[21]
-    header_size = 27 + ssid_len
-    samples_data = payload[header_size:]
-
-    for offset in range(0, len(samples_data), 10):
-        chunk = samples_data[offset : offset + 10]
-        if len(chunk) < 10:
-            continue
-
-        timestamp = struct.unpack_from("<I", chunk, 0)[0]
         if timestamp in seen_timestamps:
             continue
 
         seen_timestamps.add(timestamp)
-        rssi_raw = struct.unpack_from("<B", chunk, 4)[0]
         yield {
             "timestamp": timestamp,
-            "rssi": rssi_raw if rssi_raw < 128 else rssi_raw - 256,
-            "variance": struct.unpack_from("<f", chunk, 5)[0],
-            "motion": chunk[9],
+            "rssi": rssi,
+            "variance": motion_score,
+            "motion": is_motion,
         }
 
 
@@ -121,34 +86,36 @@ def append_rows(output_file: Path, rows):
         writer.writerows(rows)
 
 
-def collect_samples(args):
-    session = create_session(args)
+async def collect_samples(args):
+    client = DeviceClient.from_args(args)
     output_file = args.output
-    url = f"{args.base_url}/api/wifisensing/binary"
+    uri = client.ws_url("/ws/csi")
 
     initialize_output(output_file)
     seen_timestamps = set()
     start_time = time.time()
 
-    while (time.time() - start_time) < args.duration:
-        try:
-            response = session.get(url, timeout=2)
-            response.raise_for_status()
-            new_rows = list(iter_new_samples(response.content, seen_timestamps))
+    async with connect_ws(uri, client.ws_cookie_header(), client.ws_ssl_context()) as websocket:
+        print(f"[+] Connected to {uri}; collecting for {args.duration:.1f}s")
+        while (time.time() - start_time) < args.duration:
+            try:
+                message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
+            except asyncio.TimeoutError:
+                continue
+            if not isinstance(message, bytes):
+                continue
+
+            new_rows = list(iter_new_samples(message, seen_timestamps))
             if new_rows:
                 append_rows(output_file, new_rows)
             elapsed = int(time.time() - start_time)
             print(f"[{elapsed}s] Saved {len(new_rows)} new samples.")
-        except Exception as exc:
-            print(f"[-] Poll error: {exc}")
-
-        time.sleep(args.poll_interval)
 
     print(f"[+] Finished. Saved {len(seen_timestamps)} unique samples to {output_file}.")
 
 
 if __name__ == "__main__":
     try:
-        collect_samples(parse_args())
+        asyncio.run(collect_samples(parse_args()))
     except Exception as exc:
         raise SystemExit(f"Error: {exc}")

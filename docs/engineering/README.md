@@ -21,6 +21,7 @@ material that supports implementation, debugging, and validation.
 
 ## Operations
 
+- [api-contract.md](api-contract.md) - firmware/frontend/SDK/API path contract and verifier
 - [frontend-quality.md](frontend-quality.md) - frontend quality gates, CI checks, and review rules
 - [operations/security_hardening.md](operations/security_hardening.md) - security model and hardening notes
 - [operations/testing.md](operations/testing.md) - backend and frontend validation

@@ -1,28 +1,23 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from './test-utils';
+import { authenticateByApi, waitForAuthenticatedShell } from './test-utils';
 
 test.describe('Read-Only Scenarios', () => {
 	test.beforeEach(async ({ page }) => {
+		await authenticateByApi(page);
 		await page.goto('/');
-		await loginAsAdmin(page);
+		await waitForAuthenticatedShell(page);
 	});
 
-	test('System Status shows live data', async ({ page }) => {
+	test('System Status renders status panels', async ({ page }) => {
 		// Navigate to System Status
 		// Note: System is a submenu, but we can browse directly to be fast,
 		// or verify menu interaction. Direct navigation is more robust for "Status" testing.
 		await page.goto('/system/status');
+		await waitForAuthenticatedShell(page);
 
-		// Check for specific headers from HealthCard.svelte
-		// "System Health" or "Uptime"
-		// Using a locator that looks for the text "Uptime" (English default)
-		const uptimeLabel = page.getByText('Uptime', { exact: true });
-		await expect(uptimeLabel).toBeVisible();
-
-		// Check value - checking the sibling or generic structure is hard without test-ids.
-		// However, the card contains "Uptime" and should contain some time string.
-		// We can check if the entire card is visible using a class or broad check.
-		await expect(page.locator('.card').filter({ hasText: 'Uptime' }).first()).toBeVisible();
+		await expect(page.getByText('System Status').first()).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'System Health' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Hardware / Firmware' })).toBeVisible();
 	});
 
 	test('Language Switching (EN <-> PL)', async ({ page }) => {
@@ -32,6 +27,8 @@ test.describe('Read-Only Scenarios', () => {
 
 		const btnPL = page.getByRole('button', { name: 'PL' });
 		const btnEN = page.getByRole('button', { name: 'EN' });
+		await expect(btnPL).toBeVisible();
+		await expect(btnEN).toBeVisible();
 
 		// Switch to Polish
 		await btnPL.click();

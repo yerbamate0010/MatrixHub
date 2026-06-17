@@ -299,12 +299,91 @@ export interface DeviceSession {
   signedInAt: string;
 }
 
+export interface LoggingConfig {
+  level: string;
+}
+
+export interface AppConfig {
+  logging?: LoggingConfig;
+  [key: string]: unknown;
+}
+
 export interface WifiRecoveryResponse {
   success: boolean;
   accepted: boolean;
   connected: boolean;
   ip?: string;
   rssi?: number;
+}
+
+export interface TaskInfo {
+  name: string;
+  priority: number;
+  stackHighWaterMark: number;
+  state: string;
+  coreId?: number;
+}
+
+export interface TasksResponse {
+  watchdog: {
+    initialized: boolean;
+    timeoutSec: number;
+  };
+  taskCount: number;
+  detailsIncluded?: boolean;
+  tasks?: TaskInfo[];
+  error?: string;
+  memory: {
+    freeHeap: number;
+    minFreeHeap: number;
+    freePsram?: number;
+  };
+}
+
+export interface SystemNetworkInfo {
+  wifi: {
+    state: string;
+    configured_mode: string;
+    mode: string;
+    mode_id: number;
+    sta_connected: boolean;
+    ap_active: boolean;
+    last_disconnect_reason: number;
+    last_ip_change_ms: number;
+    disconnected_since_ms: number;
+    stable_connected_since_ms: number;
+    last_recovery_reason: string;
+    sta_ip?: string;
+    saved_static_ip?: string;
+  };
+  ap: {
+    active: boolean;
+    station_num: number;
+    ip?: string;
+  };
+  http: {
+    active_clients: number;
+    peak_clients: number;
+    opens: number;
+    closes: number;
+    last_open_ms: number;
+    last_close_ms: number;
+    ws_forced_removals: number;
+    ws_queue_drops: number;
+    last_ws_queue_drop_ms: number;
+    last_ws_queue_drop_payload: number;
+    ws_heap_fallbacks: number;
+    last_ws_heap_fallback_ms: number;
+    last_ws_heap_fallback_payload: number;
+    max_ws_heap_fallback_payload: number;
+  };
+  forwarding: {
+    ready: boolean;
+    requires_static_ip: boolean;
+    saved_static_ip_configured: boolean;
+    saved_static_ip_matches: boolean;
+    https_port: number;
+  };
 }
 
 export interface WifiStatus {

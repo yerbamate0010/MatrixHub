@@ -59,12 +59,14 @@ def add_common_device_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--device-url",
         "--host",
+        "--base-url",
         dest="device_url",
         default=os.environ.get("DEVICE_URL", DEFAULT_DEVICE_URL),
         help="Device base URL. Default: DEVICE_URL or https://192.168.0.30.",
     )
     parser.add_argument(
         "--user",
+        "--username",
         default=os.environ.get("DEVICE_USER", DEFAULT_USER),
         help="JWT username. Default: DEVICE_USER or admin.",
     )

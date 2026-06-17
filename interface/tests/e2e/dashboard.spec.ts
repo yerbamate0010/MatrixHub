@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { authenticateByApi, waitForAuthenticatedShell } from './test-utils';
 
 test.describe('Dashboard', () => {
 	test('should load dashboard and display widgets', async ({ page }) => {
 		// Navigate to dashboard (assuming dev server or proxy to ESP32)
+		await authenticateByApi(page);
 		await page.goto('/');
+		await waitForAuthenticatedShell(page);
 
 		// Wait for page to load
 		await page.waitForLoadState('networkidle');
@@ -13,30 +16,22 @@ test.describe('Dashboard', () => {
 		await expect(mainContent.first()).toBeVisible();
 	});
 
-	test('should handle login when security enabled', async ({ page }) => {
-		// This test assumes security is enabled
+	test('should restore authenticated session when security is enabled', async ({ page }) => {
+		await authenticateByApi(page);
 		await page.goto('/');
-
-		// If redirected to login, check login form
-		const loginForm = page.locator('form, [data-testid="login-form"]');
-		if (await loginForm.isVisible()) {
-			// Fill login form
-			await page.fill('input[type="text"], #username', 'admin');
-			await page.fill('input[type="password"], #password', 'admin');
-			await page.click('button[type="submit"]');
-
-			// Should redirect to dashboard
-			await expect(page.locator('.drawer')).toBeVisible();
-		} else {
-			// Already logged in or security disabled - check for main content
-			await expect(page.locator('body')).toBeVisible();
-		}
+		await waitForAuthenticatedShell(page);
+		await expect(page.getByText('admin')).toBeVisible();
 	});
 });
 
 test.describe('Settings', () => {
+	test.beforeEach(async ({ page }) => {
+		await authenticateByApi(page);
+	});
+
 	test('should load settings page', async ({ page }) => {
 		await page.goto('/connections');
+		await waitForAuthenticatedShell(page);
 
 		// Check if connections/settings page loaded
 		await expect(page.locator('h1, h2, h3').first()).toBeVisible();
@@ -47,6 +42,7 @@ test.describe('Settings', () => {
 
 	test('should save NTP settings', async ({ page }) => {
 		await page.goto('/connections/ntp');
+		await waitForAuthenticatedShell(page);
 
 		// Wait for NTP form to load
 		await page.waitForSelector('form, [data-testid="ntp-form"]');

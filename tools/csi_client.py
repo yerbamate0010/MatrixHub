@@ -15,6 +15,8 @@ import websockets
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from device_client import DeviceClient, add_common_device_args  # noqa: E402
 
+CSI_HEADER_BYTES = 13
+
 
 def connect_ws(uri: str, headers: dict[str, str], ssl_context):
     try:
@@ -23,41 +25,48 @@ def connect_ws(uri: str, headers: dict[str, str], ssl_context):
         return websockets.connect(uri, extra_headers=headers, ssl=ssl_context)
 
 
+def iter_csi_records(data: bytes):
+    offset = 0
+    while offset + CSI_HEADER_BYTES <= len(data):
+        ts, rssi, data_len, gain_raw, motion_score, is_motion = struct.unpack_from(
+            "<IbHBfB", data, offset
+        )
+        payload_start = offset + CSI_HEADER_BYTES
+        payload_end = payload_start + data_len
+        if data_len == 0 or payload_end > len(data):
+            break
+        yield ts, rssi, data_len, gain_raw / 10.0, motion_score, bool(is_motion), data[payload_start:payload_end]
+        offset = payload_end
+
+
 async def csi_client(client: DeviceClient, duration: float | None) -> int:
     uri = client.ws_url("/ws/csi")
     headers = client.ws_cookie_header()
     print(f"Connecting to {uri}...")
     start_time = time.time()
-    frame_count = 0
+    message_count = 0
+    packet_count = 0
     async with connect_ws(uri, headers, client.ws_ssl_context()) as websocket:
         print("Connected. Waiting for CSI frames...")
         while duration is None or time.time() - start_time < duration:
             data = await websocket.recv()
-            frame_count += 1
-            if not isinstance(data, bytes) or len(data) < 8:
+            message_count += 1
+            if not isinstance(data, bytes):
                 print(f"Invalid frame size: {len(data) if hasattr(data, '__len__') else 'n/a'}")
                 continue
 
-            offset = 0
-            ts = struct.unpack_from("<I", data, offset)[0]
-            offset += 4
-            rssi = struct.unpack_from("<B", data, offset)[0]
-            rssi = rssi - 256 if rssi > 127 else rssi
-            offset += 1
-            data_len = struct.unpack_from("<H", data, offset)[0]
-            offset += 2
-            gain = struct.unpack_from("<B", data, offset)[0] / 10.0
-            offset += 1
-            payload = data[offset:]
-            if frame_count % 10 == 0:
-                fps = frame_count / max(0.001, time.time() - start_time)
+            for ts, rssi, data_len, gain, motion_score, is_motion, payload in iter_csi_records(data):
+                packet_count += 1
+                if packet_count % 10 != 0:
+                    continue
+                fps = packet_count / max(0.001, time.time() - start_time)
                 print(
-                    f"Frame #{frame_count} | FPS: {fps:.1f} | TS: {ts} | "
+                    f"Packet #{packet_count} | Messages: {message_count} | FPS: {fps:.1f} | TS: {ts} | "
                     f"RSSI: {rssi}dBm | Gain: {gain:.1f} | Len: {data_len} | "
-                    f"Payload: {len(payload)} bytes"
+                    f"Payload: {len(payload)} bytes | Motion: {is_motion} | Score: {motion_score:.3f}"
                 )
-    print(f"Received {frame_count} CSI frame(s)")
-    return 0 if frame_count > 0 else 1
+    print(f"Received {packet_count} CSI packet(s) in {message_count} WebSocket message(s)")
+    return 0 if packet_count > 0 else 1
 
 
 def main(argv: list[str] | None = None) -> int:
