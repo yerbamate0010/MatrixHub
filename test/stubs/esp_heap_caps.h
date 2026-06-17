@@ -3,9 +3,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define MALLOC_CAP_INTERNAL 0
-#define MALLOC_CAP_8BIT 0
-#define MALLOC_CAP_SPIRAM 0
+#ifndef MALLOC_CAP_INTERNAL
+#define MALLOC_CAP_INTERNAL 0x01
+#endif
+#ifndef MALLOC_CAP_8BIT
+#define MALLOC_CAP_8BIT 0x02
+#endif
+#ifndef MALLOC_CAP_SPIRAM
+#define MALLOC_CAP_SPIRAM 0x04
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +19,7 @@ extern "C" {
 size_t heap_caps_get_free_size(uint32_t caps);
 size_t heap_caps_get_largest_free_block(uint32_t caps);
 size_t heap_caps_get_total_size(uint32_t caps);
+size_t heap_caps_get_minimum_free_size(uint32_t caps);
 uint32_t esp_get_minimum_free_heap_size();
 uint32_t esp_get_free_heap_size();
 inline void* heap_caps_malloc(size_t size, uint32_t caps) { return malloc(size); }

@@ -15,6 +15,7 @@ RTC_NOINIT_ATTR BootState rtcBootState;
 
 // Static member initialization
 BootState BootTracker::_state = {};
+BootState BootTracker::_lastSessionState = {};
 bool BootTracker::_initialized = false;
 bool BootTracker::_lastBootUnexpected = false;
 
@@ -78,7 +79,9 @@ void BootTracker::begin() {
 
         // Lost RTC context - do not report a synthetic crash on a brand-new epoch.
         _lastBootUnexpected = false;
+        _lastSessionState = {};
     } else {
+        _lastSessionState = _state;
         const bool hasShutdownMarker = (_state.lastShutdownReason != 0);
         _lastBootUnexpected = !hasShutdownMarker && shouldCountUnexpectedRestart(resetReason);
 
@@ -125,6 +128,7 @@ void BootTracker::recordShutdown(ShutdownReason reason) {
     _state.lastShutdownMs = millis();
     _state.lastUptimeMs = millis();  // Current uptime
     _state.freeHeapAtShutdown = HeapMonitor::instance().getFreeHeap();
+    _lastSessionState = _state;
     
     saveToRtc();
     
@@ -157,7 +161,19 @@ bool BootTracker::wasLastBootUnexpected() {
 }
 
 uint32_t BootTracker::getLastSessionUptimeMs() {
-    return _state.lastUptimeMs;
+    return _lastSessionState.lastUptimeMs;
+}
+
+uint8_t BootTracker::getLastShutdownReason() {
+    return _lastSessionState.lastShutdownReason;
+}
+
+uint8_t BootTracker::getLastResetReason() {
+    return _lastSessionState.lastResetReason;
+}
+
+uint32_t BootTracker::getFreeHeapAtShutdown() {
+    return _lastSessionState.freeHeapAtShutdown;
 }
 
 void BootTracker::logState() {

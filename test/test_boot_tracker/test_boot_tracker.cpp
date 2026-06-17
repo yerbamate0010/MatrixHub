@@ -43,6 +43,7 @@ void resetBootTrackerState() {
 
     SYSTEM::rtcBootState = {};
     SYSTEM::BootTracker::_state = {};
+    SYSTEM::BootTracker::_lastSessionState = {};
     SYSTEM::BootTracker::_initialized = false;
     SYSTEM::BootTracker::_lastBootUnexpected = false;
 }
@@ -149,6 +150,19 @@ void test_record_shutdown_persists_reason_uptime_and_heap() {
     TEST_ASSERT_EQUAL_UINT32(8765, SYSTEM::rtcBootState.freeHeapAtShutdown);
 }
 
+void test_public_diagnostics_getters_expose_retained_shutdown_state() {
+    SYSTEM::rtcBootState = makeValidRtcState();
+    TEST_STUBS::ESP::resetReason = ESP_RST_DEEPSLEEP;
+
+    SYSTEM::BootTracker::begin();
+
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(SYSTEM::ShutdownReason::CLEAN_SLEEP),
+                            SYSTEM::BootTracker::getLastShutdownReason());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(ESP_RST_DEEPSLEEP),
+                            SYSTEM::BootTracker::getLastResetReason());
+    TEST_ASSERT_EQUAL_UINT32(777, SYSTEM::BootTracker::getFreeHeapAtShutdown());
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -160,5 +174,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_begin_does_not_count_restart_when_shutdown_marker_exists);
     RUN_TEST(test_begin_caps_unexpected_restart_counter_at_uint16_max);
     RUN_TEST(test_record_shutdown_persists_reason_uptime_and_heap);
+    RUN_TEST(test_public_diagnostics_getters_expose_retained_shutdown_state);
     return UNITY_END();
 }

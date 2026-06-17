@@ -36,6 +36,32 @@ struct SystemApiInitBundles {
   API::SystemApiBroadcastDeps broadcastDeps;
 };
 
+API::DiagnosticsApiDeps buildDiagnosticsApiDeps(
+    const ApiServicesInitializerDeps& deps,
+    const API::SystemApiRouteDeps& routeDeps) {
+  API::DiagnosticsApiDeps diagnosticsDeps;
+  diagnosticsDeps.info = routeDeps.info;
+  diagnosticsDeps.tasks = routeDeps.tasks;
+  diagnosticsDeps.wifiSensingSettings = deps.wifiSensingSettings;
+  diagnosticsDeps.wifiSensingService = deps.wifiSensingService;
+  diagnosticsDeps.csiService = deps.csiService;
+  diagnosticsDeps.bleSettings = deps.bleSettings;
+  diagnosticsDeps.bleService = deps.bleService;
+  diagnosticsDeps.alarmService = deps.alarmService;
+  diagnosticsDeps.alarmSettings = deps.alarmSettings;
+  diagnosticsDeps.keyboardService = deps.keyboardService;
+  diagnosticsDeps.keyboardSettingsService = deps.keyboardSettingsService;
+  diagnosticsDeps.macroService = deps.macroService;
+  diagnosticsDeps.airMouseService = deps.airMouseService;
+  diagnosticsDeps.usbTerminalService = deps.usbTerminalService;
+  diagnosticsDeps.usbTerminalSettings = deps.usbTerminalSettings;
+  diagnosticsDeps.udpPusher = deps.udpPusher;
+  diagnosticsDeps.udpSettings = deps.udpSettings;
+  diagnosticsDeps.heartbeatSettings = deps.heartbeatSettings;
+  diagnosticsDeps.compensationSettings = deps.compensationSettings;
+  return diagnosticsDeps;
+}
+
 API::SystemApiDependencies buildSystemApiDependencies() {
   // These callbacks intentionally stay close to the initializer rather than
   // being spread across the call site. If `/api/system/info|tasks|network`
@@ -140,6 +166,13 @@ void initializeRuntimeApis(ApiServices& api,
       systemBundles.routeDeps,
       systemBundles.broadcastDeps);
   api.systemApi->begin();
+
+  api.diagnosticsApi.init(
+      deps.server,
+      securityManager,
+      deps.powerManager,
+      buildDiagnosticsApiDeps(deps, systemBundles.routeDeps));
+  api.diagnosticsApi->begin();
 
   api.alarmsApi.init(
       deps.server,

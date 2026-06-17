@@ -58,7 +58,7 @@ Run the focused contract gate first:
 
 ```bash
 python scripts/contract/verify_api_contract.py
-python -m py_compile scripts/device_client.py scripts/analyze_csi.py scripts/csi_monitor.py scripts/sensing_analysis/collect_long_data.py tools/csi_client.py scripts/contract/verify_api_contract.py
+python -m py_compile scripts/device_client.py scripts/analyze_csi.py scripts/csi_monitor.py scripts/sensing_analysis/collect_long_data.py scripts/diagnostics/check_runtime_diagnostics.py tools/csi_client.py scripts/contract/verify_api_contract.py
 ```
 
 Then run the normal Podgol 2 quality gates:

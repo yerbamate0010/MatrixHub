@@ -78,6 +78,21 @@ public:
      * Get uptime of previous session (if available)
      */
     static uint32_t getLastSessionUptimeMs();
+
+    /**
+     * Get the last recorded controlled shutdown reason.
+     */
+    static uint8_t getLastShutdownReason();
+
+    /**
+     * Get the ESP reset reason retained in the previous session snapshot.
+     */
+    static uint8_t getLastResetReason();
+
+    /**
+     * Get the free heap captured at the last controlled shutdown.
+     */
+    static uint32_t getFreeHeapAtShutdown();
     
     /**
      * Log boot state for debugging
@@ -86,6 +101,7 @@ public:
     
 private:
     static BootState _state;
+    static BootState _lastSessionState;
     static bool _initialized;
     static bool _lastBootUnexpected;
     
