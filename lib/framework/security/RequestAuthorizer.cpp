@@ -8,8 +8,8 @@
 #define LOG_TAG "Security"
 
 namespace {
-constexpr size_t kMaxRequestPayloadBytes = 16384;
-constexpr size_t kMaxJsonPayloadBytes = 8192;
+constexpr size_t kMaxRequestPayloadBytes = Response::kDefaultJsonPayloadLimitBytes;
+constexpr size_t kMaxJsonPayloadBytes = Response::kJsonAuthCallbackPayloadLimitBytes;
 }
 
 RequestAuthorizer::RequestAuthorizer(RateLimiter *rateLimiter, JwtAuthenticator jwtAuthenticator)
@@ -103,7 +103,7 @@ PsychicHttpRequestCallback RequestAuthorizer::wrapRequest(PsychicHttpRequestCall
     {
         if (request && request->contentLength() > kMaxRequestPayloadBytes)
         {
-            return Response::error(request, 413, ErrorCodes::Input::PAYLOAD_TOO_LARGE);
+            return Response::payloadTooLarge(request);
         }
 
         if (!authorizeRequest(request, predicate, true))
@@ -122,7 +122,7 @@ PsychicJsonRequestCallback RequestAuthorizer::wrapCallback(PsychicJsonRequestCal
     {
         if (request && request->contentLength() > kMaxJsonPayloadBytes)
         {
-            return Response::error(request, 413, ErrorCodes::Input::PAYLOAD_TOO_LARGE);
+            return Response::payloadTooLarge(request);
         }
 
         if (!authorizeRequest(request, predicate, true))

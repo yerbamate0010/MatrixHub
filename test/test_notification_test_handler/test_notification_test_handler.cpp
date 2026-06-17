@@ -236,7 +236,7 @@ void test_telegram_message_field_fallback_queues_task() {
     releaseHandlerSchedulerSemaphores(handler);
 }
 
-void test_telegram_parse_error_reports_not_configured_when_sender_is_not_send_ready() {
+void test_telegram_invalid_json_reports_not_configured_when_sender_is_not_send_ready() {
     gTelegramConfigured = false;
     API::Handlers::NotificationTestHandler handler(telegramSender(), webhookSender(), pushoverSender());
     TEST_ASSERT_TRUE(handler.begin());
@@ -246,7 +246,7 @@ void test_telegram_parse_error_reports_not_configured_when_sender_is_not_send_re
 
     TEST_ASSERT_EQUAL(ESP_OK, err);
     TEST_ASSERT_EQUAL(400, request.lastStatusCode);
-    TEST_ASSERT_TRUE(request.lastResponseBody.find("input/json_parse_error") != std::string::npos);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find(ErrorCodes::Input::INVALID_JSON) != std::string::npos);
     TEST_ASSERT_TRUE(request.lastResponseBody.find("\"configured\":false") != std::string::npos);
 }
 
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_telegram_too_long_returns_400_and_max_len);
     RUN_TEST(test_telegram_busy_returns_429_when_channel_lock_is_held);
     RUN_TEST(test_telegram_message_field_fallback_queues_task);
-    RUN_TEST(test_telegram_parse_error_reports_not_configured_when_sender_is_not_send_ready);
+    RUN_TEST(test_telegram_invalid_json_reports_not_configured_when_sender_is_not_send_ready);
     RUN_TEST(test_webhook_empty_content_queues_default_payload);
     RUN_TEST(test_webhook_busy_returns_429_with_configured_flag);
     RUN_TEST(test_pushover_not_configured_returns_400);

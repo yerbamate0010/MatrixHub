@@ -3,6 +3,11 @@
 #include <vector>
 #include <Arduino.h>
 
+#include "../../test/stubs/PsychicJson.h"
+#include "../../test/stubs/PsychicRequest.h"
+#include "../../src/system/memory/PsramAllocator.h"
+#include <utils/ResponseUtils.h>
+
 // ============================================================================
 // Mocks Setup
 // ============================================================================
@@ -184,6 +189,55 @@ void test_writer_object() {
     TEST_ASSERT_EQUAL_STRING("{\"id\":1,\"name\":\"Test\"}", g_responseBuffer.c_str());
 }
 
+void test_parse_json_body_rejects_oversized_payload() {
+    PsychicRequest request;
+    request.setBody(std::string(65, 'x'));
+    SYSTEM::SpiRamJsonDocument doc(64);
+
+    const esp_err_t err = Response::parseJsonBody(&request, doc, 64);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(413, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find(ErrorCodes::Input::PAYLOAD_TOO_LARGE) != std::string::npos);
+}
+
+void test_parse_json_body_rejects_invalid_json() {
+    PsychicRequest request;
+    request.setBody("{");
+    SYSTEM::SpiRamJsonDocument doc(256);
+
+    const esp_err_t err = Response::parseJsonBody(&request, doc, 256);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(400, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find(ErrorCodes::Input::INVALID_JSON) != std::string::npos);
+}
+
+void test_parse_json_body_rejects_allocator_overflow_without_unbounded_growth() {
+    std::string body = "[";
+    for (size_t i = 0; i < 300; ++i) {
+        if (i > 0) {
+            body += ",";
+        }
+        body += "1";
+    }
+    body += "]";
+
+    PsychicRequest request;
+    request.setBody(body);
+    constexpr size_t kDocLimit = 64;
+    SYSTEM::SpiRamJsonDocument doc(kDocLimit);
+
+    const esp_err_t err = Response::parseJsonBody(&request, doc, body.size() + 1);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(413, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find(ErrorCodes::Input::PAYLOAD_TOO_LARGE) != std::string::npos);
+    TEST_ASSERT_TRUE(doc.overflowed());
+    TEST_ASSERT_LESS_OR_EQUAL(SYSTEM::SpiRamJsonDocument::effectiveLimitFor(kDocLimit),
+                              doc.peakAllocatedBytes());
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_reader_literals);
@@ -195,5 +249,8 @@ int main(int argc, char **argv) {
     RUN_TEST(test_writer_disables_caching_for_api_paths);
     RUN_TEST(test_writer_escaping);
     RUN_TEST(test_writer_object);
+    RUN_TEST(test_parse_json_body_rejects_oversized_payload);
+    RUN_TEST(test_parse_json_body_rejects_invalid_json);
+    RUN_TEST(test_parse_json_body_rejects_allocator_overflow_without_unbounded_growth);
     return UNITY_END();
 }

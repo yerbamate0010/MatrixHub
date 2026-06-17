@@ -140,18 +140,18 @@ protected:
      * - 400 input/invalid_json
      */
     template <typename Fn>
-    esp_err_t parseJsonBody(PsychicRequest* request, size_t docSize, Fn&& handler, size_t limit = 16384) const {
+    esp_err_t parseJsonBody(PsychicRequest* request, size_t docSize, Fn&& handler, size_t limit) const {
         if (request->contentLength() > limit) {
-            return Response::error(request, 413, "input/payload_too_large");
+            return Response::payloadTooLarge(request);
         }
 
         SYSTEM::SpiRamJsonDocument doc(docSize);
         DeserializationError err = deserializeJson(doc, request->body());
         if (err == DeserializationError::NoMemory || doc.overflowed()) {
-            return Response::error(request, 413, "input/payload_too_large");
+            return Response::payloadTooLarge(request);
         }
         if (err) {
-            return Response::error(request, 400, "input/invalid_json");
+            return Response::invalidJson(request, err.c_str());
         }
 
         return handler(doc);

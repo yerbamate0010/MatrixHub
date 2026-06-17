@@ -198,8 +198,8 @@ bool ChannelSubscriptions::handleMessage(int fd, const char* msg, size_t len, Ch
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::CHANNEL_SUBSCRIPTIONS);
     DeserializationError error = deserializeJson(doc, msg, len);
     
-    if (error) {
-        LOGW("WebSocket JSON parse failed: %s", error.c_str());
+    if (error || doc.overflowed()) {
+        LOGW("WebSocket JSON parse failed: %s", doc.overflowed() ? "overflow" : error.c_str());
         return false;
     }
     

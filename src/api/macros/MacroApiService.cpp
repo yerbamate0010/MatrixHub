@@ -14,6 +14,7 @@ namespace MACROS {
 
     namespace {
         constexpr const char* kMacroSettingsPath = "/api/macros/settings";
+        constexpr size_t kMacroUploadPayloadLimitBytes = 12288;
     }
 
     MacroApiService::MacroApiService(PsychicHttpServer* server,
@@ -140,8 +141,8 @@ namespace MACROS {
     esp_err_t MacroApiService::handleUpload(PsychicRequest* request) {
         if (request->contentType().startsWith("application/json")) {
             // Safety: Check body size before parsing to prevent RAM exhaustion
-            if (request->contentLength() > 12288) { // 12KB limit (allows ~8KB script + overhead)
-                return Response::error(request, 413, "input/payload_too_large");
+            if (request->contentLength() > kMacroUploadPayloadLimitBytes) {
+                return Response::payloadTooLarge(request);
             }
             return this->parseJsonBody(
                 request,
@@ -178,7 +179,7 @@ namespace MACROS {
                     return Response::error(request, 500, "internal/save_failed");
                 }
             },
-            12288);
+            kMacroUploadPayloadLimitBytes);
         }
         return Response::error(request, 400, "input/unsupported_content_type");
     }

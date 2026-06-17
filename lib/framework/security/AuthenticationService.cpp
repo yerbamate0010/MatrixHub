@@ -237,7 +237,7 @@ void AuthenticationService::begin()
                 {
                     // DoS Protection: Reject large payloads early
                     if (request->contentLength() > NET::AUTH::SIGN_IN_MAX_PAYLOAD_BYTES) {
-                         return Response::error(request, 413, ErrorCodes::Input::PAYLOAD_TOO_LARGE);
+                         return Response::payloadTooLarge(request);
                     }
 
                     // Protection: Login Rate Limiting (3 attempts / 60s)

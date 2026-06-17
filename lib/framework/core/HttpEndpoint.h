@@ -10,6 +10,8 @@
 #include <core/StatefulService.h>
 #include <utils/ResponseUtils.h>
 
+#include "../../../src/system/memory/PsramAllocator.h"
+
 #define HTTP_ENDPOINT_ORIGIN_ID "http"
 
 #ifndef SVK_TAG
@@ -26,7 +28,7 @@ protected:
     using JsonRequestValidator = std::function<StateHandlerResult(PsychicRequest *request, JsonObject &root)>;
     using RequestActivityNotifier = std::function<void()>;
 
-    static constexpr size_t kMaxJsonPayloadBytes = 8192;
+    static constexpr size_t kMaxJsonPayloadBytes = Response::kStateJsonPayloadLimitBytes;
 
     JsonStateReader<T> _stateReader;
     JsonStateUpdater<T> _stateUpdater;
@@ -136,14 +138,18 @@ public:
 
         if (request && request->contentLength() > kMaxJsonPayloadBytes)
         {
-            return Response::error(request, 413, "input/payload_too_large");
+            return Response::payloadTooLarge(request);
         }
 
-        JsonDocument jsonDocument;
+        SYSTEM::SpiRamJsonDocument jsonDocument(kMaxJsonPayloadBytes);
         DeserializationError error = deserializeJson(jsonDocument, request->body());
+        if (error == DeserializationError::NoMemory || jsonDocument.overflowed())
+        {
+            return Response::payloadTooLarge(request);
+        }
         if (error || !jsonDocument.is<JsonObject>())
         {
-            return Response::error(request, 400, "input/invalid_json");
+            return Response::invalidJson(request, error ? error.c_str() : nullptr);
         }
 
         JsonObject jsonObject = jsonDocument.as<JsonObject>();

@@ -101,7 +101,8 @@ esp_err_t ShellyApiService::handleDeviceList(PsychicRequest* request) {
 
 esp_err_t ShellyApiService::handleDeviceUpsert(PsychicRequest* request) {
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::SHELLY_DEVICE_UPSERT);
-    if (auto err = Response::parseJsonBody(request, doc); err != ESP_OK) {
+    if (auto err = Response::parseJsonBody(
+            request, doc, LIMITS::API::JSON_DOC::SHELLY_DEVICE_UPSERT); err != ESP_OK) {
         return err;
     }
 
@@ -164,7 +165,8 @@ esp_err_t ShellyApiService::handleDeviceDelete(PsychicRequest* request) {
 
 esp_err_t ShellyApiService::handleRelayControl(PsychicRequest* request) {
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::SHELLY_RELAY_CONTROL);
-    if (auto err = Response::parseJsonBody(request, doc); err != ESP_OK) {
+    if (auto err = Response::parseJsonBody(
+            request, doc, LIMITS::API::JSON_DOC::SHELLY_RELAY_CONTROL); err != ESP_OK) {
         return err;
     }
 

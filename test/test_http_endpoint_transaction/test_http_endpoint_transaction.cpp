@@ -790,6 +790,44 @@ void test_http_endpoint_payload_too_large_returns_structured_error() {
     TEST_ASSERT_TRUE(request.lastResponseBody.find("\"error\":\"input/payload_too_large\"") != std::string::npos);
 }
 
+void test_http_endpoint_validator_rejects_unexpected_fields() {
+    PsychicHttpServer server;
+    SecurityManager securityManager;
+    TestStateService service(false);
+    HttpEndpoint<TestState> endpoint(
+        TestState::read,
+        TestState::update,
+        &service,
+        &server,
+        "/api/test",
+        &securityManager,
+        AuthenticationPredicates::IS_ADMIN,
+        [](PsychicRequest* request, JsonObject& root) {
+            (void)request;
+            for (JsonPair pair : root) {
+                if (strcmp(pair.key().c_str(), "value") != 0) {
+                    return StateHandlerResult::failure("input/unexpected_field", 400);
+                }
+            }
+            return StateHandlerResult::success();
+        });
+    endpoint.begin();
+
+    PsychicRequest request;
+    request.setBody("{\"value\":4,\"extra\":true}");
+
+    const esp_err_t err = server.invoke("/api/test", HTTP_POST, &request);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(400, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find("\"error\":\"input/unexpected_field\"") != std::string::npos);
+    int storedValue = 0;
+    service.read([&storedValue](TestState& state) {
+        storedValue = state.value;
+    });
+    TEST_ASSERT_EQUAL(1, storedValue);
+}
+
 void test_http_endpoint_get_returns_error_when_state_read_fails() {
     PsychicHttpServer server;
     SecurityManager securityManager;
@@ -1427,6 +1465,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_http_endpoint_post_notifies_activity_callback);
     RUN_TEST(test_http_endpoint_invalid_json_returns_structured_error);
     RUN_TEST(test_http_endpoint_payload_too_large_returns_structured_error);
+    RUN_TEST(test_http_endpoint_validator_rejects_unexpected_fields);
     RUN_TEST(test_http_endpoint_get_returns_error_when_state_read_fails);
     RUN_TEST(test_rtc_stateful_service_rolls_back_store_on_handler_failure);
     RUN_TEST(test_rtc_stateful_service_failed_commit_restores_cached_state);

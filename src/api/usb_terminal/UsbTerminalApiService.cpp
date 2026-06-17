@@ -266,7 +266,7 @@ esp_err_t UsbTerminalApiService::handleFrame(httpd_req_t* req, int fd) {
 
     SYSTEM::SpiRamJsonDocument doc(USB_TERMINAL_WS_DOC_SIZE);
     const DeserializationError err = deserializeJson(doc, payload);
-    if (err) {
+    if (err || doc.overflowed()) {
         sendError(fd, "Invalid terminal request payload.");
         return ESP_OK;
     }

@@ -30,7 +30,7 @@ inline bool parseJsonBodyWithConfiguredError(PsychicRequest* request,
                                              bool configured,
                                              size_t limit) {
     if (request->contentLength() > limit) {
-        Response::error(request, 413, "input/payload_too_large");
+        Response::payloadTooLarge(request);
         return false;
     }
 
@@ -38,19 +38,15 @@ inline bool parseJsonBodyWithConfiguredError(PsychicRequest* request,
     if (err == DeserializationError::NoMemory || doc.overflowed()) {
         Response::error(request,
                         413,
-                        "input/payload_too_large",
+                        ErrorCodes::Input::PAYLOAD_TOO_LARGE,
                         [configured](JsonVariant& root) { root["configured"] = configured; });
         return false;
     }
     if (err) {
-        PsychicJsonResponse response(request);
-        response.setCode(400);
-        JsonVariant& root = response.getRoot();
-        root["ok"] = false;
-        root["configured"] = configured;
-        root["error"] = "input/json_parse_error";
-        root["detail"] = err.c_str();
-        response.send();
+        Response::invalidJson(
+            request,
+            [configured](JsonVariant& root) { root["configured"] = configured; },
+            err.c_str());
         return false;
     }
 
@@ -58,25 +54,19 @@ inline bool parseJsonBodyWithConfiguredError(PsychicRequest* request,
 }
 
 template <typename TDocument>
-inline bool parseJsonBodyOrRespond(PsychicRequest* request, TDocument& doc, size_t limit = 16384) {
+inline bool parseJsonBodyOrRespond(PsychicRequest* request, TDocument& doc, size_t limit) {
     if (request->contentLength() > limit) {
-        Response::error(request, 413, "input/payload_too_large");
+        Response::payloadTooLarge(request);
         return false;
     }
 
     DeserializationError err = deserializeJson(doc, request->body());
     if (err == DeserializationError::NoMemory || doc.overflowed()) {
-        Response::error(request, 413, "input/payload_too_large");
+        Response::payloadTooLarge(request);
         return false;
     }
     if (err) {
-        PsychicJsonResponse response(request);
-        response.setCode(400);
-        JsonVariant& root = response.getRoot();
-        root["ok"] = false;
-        root["error"] = "input/json_parse_error";
-        root["detail"] = err.c_str();
-        response.send();
+        Response::invalidJson(request, err.c_str());
         return false;
     }
 

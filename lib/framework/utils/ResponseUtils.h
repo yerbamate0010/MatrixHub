@@ -23,7 +23,7 @@
  *
  * // Parse JSON body with automatic error handling
  * JsonDocument doc;
- * if (auto err = Response::parseJsonBody(request, doc); err != ESP_OK) {
+ * if (auto err = Response::parseJsonBody(request, doc, Response::kDefaultJsonPayloadLimitBytes); err != ESP_OK) {
  *     return err;  // Error response already sent
  * }
  * @endcode
@@ -36,7 +36,13 @@
 #include <PsychicRequest.h>
 #include <functional>
 
+#include "../../../src/system/errors/ErrorCodes.h"
+
 namespace Response {
+
+inline constexpr size_t kDefaultJsonPayloadLimitBytes = 16 * 1024;
+inline constexpr size_t kStateJsonPayloadLimitBytes = 8 * 1024;
+inline constexpr size_t kJsonAuthCallbackPayloadLimitBytes = 8 * 1024;
 
 /**
  * Send a JSON error response
@@ -101,6 +107,37 @@ inline esp_err_t error(PsychicRequest* request, int httpCode, const char* errorC
     return response.send();
 }
 
+inline esp_err_t payloadTooLarge(PsychicRequest* request) {
+    return Response::error(request, 413, ErrorCodes::Input::PAYLOAD_TOO_LARGE);
+}
+
+inline esp_err_t invalidJson(PsychicRequest* request, const char* detail = nullptr) {
+    PsychicJsonResponse response(request);
+    response.setCode(400);
+    JsonVariant& root = response.getRoot();
+    root["ok"] = false;
+    root["error"] = ErrorCodes::Input::INVALID_JSON;
+    if (detail && detail[0] != '\0') {
+        root["detail"] = detail;
+    }
+    return response.send();
+}
+
+inline esp_err_t invalidJson(PsychicRequest* request,
+                             std::function<void(JsonVariant&)> extraBuilder,
+                             const char* detail = nullptr) {
+    PsychicJsonResponse response(request);
+    response.setCode(400);
+    JsonVariant& root = response.getRoot();
+    root["ok"] = false;
+    root["error"] = ErrorCodes::Input::INVALID_JSON;
+    if (detail && detail[0] != '\0') {
+        root["detail"] = detail;
+    }
+    extraBuilder(root);
+    return response.send();
+}
+
 /**
  * Send a JSON success response with builder callback
  * 
@@ -130,28 +167,22 @@ inline esp_err_t success(PsychicRequest* request,
  * 
  * @param request The HTTP request containing JSON body
  * @param doc JsonDocument to deserialize into
- * @param limit Maximum allowed payload size (default 16KB). 
+ * @param limit Maximum allowed payload size.
  *              NOTE: Body is explicitly allocated in PSRAM via PsychicRequest.
  * @return ESP_OK on success, or error code if parsing failed (response already sent)
  */
 template <typename TDocument>
-inline esp_err_t parseJsonBody(PsychicRequest* request, TDocument& doc, size_t limit = 16384) {
+inline esp_err_t parseJsonBody(PsychicRequest* request, TDocument& doc, size_t limit) {
     if (request->contentLength() > limit) {
-        return Response::error(request, 413, "input/payload_too_large");
+        return payloadTooLarge(request);
     }
     
     DeserializationError err = deserializeJson(doc, request->body());
     if (err == DeserializationError::NoMemory || doc.overflowed()) {
-        return Response::error(request, 413, "input/payload_too_large");
+        return payloadTooLarge(request);
     }
     if (err) {
-        PsychicJsonResponse response(request);
-        response.setCode(400);
-        JsonVariant& root = response.getRoot();
-        root["ok"] = false;
-        root["error"] = "input/json_parse_error";
-        root["detail"] = err.c_str();
-        return response.send();
+        return invalidJson(request, err.c_str());
     }
     return ESP_OK;
 }
@@ -165,31 +196,27 @@ inline esp_err_t parseJsonBody(PsychicRequest* request, TDocument& doc, size_t l
  * @param request The HTTP request containing JSON body
  * @param doc JsonDocument to deserialize into
  * @param configured Whether the feature is configured (added to error response)
- * @param limit Maximum allowed payload size (default 16KB)
+ * @param limit Maximum allowed payload size
  * @return ESP_OK on success, or error code if parsing failed (response already sent)
  */
 template <typename TDocument>
-inline esp_err_t parseJsonBodyWithConfig(PsychicRequest* request, TDocument& doc, bool configured, size_t limit = 16384) {
+inline esp_err_t parseJsonBodyWithConfig(PsychicRequest* request, TDocument& doc, bool configured, size_t limit) {
     if (request->contentLength() > limit) {
-        return Response::error(request, 413, "input/payload_too_large");
+        return payloadTooLarge(request);
     }
 
     DeserializationError err = deserializeJson(doc, request->body());
     if (err == DeserializationError::NoMemory || doc.overflowed()) {
         return Response::error(request,
                                413,
-                               "input/payload_too_large",
+                               ErrorCodes::Input::PAYLOAD_TOO_LARGE,
                                [configured](JsonVariant& root) { root["configured"] = configured; });
     }
     if (err) {
-        PsychicJsonResponse response(request);
-        response.setCode(400);
-        JsonVariant& root = response.getRoot();
-        root["ok"] = false;
-        root["configured"] = configured;
-        root["error"] = "input/json_parse_error";
-        root["detail"] = err.c_str();
-        return response.send();
+        return invalidJson(
+            request,
+            [configured](JsonVariant& root) { root["configured"] = configured; },
+            err.c_str());
     }
     return ESP_OK;
 }

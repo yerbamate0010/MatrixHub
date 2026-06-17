@@ -155,7 +155,7 @@ bool SystemWebsocketBroadcaster::tryHandleSnapshotRequest(int fd,
 
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::CHANNEL_SUBSCRIPTIONS);
     const DeserializationError error = deserializeJson(doc, msg, len);
-    if (error) {
+    if (error || doc.overflowed()) {
         return false;
     }
 

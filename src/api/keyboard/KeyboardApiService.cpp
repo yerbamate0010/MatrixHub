@@ -57,10 +57,11 @@ void KeyboardApiService::begin() {
                 }
 
                 SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::KEYBOARD);
-                if (auto err = Response::parseJsonBody(request, doc); err != ESP_OK) return err;
+                if (auto err = Response::parseJsonBody(
+                        request, doc, LIMITS::API::JSON_DOC::KEYBOARD); err != ESP_OK) return err;
                 JsonObject obj = doc.as<JsonObject>();
                 if (obj.isNull()) {
-                    return Response::error(request, 400, "input/invalid_json");
+                    return Response::invalidJson(request);
                 }
                 
                 if (obj[CONFIG::Keys::kText].is<const char*>()) {
@@ -90,10 +91,11 @@ void KeyboardApiService::begin() {
                 }
 
                 SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::KEYBOARD);
-                if (auto err = Response::parseJsonBody(request, doc); err != ESP_OK) return err;
+                if (auto err = Response::parseJsonBody(
+                        request, doc, LIMITS::API::JSON_DOC::KEYBOARD); err != ESP_OK) return err;
                 JsonObject obj = doc.as<JsonObject>();
                 if (obj.isNull()) {
-                    return Response::error(request, 400, "input/invalid_json");
+                    return Response::invalidJson(request);
                 }
                 
                 // Handle combo

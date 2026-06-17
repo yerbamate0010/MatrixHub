@@ -38,7 +38,7 @@
 
 namespace {
     constexpr const char* kAlarmRulesPath = "/api/alarms/rules";
-    constexpr size_t kMaxAlarmRulesPayloadBytes = 8192;
+    constexpr size_t kMaxAlarmRulesPayloadBytes = LIMITS::API::JSON_DOC::ALARMS_RULES;
 
     // Heap monitoring thresholds (bytes)
     constexpr int32_t kHeapWarnDeltaThreshold = 6000;
@@ -211,7 +211,7 @@ esp_err_t AlarmsApiService::handleWriteRules(PsychicRequest* request) {
         kMaxAlarmRulesPayloadBytes,
         [this, request](JsonDocument& jsonDocument) -> esp_err_t {
             if (!jsonDocument.is<JsonObject>()) {
-                return Response::error(request, 400, "input/invalid_json");
+                return Response::invalidJson(request);
             }
 
             if (!_settings) {
