@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FreeRTOS.h"
+#include <atomic>
+#include <thread>
 
 // Mock Task Functions
 typedef void (*TaskFunction_t)( void * );
@@ -21,7 +23,7 @@ inline BaseType_t taskCreateResult = pdPASS;
 inline TaskHandle_t createdTaskHandle = reinterpret_cast<TaskHandle_t>(1);
 inline TaskHandle_t currentTaskHandle = reinterpret_cast<TaskHandle_t>(2);
 inline BaseType_t schedulerState = 1;
-inline eTaskState taskState = eRunning;
+inline std::atomic<eTaskState> taskState{eRunning};
 inline TaskFunction_t lastTaskFunction = nullptr;
 inline const char* lastTaskName = nullptr;
 inline uint32_t lastTaskStackDepth = 0;
@@ -35,7 +37,7 @@ inline void resetTaskCreateStub() {
     createdTaskHandle = reinterpret_cast<TaskHandle_t>(1);
     currentTaskHandle = reinterpret_cast<TaskHandle_t>(2);
     schedulerState = 1;
-    taskState = eRunning;
+    taskState.store(eRunning, std::memory_order_relaxed);
     lastTaskFunction = nullptr;
     lastTaskName = nullptr;
     lastTaskStackDepth = 0;
@@ -119,11 +121,12 @@ inline BaseType_t xTaskGetSchedulerState() {
 
 inline void vTaskDelete( TaskHandle_t xTaskToDelete ) {
     TEST_STUBS::FREERTOS::lastDeletedTask = xTaskToDelete;
-    TEST_STUBS::FREERTOS::taskState = eDeleted;
+    TEST_STUBS::FREERTOS::taskState.store(eDeleted, std::memory_order_release);
 }
 
 inline void vTaskDelay( const TickType_t xTicksToDelay ) {
     TEST_STUBS::FREERTOS::tickCount += xTicksToDelay;
+    std::this_thread::yield();
 }
 
 inline BaseType_t xTaskDelayUntil(TickType_t* previousWakeTime, TickType_t timeIncrement) {
@@ -142,7 +145,7 @@ inline BaseType_t xTaskDelayUntil(TickType_t* previousWakeTime, TickType_t timeI
 
 inline void vTaskSuspend( TaskHandle_t xTaskToSuspend ) {
     (void)xTaskToSuspend;
-    TEST_STUBS::FREERTOS::taskState = eSuspended;
+    TEST_STUBS::FREERTOS::taskState.store(eSuspended, std::memory_order_release);
 }
 
 inline void vTaskResume( TaskHandle_t xTaskToResume ) {}
@@ -165,5 +168,5 @@ inline const char* pcTaskGetName(TaskHandle_t xTask) {
 
 inline eTaskState eTaskGetState( TaskHandle_t xTask ) {
     (void)xTask;
-    return TEST_STUBS::FREERTOS::taskState;
+    return TEST_STUBS::FREERTOS::taskState.load(std::memory_order_acquire);
 }

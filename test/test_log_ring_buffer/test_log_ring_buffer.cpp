@@ -12,6 +12,7 @@
  */
 
 #include <unity.h>
+#include <cstdio>
 #include <cstring>
 #include <array>
 #include <vector>

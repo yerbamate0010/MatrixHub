@@ -44,6 +44,7 @@ size_t g_lastProcessedLen = 0;
 void resetStubs() {
     TEST_STUBS::FREERTOS::resetQueueStub();
     TEST_STUBS::FREERTOS::resetTaskCreateStub();
+    TEST_STUBS::FREERTOS::resetSemaphoreStubs();
     g_processedCount = 0;
     g_lastProcessedLen = 0;
 }

@@ -3,6 +3,7 @@
 
 #include <functional>
 
+#include <esp_log.h>
 #include <PsychicHttp.h>
 
 #include <security/SecurityManager.h>
