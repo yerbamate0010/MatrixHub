@@ -59,6 +59,17 @@ Detailed build notes:
 - `BUILD_SPEED_OPTIMIZATION.md`
 - `docs/main_docs/BUILD_SPEED_OPTIMIZATION.md`
 
+Detailed agent workflows:
+
+- `docs/agent-workflows/README.md`
+- `docs/agent-workflows/build.md`
+- `docs/agent-workflows/clean.md`
+- `docs/agent-workflows/core_dump.md`
+- `docs/agent-workflows/frontend-diagnostics.md`
+- `docs/agent-workflows/language_preference.md`
+- `docs/agent-workflows/new_module.md`
+- `docs/agent-workflows/tests_backend.md`
+
 ## Project Shape
 
 Important entry path:
@@ -87,7 +98,7 @@ Core module directories:
 - `src/system/`: boot, lifecycle, service registry, logging, memory, power,
   watchdog, health, RTC, and shutdown.
 - `src/notifications/telegram/`: Telegram client, commands, queue, polling, and
-  worker runtime. There is no standalone `src/telegram/` module.
+  worker runtime.
 - `src/udp/`: UDP pusher and settings.
 - `src/wifisensing/`: RSSI and CSI sensing.
 - `src/ble/`: BLE facade, scanning, parsing, and BLE settings.

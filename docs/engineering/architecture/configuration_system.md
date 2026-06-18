@@ -19,7 +19,8 @@ src/config/
 ├── Hardware.h
 ├── Network.h
 ├── System.h
-└── ConfigManager.h / .cpp
+├── TaskConfig.h
+└── json/*.h / json/*.cpp
 ```
 
 ### `App.h`
@@ -54,14 +55,20 @@ Use for:
 
 Use for:
 
+- aggregate inclusion of the config headers
+
+### `TaskConfig.h`
+
+Use for:
+
 - task stacks, priorities, and core affinity
-- memory budgets and JSON document sizes
 - system timeouts
-- shared operational limits
+- task monitoring thresholds
 
 ## Include rule
 
-The old umbrella-style config include is no longer the model. Include the specific header you need.
+Include the specific header you need where practical. Use `System.h` when a
+translation unit genuinely needs the aggregate config view.
 
 Example:
 
@@ -87,7 +94,7 @@ So the runtime config path is no longer `settings.json` in the project root.
 
 ### Config manager
 
-`src/config/ConfigManager.cpp` is the central JSON orchestrator.
+`src/core/config/ConfigManager.cpp` is the central JSON orchestrator.
 
 It:
 

@@ -40,7 +40,7 @@ The scanner-only contract is intentionally small:
 - BLE snapshot channel: same settings shape plus discovered devices
 - binary system-status packet: Wi-Fi status, Wi-Fi flags, RSSI, CPU temperature
 
-Legacy peripheral fields such as advertising state, connection counters,
+Compatibility peripheral fields such as advertising state, connection counters,
 passkeys, or pairing state are no longer part of the live API.
 
 ## Discovery and coexistence

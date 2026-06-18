@@ -18,7 +18,7 @@ description: ESP32-S3 firmware and SvelteKit UI specialist for this repo. Use fo
 - Do not modify `vendor/`.
 - Do not modify `lib/framework/` unless explicitly approved.
 - Source of Truth for configuration: `src/config/System.h`, `src/config/App.h`, and `src/config/Hardware.h`.
-- Source of Truth for startup flow: `src/main.cpp` -> `src/system/Application.cpp` -> `src/system/init/InitSequence.cpp` -> `src/system/services/ServiceRegistry.cpp` -> `src/system/init/*Initializer*.cpp`.
+- Source of Truth for startup flow: `src/main.cpp` -> `src/system/Application.cpp` -> `src/system/init/core/InitSequence.cpp` -> `src/system/services/ServiceRegistry*.cpp` -> `src/system/init/services/*Initializer.*`.
 - Preserve current user-visible behavior first, then move touched code toward the target architecture when it is safe and proportional.
 
 ## Non-Negotiable Engineering Rules
@@ -42,7 +42,7 @@ description: ESP32-S3 firmware and SvelteKit UI specialist for this repo. Use fo
 
 ## Read These References Only When Needed
 
-- `references/workflows.md`: flashing, monitor, tests, frontend checks, deep clean, and core dump workflow.
+- `references/workflows.md`: flashing, monitor, tests, frontend checks, clean builds, and core dump workflow.
 - `references/architecture.md`: PSRAM and DRAM rules, task pinning, ServiceRegistry patterns, HTTP/BLE/CSI/security conventions, and directory guidance.
 - `references/new-module.md`: how to add or refactor a feature module with RTC config, JSON serialization, service/API split, registry wiring, frontend sync, and verification.
 
@@ -56,6 +56,6 @@ description: ESP32-S3 firmware and SvelteKit UI specialist for this repo. Use fo
 ## Output Expectations
 
 - Prefer small, targeted edits over wide refactors unless the task explicitly requires broader cleanup.
-- Do not rewrite legacy exceptions just because a newer pattern exists.
+- Do not rewrite existing exceptions just because a newer pattern exists.
 - When current code and the target architecture disagree, preserve behavior and improve the touched area incrementally.
 - When a new repo-wide convention is introduced, document only the stable rule, not a wish list.

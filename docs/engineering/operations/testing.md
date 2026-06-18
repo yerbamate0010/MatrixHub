@@ -42,7 +42,7 @@ Run the host suite with compiler coverage instrumentation:
 pio test -e native_coverage
 ```
 
-Generate a summarized coverage report on macOS Command Line Tools / Xcode toolchains:
+Generate a summarized coverage report:
 
 ```bash
 bash scripts/tests/native_coverage.sh
@@ -111,7 +111,7 @@ Run against another device:
 
 ```bash
 cd interface
-DEVICE_URL=http://192.168.0.123 npm run test:e2e
+DEVICE_URL=https://192.168.0.123 npm run test:e2e
 ```
 
 Override credentials if needed:
@@ -183,7 +183,7 @@ python scripts/diagnostics/decode_coredump.py --elf build/elf/<hash>.elf
 python scripts/diagnostics/decode_coredump.py --save crashlogs/2026-05-21.bin
 ```
 
-Use `--save` when reporting an incident — it archives the raw partition image
+Use `--save` when reporting an incident; it stores the raw partition image
 and a snapshot of the matching ELF side-by-side so the trace can be re-decoded
 later even after the firmware ELF rotates.
 
@@ -233,118 +233,5 @@ pio test -e native
 cd interface && npm run check
 cd interface && npm run test:run
 ```
-
-## Frontend Refactor Smoke Checklist
-
-Use this quick manual pass before merging a wider frontend refactor, especially
-when it touches shared stores, dashboard widgets, navigation, or settings
-controllers.
-
-Recommended local gate first:
-
-```bash
-cd interface
-npm run check
-npm run build
-```
-
-Targeted verification areas:
-
-1. Dashboard alarms widget
-   Expected:
-   - data appears from the live snapshot without a visible jump from stale REST data
-   - toggling a rule updates immediately
-   - if the toggle request fails, the switch returns to the previous state and an error is shown
-
-2. Alarms page
-   Expected:
-   - create, edit, delete, and enable/disable all persist correctly
-   - the dashboard widget and `/alarms` stay in sync after changes
-   - the max rule limit is enforced and clearly messaged
-
-3. Wi-Fi sensing page
-   Expected:
-   - settings only show a success toast after a real save success
-   - failed saves do not show a success toast
-   - enable/disable, interval, and threshold survive a reload after save
-
-4. Shelly page and dashboard widget
-   Expected:
-   - add, edit, delete, and toggle all behave consistently
-   - read-only users cannot mutate state
-   - widget state matches the full Shelly page
-
-5. Power settings page
-   Expected:
-   - invalid timeout/grace values block save
-   - valid boundary values save correctly
-   - blur/clamp behavior keeps the form in a valid persisted range
-
-6. Navigation, help, and status bar
-   Expected:
-   - help links resolve to the correct destinations
-   - admin-only items remain visible but disabled for non-admin users where intended
-   - Wi-Fi CSI is disabled when STA is disconnected
-   - status bar title matches the active feature route
-
-Suggested test notes template:
-
-```text
-Build/check:
-- npm run check: PASS/FAIL
-- npm run build: PASS/FAIL
-
-Manual smoke:
-- Dashboard alarms: PASS/FAIL
-- /alarms CRUD + toggle: PASS/FAIL
-- /wifisensing save/error flow: PASS/FAIL
-- /shelly page + widget sync: PASS/FAIL
-- /system/power validation: PASS/FAIL
-- navigation/help/statusbar: PASS/FAIL
-
-Issues found:
-- none / short bullet list
-```
-
-## Native Test Debt Reduction Plan
-
-The host suite is healthy and broad, but some of that coverage still depends on
-white-box test seams. The goal is to keep the current regression-detection
-strength while steadily reducing test fragility.
-
-Current debt themes:
-
-- some suites still use `#define private public` to reach private state/helpers
-- many host suites include production `.cpp` files directly because
-  `env:native` uses `test_build_src = no`
-- a few runtime wiring tests depend on large hand-written stubs because the
-  production code exposes broad initialization surfaces
-
-Reduction order:
-
-1. Remove unnecessary `private public` usage first.
-   These are the cheapest wins because they reduce coupling without changing
-   production behavior.
-2. Prefer narrow runtime/control seams over broad white-box access.
-   Recent examples:
-   - `src/shelly/ShellyRuntimeControl.*`
-   - `src/system/services/ServiceRegistryOwnedApiRuntime.*`
-3. When a host test needs only orchestration logic, extract a small helper file
-   with forward-declared pointer dependencies instead of pulling in a large
-   feature root.
-4. Reserve direct `.cpp` inclusion for algorithmic code and translation units
-   that would otherwise require a disproportionate stub surface.
-5. Keep `env:native` green while shrinking debt incrementally.
-   Avoid large rewrites of old suites unless the touched production area already
-   justifies the churn.
-
-Recommended next slices:
-
-- reduce white-box coupling in shutdown/factory-reset lifecycle tests further by
-  extracting more shutdown-only helpers behind small runtime seams
-- continue decomposing `ServiceRegistry` initialization into testable helper
-  files with narrow dependency sets
-- keep `env:native` and this document in sync when a suite is temporarily
-  excluded from the default host gate
 
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Operations](../README.md#operations)

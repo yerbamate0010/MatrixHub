@@ -3,7 +3,7 @@
 Navigation: [Engineering Reference](README.md)
 
 `api-contract.json` is the local source of truth for firmware, frontend, SDK,
-diagnostic scripts, and user-doc endpoint paths.
+diagnostic scripts, and documentation endpoint paths.
 
 The contract intentionally tracks:
 
@@ -35,8 +35,8 @@ The verifier scans:
 - `scripts/**` and `tools/**`
 - `docs/user-guide/**`
 
-It fails when a local path literal exists in code or user docs but is missing
-from `api-contract.json`.
+It fails when a local API path literal exists in code or maintained docs but is
+missing from `api-contract.json`.
 
 ## Runtime Rules
 

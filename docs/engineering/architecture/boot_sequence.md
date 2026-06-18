@@ -10,9 +10,9 @@ The current boot path is defined primarily by:
 
 - `src/main.cpp`
 - `src/system/Application.cpp`
-- `src/system/init/InitSequence.cpp`
-- `src/system/services/ServiceRegistry.cpp`
-- `src/system/init/*Initializer*.cpp`
+- `src/system/init/core/InitSequence.cpp`
+- `src/system/services/ServiceRegistry*.cpp`
+- `src/system/init/services/*Initializer*.cpp`
 
 When this document and the code disagree, the code wins.
 
@@ -49,7 +49,7 @@ Important decision:
 
 ## Phase 2: Logging
 
-Implemented in `src/system/init/InitSequence.cpp`.
+Implemented in `src/system/init/core/InitSequence.cpp`.
 
 This phase:
 
@@ -83,7 +83,7 @@ This step:
 
 ## Phase 4: Framework
 
-Implemented in `src/system/init/InitSequence.cpp`.
+Implemented in `src/system/init/core/InitSequence.cpp`.
 
 This phase:
 
@@ -110,7 +110,7 @@ Current registry order:
 
 ### Core Services
 
-Initialized in `src/system/init/CoreServicesInitializer.cpp`.
+Initialized in `src/system/init/services/CoreServicesInitializer.cpp`.
 
 Notable services:
 

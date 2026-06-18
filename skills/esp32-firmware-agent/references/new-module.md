@@ -2,7 +2,7 @@
 
 ## When To Read This File
 
-- Read this file before adding a new feature module or refactoring an older feature into the preferred service and API split.
+- Read this file before adding a new feature module or moving an existing feature into the preferred service and API split.
 
 ## Design Rules
 
@@ -74,8 +74,8 @@ bool changed = memcmp(&current_cfg, &next_cfg, sizeof(RTC::ThermostatData)) != 0
 
 - Add owned members or getters in `src/system/services/ServiceRegistry.h` as needed.
 - If the feature exposes HTTP endpoints, add the API `PsramStaticService` slot in `src/system/services/ServiceRegistryApi.h`.
-- Wire the feature through the appropriate initializer under `src/system/init/`.
-- Update `src/system/services/ServiceRegistry.cpp` only where ownership or sequencing belongs.
+- Wire the feature through the appropriate initializer under `src/system/init/services/`.
+- Update `src/system/services/ServiceRegistry*.cpp` only where ownership or sequencing belongs.
 - Follow existing cleanup patterns: RAII for `std::unique_ptr` and `.destroy()` or `destroyAll()` for `PsramStaticService`.
 
 ## Step 6: Memory Rules

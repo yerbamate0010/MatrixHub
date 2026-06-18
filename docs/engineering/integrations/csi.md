@@ -52,7 +52,8 @@ The current flow is:
 ## Wire format used by `/ws/csi`
 
 Each WebSocket payload contains one or more packet records concatenated back to
-back. A single-packet payload is therefore the same shape as the legacy frame.
+back. A single-packet payload is therefore just one record using the same binary
+record layout.
 Each packet record is encoded as:
 
 - `uint32` timestamp
@@ -104,8 +105,8 @@ The nested `csi` object includes:
 
 `scripts/diagnostics/trigger_wifisensing.py` records this status before and
 after toggling the feature. `tools/csi_client.py` prints the CSI status summary
-when the endpoint is available and continues to work against older firmware
-where the endpoint is not present.
+when the endpoint is available and tolerates firmware builds where the endpoint
+is not present.
 
 ## Current limitations
 

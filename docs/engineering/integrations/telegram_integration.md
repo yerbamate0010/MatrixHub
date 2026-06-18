@@ -92,7 +92,7 @@ Request body:
 }
 ```
 
-The backend still accepts legacy `message` for compatibility.
+The backend accepts `message` as a compatibility alias for `text`.
 
 Current behavior is intentionally asynchronous:
 

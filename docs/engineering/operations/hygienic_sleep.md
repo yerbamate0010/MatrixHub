@@ -82,8 +82,6 @@ It also persists RTC/boot state and flushes serial output.
 
 ## What is intentionally *not* done
 
-Some older ideas were removed from this document because they are not part of the current design.
-
 Notably:
 
 - no dedicated pre-sleep `TelegramClient::disconnect()` step

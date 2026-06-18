@@ -4,8 +4,6 @@ Navigation: [Project README](../../../README.md) · [Engineering Reference](../R
 
 This document describes the current power subsystem in the repo.
 
-The old `always_on` vs `battery_mode` split is not the active architecture here anymore and should not be treated as source of truth.
-
 ## Current model
 
 Power behavior is driven by `POWER::PowerManager` and consists of:
@@ -48,7 +46,7 @@ Those are loaded/saved through `src/config/json/PowerSettingsJson.cpp`.
 - `grace_ms`
 - `sleep_en`
 
-These are implementation details for backup compatibility. New docs and frontend code should use the JSON keys above, not the old NVS key names.
+These are implementation details for backup compatibility. New docs and frontend code should use the JSON keys above.
 
 ## HTTP endpoints
 
@@ -132,6 +130,6 @@ Frontend code should treat `GET /rest/power/status` as the authoritative status 
 - `wake_reason`
 - `sleep_eta_ms`
 
-Do not build new UI against legacy names such as `grace_ms`.
+Do not build new UI against backup-only names such as `grace_ms`.
 
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Architecture](../README.md#runtime-and-architecture)

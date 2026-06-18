@@ -4,8 +4,6 @@ Navigation: [Project README](../../../README.md) · [Engineering Reference](../R
 
 This document describes the current deep-sleep persistence model used by the firmware.
 
-The old statement "all config lives directly in RTC SLOW memory" is no longer accurate.
-
 ## Current storage model
 
 The system now uses three persistence layers:
@@ -140,7 +138,7 @@ It handles:
 - mutation
 - `magic` / version / CRC refresh
 
-Some legacy code still mutates config directly or through `RtcStatefulService` calling `RTC::markValid()`. Because of that, `prepareForSleep()` does a final validity refresh before copying the store to RTC.
+Some code still mutates config directly or through `RtcStatefulService` calling `RTC::markValid()`. Because of that, `prepareForSleep()` does a final validity refresh before copying the store to RTC.
 
 ## Persistence matrix
 

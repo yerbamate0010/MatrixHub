@@ -32,7 +32,7 @@
 - Initialization is split across `src/system/init/*Initializer*.cpp`.
 - Prefer constructor injection or explicit `init(...)` wiring.
 - API services under `src/api/` should receive business-service pointers explicitly.
-- Existing repo-wide `instance()` patterns are legacy exceptions, not models for new features.
+- Existing repo-wide `instance()` patterns are compatibility exceptions, not models for new features.
 
 ## Configuration Rules
 

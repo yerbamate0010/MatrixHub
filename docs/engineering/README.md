@@ -1,7 +1,7 @@
 # Engineering Reference
 
-This section is for developers and maintainers. It groups technical reference
-material that supports implementation, debugging, and validation.
+This section is for developers and maintainers. It groups the maintained
+technical references that support implementation, debugging, and validation.
 
 ## Runtime and architecture
 
@@ -27,11 +27,9 @@ material that supports implementation, debugging, and validation.
 - [operations/testing.md](operations/testing.md) - backend and frontend validation
 - [operations/dram_optimizations.md](operations/dram_optimizations.md) - DRAM usage guidance
 - [operations/hygienic_sleep.md](operations/hygienic_sleep.md) - hygiene sleep and maintenance restart flow
+- [../main_docs/BUILD_SPEED_OPTIMIZATION.md](../main_docs/BUILD_SPEED_OPTIMIZATION.md) - measured PlatformIO build-speed optimization report
 
-## Release notes
+## Agent and operator references
 
-- [frontend-ux-release-notes.md](frontend-ux-release-notes.md) - user-facing UX changes from the Matrix LED refactor
-
-## Planning
-
-- [planning/ROADMAP.md](planning/ROADMAP.md) - active engineering backlog
+- [../agent-workflows/README.md](../agent-workflows/README.md) - repeatable workflows for agents
+- [../user-guide/README.md](../user-guide/README.md) - current UI route map and operator notes

@@ -28,7 +28,7 @@
  * @brief Private struct holding all API PsramStaticService instances.
  *
  * This is an implementation detail of ServiceRegistry — only included
- * by ServiceRegistry.cpp and ApiServicesInitializer.cpp.
+ * by ServiceRegistry internals and ApiServicesInitializer.cpp.
  * Keeps the heavyweight API includes out of the public header.
  */
 struct ApiServices {

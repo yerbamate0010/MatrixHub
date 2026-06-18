@@ -499,7 +499,7 @@ esp32s3_matrix/
 │   ├── system/             # Boot, power, thermal, button, data logger, watchdog
 │   ├── udp/                # UDP telemetry push
 │   ├── utils/              # Shared utilities
-│   └── wifisensing/        # Wi-Fi CSI motion detection
+│   └── wifisensing/        # RSSI sensing and CSI diagnostics
 ├── interface/              # SvelteKit web dashboard
 │   └── src/
 ├── lib/
@@ -510,7 +510,7 @@ esp32s3_matrix/
 │   └── sensirion_scd4x/    # SCD41 driver (BSD-3-Clause)
 ├── test/                   # Unity unit tests (native host)
 ├── boards/                 # PlatformIO board definitions
-├── docs/                   # Engineering & user documentation
+├── docs/                   # Maintained engineering, workflow, and user notes
 ├── LICENSE                 # GPL-3.0
 └── platformio.ini          # Build configuration
 ```
@@ -523,10 +523,10 @@ esp32s3_matrix/
   and application tasks on Core 1.
 - **Memory strategy**: everything > 512 B that does not require DMA lives in
   PSRAM (`MALLOC_CAP_SPIRAM`). DMA buffers (matrix, SPI) stay in internal DRAM.
-- **Service pattern**: each feature is a singleton `Service` (business logic) +
-  `ApiService` (HTTP controller), wired in `ServiceRegistry`.
-- **Config persistence**: settings stored in LittleFS as JSON; a hot snapshot
-  kept in RTC memory survives deep sleep for instant warm-boot restore.
+- **Service pattern**: long-lived services are owned and wired by
+  `ServiceRegistry`; API services stay transport-focused.
+- **Config persistence**: settings live in a PSRAM working store, persist to
+  LittleFS JSON, and use an RTC shadow copy for deep-sleep restore.
 - **No magic numbers**: all timeouts, thresholds, and pin assignments are in
   `src/config/Hardware.h`, `App.h`, and `TaskConfig.h`.
 
@@ -542,7 +542,8 @@ esp32s3_matrix/
 ## Contributing
 
 1. Keep all task configs in `src/config/TaskConfig.h`.
-2. Do **not** modify `lib/framework/` or `vendor/`.
+2. Do **not** modify `lib/framework/` or `src/wifisensing/csi/vendor/` without
+   explicit approval.
 3. Run backend tests before submitting: `pio test -e native`.
 4. Use `LOGI()` / `LOGW()` / `LOGE()` — never `Serial.print()`.
 5. All new large buffers (> 512 B) must use `MALLOC_CAP_SPIRAM`.
