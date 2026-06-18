@@ -69,6 +69,7 @@ void setUp(void) {
     g_responseType.clear();
     g_responseHeaderField.clear();
     g_responseHeaderValue.clear();
+    SYSTEM::LOCK_DIAGNOSTICS::reset();
     TEST_ASSERT_TRUE(Utils::JsonResponseWriter::begin());
 }
 
@@ -147,6 +148,34 @@ void test_endpoints_writer_lists_all_diagnostics_routes() {
     TEST_ASSERT_EQUAL_STRING("/api/diagnostics/summary", doc["diagnostics"][0]["path"].as<const char*>());
 }
 
+void test_mutex_writer_exposes_runtime_lock_counters() {
+    SYSTEM::LOCK_DIAGNOSTICS::recordAcquire(false, pdMS_TO_TICKS(25), pdMS_TO_TICKS(100), true);
+    SYSTEM::LOCK_DIAGNOSTICS::recordAcquire(true, pdMS_TO_TICKS(5), 0, false);
+
+    httpd_req_t req{};
+    req.uri = "/api/diagnostics/mutexes";
+    Utils::JsonResponseWriter writer(&req);
+
+    TEST_ASSERT_TRUE(writer.beginResponse());
+    API::DiagnosticsJsonWriter::writeMutexes(writer);
+    TEST_ASSERT_TRUE(writer.finish());
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, g_responseBuffer);
+    TEST_ASSERT_FALSE(err);
+    TEST_ASSERT_EQUAL_STRING("diagnostics.mutexes.v1", doc["schema"].as<const char*>());
+    TEST_ASSERT_TRUE(doc["instrumented"].as<bool>());
+    TEST_ASSERT_TRUE(doc["coverage"]["timeoutCounters"].as<bool>());
+    TEST_ASSERT_TRUE(doc["coverage"]["slowAcquireCounters"].as<bool>());
+    TEST_ASSERT_FALSE(doc["coverage"]["holdTimeBuckets"].as<bool>());
+    TEST_ASSERT_EQUAL(1U, doc["runtime"]["standard"]["attempts"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(1U, doc["runtime"]["standard"]["successes"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(1U, doc["runtime"]["standard"]["slowAcquires"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(1U, doc["runtime"]["recursive"]["attempts"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(1U, doc["runtime"]["recursive"]["timeouts"].as<unsigned int>());
+    TEST_ASSERT_EQUAL_STRING("global", doc["criticalLocks"][0]["counterScope"].as<const char*>());
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -156,5 +185,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_heap_writer_serializes_regions_and_fragmentation);
     RUN_TEST(test_features_writer_marks_unmeasured_runtime_explicitly);
     RUN_TEST(test_endpoints_writer_lists_all_diagnostics_routes);
+    RUN_TEST(test_mutex_writer_exposes_runtime_lock_counters);
     return UNITY_END();
 }

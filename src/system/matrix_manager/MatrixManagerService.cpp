@@ -86,60 +86,73 @@ uint8_t MatrixManagerService::pendingNotifications() const {
 // ─── Task Loop ───────────────────────────────────────────────────
 
 void MatrixManagerService::update() {
-    SYSTEM::RecursiveScopeLock lock(_mutex);
-    if (!lock.isLocked()) {
-        LOGW("update: mutex timeout");
-        return;
+    bool shouldApplyContent = false;
+    bool shouldClearDisplay = false;
+    LayerContent contentToApply;
+
+    {
+        SYSTEM::RecursiveScopeLock lock(_mutex);
+        if (!lock.isLocked()) {
+            LOGW("update: mutex timeout");
+            return;
+        }
+
+        uint32_t now = millis();
+        if (_lastUpdateMs == 0) _lastUpdateMs = now;
+        uint32_t deltaMs = now - _lastUpdateMs;
+        _lastUpdateMs = now;
+
+        // Resolve the top layer first to know who gets the visible time tick
+        LayerContent topContent;
+        Layer topLayer;
+        uint32_t topHash = 0;
+        bool hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
+
+        if (hasActiveLayer) {
+            _layerVisibleTimeMs[static_cast<uint8_t>(topLayer)] += deltaMs;
+        }
+
+        // Step 1: Advance notification queue timer
+        advanceNotificationQueue();
+
+        // Step 2: Auto-clear any expired layers
+        checkLayerTimeouts();
+
+        // The top layer might have changed due to timeouts, so resolve again
+        hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
+
+        if (hasActiveLayer) {
+            // Check if content changed. Layer hashes are computed on mutation.
+            bool changed = !_wasRendering ||
+                           topLayer != _lastRenderedLayer ||
+                           topContent.type != _lastRenderedType ||
+                           topHash != _lastContentHash;
+
+            if (changed) {
+                _lastRenderedContent = topContent;
+                contentToApply = _lastRenderedContent;
+                _lastRenderedLayer = topLayer;
+                _lastRenderedType = topContent.type;
+                _lastContentHash = topHash;
+                _wasRendering = true;
+                shouldApplyContent = true;
+                LOGD("Rendering layer %u (type=%d)",
+                     static_cast<unsigned>(topLayer), static_cast<int>(topContent.type));
+            }
+        } else {
+            // No active layers — clear display
+            if (_wasRendering) {
+                _wasRendering = false;
+                shouldClearDisplay = true;
+                LOGD("All layers inactive, display cleared");
+            }
+        }
     }
 
-    uint32_t now = millis();
-    if (_lastUpdateMs == 0) _lastUpdateMs = now;
-    uint32_t deltaMs = now - _lastUpdateMs;
-    _lastUpdateMs = now;
-
-    // Resolve the top layer first to know who gets the visible time tick
-    LayerContent topContent;
-    Layer topLayer;
-    uint32_t topHash = 0;
-    bool hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
-
-    if (hasActiveLayer) {
-        _layerVisibleTimeMs[static_cast<uint8_t>(topLayer)] += deltaMs;
-    }
-
-    // Step 1: Advance notification queue timer
-    advanceNotificationQueue();
-    
-    // Step 2: Auto-clear any expired layers
-    checkLayerTimeouts();
-
-    // The top layer might have changed due to timeouts, so resolve again
-    hasActiveLayer = _layerManager.getTopLayer(topContent, topLayer, topHash);
-
-    if (hasActiveLayer) {
-        // Check if content changed. Layer hashes are computed on mutation.
-        bool changed = !_wasRendering ||
-                       topLayer != _lastRenderedLayer ||
-                       topContent.type != _lastRenderedType ||
-                       topHash != _lastContentHash;
-
-        if (changed) {
-            _lastRenderedContent = topContent;
-            applyLayerToRenderer(_lastRenderedContent);
-            _lastRenderedLayer = topLayer;
-            _lastRenderedType = topContent.type;
-            _lastContentHash = topHash;
-            _wasRendering = true;
-            LOGD("Rendering layer %u (type=%d)", 
-                 static_cast<unsigned>(topLayer), static_cast<int>(topContent.type));
-        }
-    } else {
-        // No active layers — clear display
-        if (_wasRendering) {
-            _matrixService->clear(false); // Preserve background effect
-            _wasRendering = false;
-            LOGD("All layers inactive, display cleared");
-        }
+    if (shouldApplyContent) {
+        applyLayerToRenderer(contentToApply);
+    } else if (shouldClearDisplay) {
+        _matrixService->clear(false); // Preserve background effect
     }
 }
 

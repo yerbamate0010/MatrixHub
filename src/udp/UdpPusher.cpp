@@ -25,6 +25,9 @@ constexpr size_t kBufferSize = 4096;
 
 namespace {
 
+constexpr TickType_t kStateLockTimeout = pdMS_TO_TICKS(500);
+constexpr TickType_t kDestructorLockTimeout = pdMS_TO_TICKS(1000);
+
 void freeBuffer(char*& buffer) {
     if (!buffer) {
         return;
@@ -80,11 +83,13 @@ UdpPusher::UdpPusher() {
 UdpPusher::~UdpPusher() {
     if (_stateLock) {
         {
-            SYSTEM::ScopeLock lock(_stateLock, portMAX_DELAY);
+            SYSTEM::ScopeLock lock(_stateLock, kDestructorLockTimeout);
             if (lock.isLocked()) {
                 if (stopWorkerLocked()) {
                     freeBuffer(_buffer);
                 }
+            } else {
+                LOGW("Destructor could not lock UDP pusher state; deferring worker cleanup to task shutdown");
             }
         }
         vSemaphoreDelete(_stateLock);
@@ -93,7 +98,7 @@ UdpPusher::~UdpPusher() {
 }
 
 void UdpPusher::begin() {
-    SYSTEM::ScopeLock lock(_stateLock, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(_stateLock, kStateLockTimeout);
     if (!lock.isLocked()) {
         LOGE("Failed to lock UDP pusher state in begin()");
         return;
@@ -106,7 +111,7 @@ void UdpPusher::begin() {
 
 void UdpPusher::update() {
     const RTC::UdpPusherData cfg = loadUdpConfigSnapshot();
-    SYSTEM::ScopeLock lock(_stateLock, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(_stateLock, kStateLockTimeout);
     if (!lock.isLocked()) {
         LOGW("UDP pusher state lock busy during update()");
         return;
@@ -156,7 +161,7 @@ void UdpPusher::update() {
 
 UdpPusher::PushNowResult UdpPusher::pushNow() {
     const RTC::UdpPusherData cfg = loadUdpConfigSnapshot();
-    SYSTEM::ScopeLock lock(_stateLock, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(_stateLock, kStateLockTimeout);
     if (!lock.isLocked()) {
         LOGW("UDP pusher state lock busy during pushNow()");
         return PushNowResult::SendFailed;
@@ -356,7 +361,7 @@ void UdpPusher::taskLoop() {
 
         do {
             _pushRequested.store(false);
-            SYSTEM::ScopeLock lock(_stateLock, portMAX_DELAY);
+            SYSTEM::ScopeLock lock(_stateLock, kStateLockTimeout);
             if (!lock.isLocked()) {
                 LOGW("Failed to lock UDP pusher state in worker");
                 break;

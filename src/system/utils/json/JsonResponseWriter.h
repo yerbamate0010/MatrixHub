@@ -1,7 +1,6 @@
 #pragma once
 #include <esp_http_server.h>
 #include <Arduino.h>
-#include <freertos/semphr.h>
 
 namespace Utils {
 
@@ -41,10 +40,6 @@ private:
 
     bool flushPending();
     bool sendEscaped(const char* s);
-    
-    static constexpr size_t BUFFER_SIZE = 4096;
-    static char* _psramBuf;  // Allocated in PSRAM via begin()
-    static SemaphoreHandle_t _bufferMutex;  // Serializes access to the shared PSRAM buffer
 };
 
 } // namespace Utils

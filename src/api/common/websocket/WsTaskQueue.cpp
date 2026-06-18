@@ -9,6 +9,8 @@
 
 namespace {
 
+constexpr TickType_t kLifecycleLockTimeout = pdMS_TO_TICKS(1000);
+
 bool waitForTaskSuspended(TaskHandle_t taskHandle, SemaphoreHandle_t cleanupSem, TickType_t waitTicks) {
     if (taskHandle == nullptr) {
         return true;
@@ -109,7 +111,7 @@ bool WsTaskQueue::enqueue(const WsMessage& msg) {
 }
 
 void WsTaskQueue::enable(size_t queueSize, uint32_t stackSize) {
-    SYSTEM::ScopeLock queueLock(_lifecycleLock, portMAX_DELAY);
+    SYSTEM::ScopeLock queueLock(_lifecycleLock, kLifecycleLockTimeout);
     if (!queueLock.isLocked()) {
         LOGE("[%s] Failed to lock queue lifecycle for enable", _logTag);
         return;
@@ -223,7 +225,7 @@ void WsTaskQueue::enable(size_t queueSize, uint32_t stackSize) {
 }
 
 bool WsTaskQueue::disable() {
-    SYSTEM::ScopeLock queueLock(_lifecycleLock, portMAX_DELAY);
+    SYSTEM::ScopeLock queueLock(_lifecycleLock, kLifecycleLockTimeout);
     if (!queueLock.isLocked()) {
         LOGW("[%s] Failed to lock queue lifecycle for disable", _logTag);
         return false;

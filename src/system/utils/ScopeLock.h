@@ -3,6 +3,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include "../../config/TaskConfig.h"
+#include "LockDiagnostics.h"
 
 namespace SYSTEM {
 
@@ -20,7 +21,10 @@ public:
         : _mutex(mutex) 
     {
         if (_mutex) {
+            const uint32_t startMs = millis();
             _locked = xSemaphoreTake(_mutex, timeout) == pdTRUE;
+            const TickType_t waitedTicks = pdMS_TO_TICKS(millis() - startMs);
+            LOCK_DIAGNOSTICS::recordAcquire(false, waitedTicks, timeout, _locked);
         }
     }
 
@@ -88,7 +92,10 @@ public:
         : _mutex(mutex) 
     {
         if (_mutex) {
+            const uint32_t startMs = millis();
             _locked = xSemaphoreTakeRecursive(_mutex, timeout) == pdTRUE;
+            const TickType_t waitedTicks = pdMS_TO_TICKS(millis() - startMs);
+            LOCK_DIAGNOSTICS::recordAcquire(true, waitedTicks, timeout, _locked);
         }
     }
 

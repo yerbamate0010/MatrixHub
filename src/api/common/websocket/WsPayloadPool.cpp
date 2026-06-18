@@ -12,6 +12,10 @@
 namespace API {
 namespace WEBSOCKET {
 
+namespace {
+constexpr TickType_t kPayloadPoolLockTimeout = pdMS_TO_TICKS(100);
+}
+
 WsPayloadPool::WsPayloadPool(const char* logTag) : _logTag(logTag) {
     _lock = xSemaphoreCreateMutex();
 }
@@ -46,7 +50,7 @@ bool WsPayloadPool::init(size_t slotCount, size_t slotSize) {
 }
 
 void WsPayloadPool::deinit() {
-    SYSTEM::ScopeLock lock(_lock, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(_lock, kPayloadPoolLockTimeout);
     if (!lock.isLocked()) {
         LOGE("[%s] Failed to lock payload pool for deinit", _logTag);
         return;
@@ -98,8 +102,11 @@ bool WsPayloadPool::acquireSlot(size_t len, uint8_t** slotPtr, int16_t* slotInde
 void WsPayloadPool::releaseSlot(int16_t slotIndex) {
     if (slotIndex < 0 || !_slotState || !_lock) return;
 
-    SYSTEM::ScopeLock lock(_lock, portMAX_DELAY);
-    if (!lock.isLocked()) return;
+    SYSTEM::ScopeLock lock(_lock, kPayloadPoolLockTimeout);
+    if (!lock.isLocked()) {
+        LOGW("[%s] Failed to lock payload pool while releasing slot %d", _logTag, slotIndex);
+        return;
+    }
 
     size_t index = static_cast<size_t>(slotIndex);
     if (index < _slotCount) {

@@ -1,6 +1,29 @@
 #include "DiagnosticsJsonWriter.h"
+#include "../../system/utils/LockDiagnostics.h"
 
 namespace API {
+
+namespace {
+
+unsigned long ticksToMs(uint32_t ticks) {
+    return static_cast<unsigned long>(ticks) * static_cast<unsigned long>(portTICK_PERIOD_MS);
+}
+
+void writeLockCounter(
+    Utils::JsonResponseWriter& writer,
+    const SYSTEM::LOCK_DIAGNOSTICS::LockCounterSnapshot& snapshot) {
+    writer.raw("{");
+    writer.key("attempts"); writer.value(static_cast<unsigned long>(snapshot.attempts)); writer.raw(",");
+    writer.key("successes"); writer.value(static_cast<unsigned long>(snapshot.successes)); writer.raw(",");
+    writer.key("timeouts"); writer.value(static_cast<unsigned long>(snapshot.timeouts)); writer.raw(",");
+    writer.key("slowAcquires"); writer.value(static_cast<unsigned long>(snapshot.slowAcquires)); writer.raw(",");
+    writer.key("unlimitedWaits"); writer.value(static_cast<unsigned long>(snapshot.unlimitedWaits)); writer.raw(",");
+    writer.key("maxWaitTicks"); writer.value(static_cast<unsigned long>(snapshot.maxWaitTicks)); writer.raw(",");
+    writer.key("maxWaitMs"); writer.value(ticksToMs(snapshot.maxWaitTicks));
+    writer.raw("}");
+}
+
+}  // namespace
 
 void DiagnosticsJsonWriter::writeHeapRegion(
     Utils::JsonResponseWriter& writer,
@@ -130,20 +153,28 @@ void DiagnosticsJsonWriter::writeFeatures(
 }
 
 void DiagnosticsJsonWriter::writeMutexes(Utils::JsonResponseWriter& writer) {
+    const auto snapshot = SYSTEM::LOCK_DIAGNOSTICS::snapshot();
     writer.raw("{");
     writer.key("schema"); writer.string("diagnostics.mutexes.v1"); writer.raw(",");
-    writer.key("instrumented"); writer.value(false); writer.raw(",");
+    writer.key("instrumented"); writer.value(true); writer.raw(",");
     writer.key("coverage"); writer.raw("{");
-    writer.key("contentionCounters"); writer.value(false); writer.raw(",");
+    writer.key("contentionCounters"); writer.value(true); writer.raw(",");
     writer.key("holdTimeBuckets"); writer.value(false); writer.raw(",");
-    writer.key("timeoutCounters"); writer.value(false);
+    writer.key("timeoutCounters"); writer.value(true); writer.raw(",");
+    writer.key("slowAcquireCounters"); writer.value(true); writer.raw(",");
+    writer.key("perLockNames"); writer.value(false);
     writer.raw("},");
-    writer.key("reason"); writer.string("critical locks are named here, but contention/hold-time counters are not instrumented yet"); writer.raw(",");
+    writer.key("runtime"); writer.raw("{");
+    writer.key("slowThresholdTicks"); writer.value(static_cast<unsigned long>(snapshot.slowThresholdTicks)); writer.raw(",");
+    writer.key("slowThresholdMs"); writer.value(ticksToMs(snapshot.slowThresholdTicks)); writer.raw(",");
+    writer.key("standard"); writeLockCounter(writer, snapshot.standard); writer.raw(",");
+    writer.key("recursive"); writeLockCounter(writer, snapshot.recursive);
+    writer.raw("},");
+    writer.key("reason"); writer.string("ScopeLock/RecursiveScopeLock acquisition counters are global; per-lock hold-time buckets are not instrumented yet"); writer.raw(",");
     writer.key("criticalLocks"); writer.raw("[");
     const char* locks[] = {
         "rtc_config",
         "fs_mutex",
-        "json_response_writer",
         "hid_keyboard",
         "csi_state",
         "csi_callback",
@@ -158,7 +189,8 @@ void DiagnosticsJsonWriter::writeMutexes(Utils::JsonResponseWriter& writer) {
         }
         writer.raw("{");
         writer.key("name"); writer.string(locks[i]); writer.raw(",");
-        writer.key("instrumented"); writer.value(false);
+        writer.key("instrumented"); writer.value(true); writer.raw(",");
+        writer.key("counterScope"); writer.string("global");
         writer.raw("}");
     }
     writer.raw("]");

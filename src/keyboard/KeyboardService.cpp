@@ -45,8 +45,12 @@ void KeyboardService::stop() {
         _initialized = false; // Block new API requests
         if (_mutex) {
             // Lock safely before taking down endpoints
-            SYSTEM::ScopeLock lock(_mutex, portMAX_DELAY);
-            _keyboard.end();
+            SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(CONFIG::KEYBOARD::MUTEX_TIMEOUT_MS));
+            if (lock.isLocked()) {
+                _keyboard.end();
+            } else {
+                LOGW("Mutex timeout in stop()");
+            }
             // We intentionally DO NOT vSemaphoreDelete(_mutex) to avoid 
             // use-after-free FreeRTOS crashes if another task just acquired the reference.
         } else {

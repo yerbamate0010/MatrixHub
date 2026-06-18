@@ -19,6 +19,7 @@ namespace DATALOG {
 namespace {
 
 constexpr size_t kMaxActiveReadLeases = 4;
+constexpr TickType_t kReadLeaseLockTimeout = pdMS_TO_TICKS(100);
 
 struct ActiveReadLease {
     char path[PATH_BUFFER_SIZE] = {0};
@@ -98,7 +99,11 @@ bool BinaryLoggerHelpers::acquireReadLease(const char* path) {
     bool tableFull = false;
 
     ensureLeaseMutex();
-    SYSTEM::ScopeLock lock(s_readLeaseMutex, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(s_readLeaseMutex, kReadLeaseLockTimeout);
+    if (!lock.isLocked()) {
+        LOGW("Read lease mutex timeout for: %s", path);
+        return false;
+    }
 
     const int existingSlot = findLeaseSlotLocked(path);
     if (existingSlot >= 0) {
@@ -135,7 +140,11 @@ void BinaryLoggerHelpers::releaseReadLease(const char* path) {
     }
 
     ensureLeaseMutex();
-    SYSTEM::ScopeLock lock(s_readLeaseMutex, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(s_readLeaseMutex, kReadLeaseLockTimeout);
+    if (!lock.isLocked()) {
+        LOGW("Read lease release mutex timeout for: %s", path);
+        return;
+    }
 
     const int slotIndex = findLeaseSlotLocked(path);
     if (slotIndex >= 0) {
@@ -157,8 +166,12 @@ bool BinaryLoggerHelpers::isReadLeaseActive(const char* path) {
     bool active = false;
 
     ensureLeaseMutex();
-    SYSTEM::ScopeLock lock(s_readLeaseMutex, portMAX_DELAY);
-    active = findLeaseSlotLocked(path) >= 0;
+    SYSTEM::ScopeLock lock(s_readLeaseMutex, kReadLeaseLockTimeout);
+    if (lock.isLocked()) {
+        active = findLeaseSlotLocked(path) >= 0;
+    } else {
+        LOGW("Read lease check mutex timeout for: %s", path);
+    }
 
     return active;
 }

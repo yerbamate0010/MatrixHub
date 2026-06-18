@@ -13,6 +13,10 @@
 namespace API {
 namespace WEBSOCKET {
 
+namespace {
+constexpr TickType_t kClientMapLockTimeout = pdMS_TO_TICKS(100);
+}
+
 WsClientManager::WsClientManager(const char* logTag, 
                                  IWebSocketAuthenticator* authenticator, 
                                  StateChangeCallback onStateChange, 
@@ -151,7 +155,7 @@ void WsClientManager::performBroadcast(uint8_t* data, size_t len, httpd_ws_type_
     int removeTargets[MAX_BROADCAST_TARGETS];
     size_t actualTargetCount = 0;
     {
-        SYSTEM::ScopeLock lock(_lock, portMAX_DELAY);
+        SYSTEM::ScopeLock lock(_lock, kClientMapLockTimeout);
         if (!lock.isLocked()) return;
         if (_clients.empty()) return;
 
@@ -241,7 +245,7 @@ size_t WsClientManager::snapshotClients(int* outTargets, size_t maxCount) const 
     }
 
     size_t count = 0;
-    SYSTEM::ScopeLock lock(_lock, portMAX_DELAY);
+    SYSTEM::ScopeLock lock(_lock, kClientMapLockTimeout);
     if (!lock.isLocked()) {
         return 0;
     }

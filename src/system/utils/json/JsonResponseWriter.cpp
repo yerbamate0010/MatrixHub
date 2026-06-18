@@ -1,10 +1,8 @@
 #include "JsonResponseWriter.h"
-#include "../ScopeLock.h"
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
 #include <cmath>
-#include <esp_heap_caps.h>
 
 namespace Utils {
 
@@ -16,24 +14,7 @@ bool shouldDisableCachingForPath(const char* uri) {
 
 }  // namespace
 
-// Static PSRAM buffer - allocated once at startup
-char* JsonResponseWriter::_psramBuf = nullptr;
-SemaphoreHandle_t JsonResponseWriter::_bufferMutex = nullptr;
-
 bool JsonResponseWriter::begin() {
-    if (_psramBuf && _bufferMutex) return true;  // Already initialized
-
-    if (!_bufferMutex) {
-        _bufferMutex = xSemaphoreCreateMutex();
-        if (!_bufferMutex) {
-            return false;
-        }
-    }
-    
-    _psramBuf = (char*)heap_caps_malloc(BUFFER_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    if (!_psramBuf) {
-        return false;
-    }
     return true;
 }
 
@@ -91,12 +72,8 @@ bool JsonResponseWriter::flushPending() {
 }
 
 bool JsonResponseWriter::fmt(const char* format, ...) {
-    if (!_psramBuf || !_bufferMutex) return false;
-    SYSTEM::ScopeLock lock(_bufferMutex, portMAX_DELAY);
-    if (!lock.isLocked()) return false;
-
-    char* b = _psramBuf;
-    size_t bufSize = BUFFER_SIZE;
+    char b[128];
+    const size_t bufSize = sizeof(b);
     
     va_list args;
     va_start(args, format);
@@ -165,12 +142,8 @@ bool JsonResponseWriter::value(double v, int decimals) {
 }
 
 bool JsonResponseWriter::sendEscaped(const char* s) {
-    if (!_psramBuf || !_bufferMutex) return false;
-    SYSTEM::ScopeLock lock(_bufferMutex, portMAX_DELAY);
-    if (!lock.isLocked()) return false;
-
-    char* b = _psramBuf;
-    size_t bufSize = BUFFER_SIZE;
+    char b[256];
+    const size_t bufSize = sizeof(b);
     size_t pos = 0;
     
     auto flush = [&]() -> bool {

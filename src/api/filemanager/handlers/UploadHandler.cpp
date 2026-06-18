@@ -4,6 +4,7 @@
 #include "system/errors/ErrorCodes.h"
 #include "system/utils/json/JsonResponseWriter.h"
 #include "system/utils/http/HttpError.h"
+#include "system/utils/ScopeLock.h"
 #include "filemanager/infrastructure/support/FileManagerPathUtils.h"
 #include "filemanager/infrastructure/uploads/UploadSession.h"
 
@@ -12,6 +13,10 @@
 #define LOG_TAG "FmUpload"
 
 namespace API {
+
+namespace {
+constexpr TickType_t kUploadSessionLockTimeout = pdMS_TO_TICKS(1000);
+}
 
 UploadHandler::UploadHandler(FILEMGR::FileManagerBackendResolver* resolver, 
                              FILEMGR::StorageService* storage, 
@@ -22,9 +27,14 @@ UploadHandler::UploadHandler(FILEMGR::FileManagerBackendResolver* resolver,
 
 UploadHandler::~UploadHandler() {
   if (_sessionsMutex) {
-    xSemaphoreTake(_sessionsMutex, portMAX_DELAY);
-    _uploadSessions.clear(); // Automatically calls PsramDeleter for all sessions
-    xSemaphoreGive(_sessionsMutex);
+    {
+      SYSTEM::ScopeLock lock(_sessionsMutex, kUploadSessionLockTimeout);
+      if (lock.isLocked()) {
+        _uploadSessions.clear(); // Automatically calls PsramDeleter for all sessions
+      } else {
+        LOGW("Upload sessions mutex timeout during shutdown");
+      }
+    }
     vSemaphoreDelete(_sessionsMutex);
   }
 }
@@ -53,7 +63,11 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
   // _sessionsMutex to preserve simple upload-session ownership and cleanup semantics,
   // and accept reduced concurrent upload throughput as a product-level compromise.
   // Revisit only if parallel uploads become a real requirement.
-  xSemaphoreTake(_sessionsMutex, portMAX_DELAY);
+  SYSTEM::ScopeLock sessionLock(_sessionsMutex, kUploadSessionLockTimeout);
+  if (!sessionLock.isLocked()) {
+    LOGW("Upload session mutex timeout for client %d", clientId);
+    return HttpError::send(request, 503, ErrorCodes::Busy::RESOURCE_LOCKED);
+  }
   cleanupStaleSessions(); // Periodically clean up stale sessions
 
   if (index == 0) {
@@ -66,14 +80,12 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
     if (!FILEMGR::FileManagerPathUtils::canonicalizeAbsoluteDirectory(
             requestedPath.c_str(), "/", canonicalRequestedPath)) {
       LOGW("Upload rejected: invalid path=%s", requestedPath.c_str());
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 404, ErrorCodes::Fs::INVALID_PATH);
     }
 
     FILEMGR::FileManagerBackendResolution resolution = _backendResolver->resolveForUpload(canonicalRequestedPath);
     if (!resolution.filesystem) {
       LOGW("Upload failed: no filesystem resolved for path=%s", canonicalRequestedPath.c_str());
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 404, ErrorCodes::Fs::INVALID_PATH);
     }
 
@@ -81,7 +93,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
             resolution.nativePath.c_str(), FILEMGR::FileManagerPathUtils::FileManagerPathAccess::Upload)) {
       LOGW("Upload rejected by path policy: request=%s native=%s",
            canonicalRequestedPath.c_str(), resolution.nativePath.c_str());
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 403, ErrorCodes::Fs::PATH_FORBIDDEN);
     }
 
@@ -90,7 +101,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
     
     if (freeSpace < CONFIG::Keys::FILEMGR::kUploadMinFreeSpace) {
       LOGW("Upload rejected: Insufficient flash space (%zu bytes)", freeSpace);
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 507, ErrorCodes::Fs::STORAGE_FULL);
     }
 
@@ -101,7 +111,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
     size_t requestSize = request->contentLength();
     if (requestSize > usableSpace) {
       LOGW("Upload rejected: Request size (%zu) exceeds usable space (%zu)", requestSize, usableSpace);
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 507, ErrorCodes::Fs::STORAGE_FULL);
     }
 
@@ -119,7 +128,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
     void* mem = heap_caps_malloc(sizeof(FILEMGR::UploadSession), MALLOC_CAP_SPIRAM);
     if (!mem) {
       LOGE("Upload failed: OOM in PSRAM");
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 500, ErrorCodes::Internal::OUT_OF_MEMORY);
     }
     
@@ -133,7 +141,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
 
   auto it = _uploadSessions.find(clientId);
   if (it == _uploadSessions.end()) {
-    xSemaphoreGive(_sessionsMutex);
     LOGW("Upload failed: no active session for client %d", clientId);
     return ESP_FAIL; 
   }
@@ -143,7 +150,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
   if (err == ESP_ERR_INVALID_STATE) {
       LOGW("Upload rejected: file already exists for client %d", clientId);
       _uploadSessions.erase(clientId);
-      xSemaphoreGive(_sessionsMutex);
       return HttpError::send(request, 409, ErrorCodes::Fs::ALREADY_EXISTS);
   }
 
@@ -152,7 +158,6 @@ esp_err_t UploadHandler::handleChunk(PsychicRequest* request, const char* filena
       _uploadSessions.erase(clientId); // Triggers destructor cleanup
   }
 
-  xSemaphoreGive(_sessionsMutex);
   return err;
 }
 
@@ -160,13 +165,19 @@ esp_err_t UploadHandler::handleComplete(PsychicRequest* request) {
   int clientId = request->client()->socket();
   bool ok = false;
 
-  xSemaphoreTake(_sessionsMutex, portMAX_DELAY);
-  auto it = _uploadSessions.find(clientId);
-  if (it != _uploadSessions.end()) {
-    ok = it->second->isSuccess(); // Check if file finalized successfully
-    _uploadSessions.erase(it);    // Releases session memory
+  {
+    SYSTEM::ScopeLock lock(_sessionsMutex, kUploadSessionLockTimeout);
+    if (!lock.isLocked()) {
+      LOGW("Upload completion mutex timeout for client %d", clientId);
+      return HttpError::send(request, 503, ErrorCodes::Busy::RESOURCE_LOCKED);
+    }
+
+    auto it = _uploadSessions.find(clientId);
+    if (it != _uploadSessions.end()) {
+      ok = it->second->isSuccess(); // Check if file finalized successfully
+      _uploadSessions.erase(it);    // Releases session memory
+    }
   }
-  xSemaphoreGive(_sessionsMutex);
 
   if (ok) {
     LOGI("Upload fully successful for client %d", clientId);
@@ -183,7 +194,11 @@ esp_err_t UploadHandler::handleComplete(PsychicRequest* request) {
 }
 
 void UploadHandler::handleClientClose(int clientId) {
-  xSemaphoreTake(_sessionsMutex, portMAX_DELAY);
+  SYSTEM::ScopeLock lock(_sessionsMutex, kUploadSessionLockTimeout);
+  if (!lock.isLocked()) {
+    LOGW("Upload close cleanup mutex timeout for client %d", clientId);
+    return;
+  }
 
   auto it = _uploadSessions.find(clientId);
   if (it != _uploadSessions.end()) {
@@ -196,8 +211,6 @@ void UploadHandler::handleClientClose(int clientId) {
     LOGW("Upload client disconnected, cleaning up session for client %d", clientId);
     _uploadSessions.erase(it);
   }
-
-  xSemaphoreGive(_sessionsMutex);
 }
 
 }  // namespace API
