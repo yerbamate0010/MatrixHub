@@ -36,6 +36,12 @@ export interface SystemStatusHttpDiagnostics {
 	closes?: number;
 	lastOpenMs?: number;
 	lastCloseMs?: number;
+	wsActiveClients?: number;
+	wsPeakClients?: number;
+	wsOpens?: number;
+	wsCloses?: number;
+	lastWsOpenMs?: number;
+	lastWsCloseMs?: number;
 	wsForcedRemovals?: number;
 	wsQueueDrops?: number;
 	lastWsQueueDropMs?: number;

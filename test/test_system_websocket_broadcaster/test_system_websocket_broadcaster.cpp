@@ -46,6 +46,9 @@ inline size_t lastQueueSize = 0;
 inline uint32_t lastQueueStackSize = 0;
 inline size_t lastQueuePayloadSlotSize = 0;
 inline std::string lastRegisteredUri;
+inline size_t removeClientCalls = 0;
+inline int lastRemovedFd = -1;
+inline bool lastRemoveTriggeredClose = false;
 
 inline void reset() {
     incomingFrame.clear();
@@ -61,6 +64,9 @@ inline void reset() {
     lastQueueStackSize = 0;
     lastQueuePayloadSlotSize = 0;
     lastRegisteredUri.clear();
+    removeClientCalls = 0;
+    lastRemovedFd = -1;
+    lastRemoveTriggeredClose = false;
 }
 } // namespace TEST_STUBS::WS
 
@@ -119,8 +125,9 @@ esp_err_t WebSocketBroadcaster::handleHandshake(httpd_req_t* req) {
 }
 
 void WebSocketBroadcaster::removeClient(int fd, bool triggerClose) {
-    (void)fd;
-    (void)triggerClose;
+    TEST_STUBS::WS::removeClientCalls++;
+    TEST_STUBS::WS::lastRemovedFd = fd;
+    TEST_STUBS::WS::lastRemoveTriggeredClose = triggerClose;
 }
 
 void WebSocketBroadcaster::broadcast(uint8_t* data, size_t len, httpd_ws_type_t type) {
@@ -516,6 +523,28 @@ void test_explicit_snapshot_refresh_keeps_subscription_counts_stable() {
     TEST_ASSERT_FALSE(TEST_STUBS::WS::lastSnapshotHadBufferPool);
 }
 
+void test_oversize_frame_forces_close_and_cleans_channel_state() {
+    PsychicHttpServer server;
+    API::SystemApiBroadcastDeps deps;
+    API::SystemWebsocketBroadcaster broadcaster(&server, nullptr, deps);
+    httpd_req_t req = makeWsFrameRequest(broadcaster, 45);
+
+    setIncomingFrame("{\"subscribe\":\"telemetry\"}");
+    TEST_ASSERT_EQUAL(ESP_OK, broadcaster.handleFrame(&req, req.sockfd));
+    TEST_ASSERT_EQUAL(static_cast<size_t>(1), broadcaster._channels.getSubscriberCount(API::ChannelSubscriptions::TELEMETRY));
+
+    TEST_STUBS::WS::incomingFrame.assign(LIMITS::API::WS_MESSAGE_MAX_SIZE + 1, 'x');
+    TEST_ASSERT_EQUAL(ESP_OK, broadcaster.handleFrame(&req, req.sockfd));
+
+    TEST_ASSERT_EQUAL(static_cast<size_t>(1), TEST_STUBS::WS::removeClientCalls);
+    TEST_ASSERT_EQUAL(45, TEST_STUBS::WS::lastRemovedFd);
+    TEST_ASSERT_TRUE(TEST_STUBS::WS::lastRemoveTriggeredClose);
+    TEST_ASSERT_FALSE(broadcaster._channels.hasSubscribers(API::ChannelSubscriptions::TELEMETRY));
+    TEST_ASSERT_EQUAL(static_cast<size_t>(2), TEST_STUBS::WS::airMouseSyncCalls);
+    TEST_ASSERT_EQUAL(static_cast<size_t>(2), TEST_STUBS::WS::bleSyncCalls);
+    TEST_ASSERT_EQUAL(static_cast<size_t>(2), TEST_STUBS::WS::notificationSyncCalls);
+}
+
 void test_begin_registers_system_endpoint_and_enables_fixed_system_ws_slots() {
     PsychicHttpServer server;
     API::SystemApiBroadcastDeps deps;
@@ -538,6 +567,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_duplicate_subscribe_stays_idempotent_without_sending_snapshot);
     RUN_TEST(test_unsubscribe_resyncs_without_sending_another_snapshot);
     RUN_TEST(test_explicit_snapshot_refresh_keeps_subscription_counts_stable);
+    RUN_TEST(test_oversize_frame_forces_close_and_cleans_channel_state);
     RUN_TEST(test_begin_registers_system_endpoint_and_enables_fixed_system_ws_slots);
     return UNITY_END();
 }

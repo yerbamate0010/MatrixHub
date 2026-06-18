@@ -67,6 +67,21 @@ void HttpServerHealthTracker::recordClose() {
     ++_snapshot.closeCount;
 }
 
+void HttpServerHealthTracker::recordWsOpen() {
+    ++_snapshot.wsOpenCount;
+    ++_snapshot.wsActiveClients;
+    if (_snapshot.wsActiveClients > _snapshot.wsPeakClients) {
+        _snapshot.wsPeakClients = _snapshot.wsActiveClients;
+    }
+}
+
+void HttpServerHealthTracker::recordWsClose() {
+    ++_snapshot.wsCloseCount;
+    if (_snapshot.wsActiveClients > 0) {
+        --_snapshot.wsActiveClients;
+    }
+}
+
 void HttpServerHealthTracker::recordWsForcedRemoval(int fd) {
     (void)fd;
     ++_snapshot.wsForcedRemovals;

@@ -344,6 +344,12 @@ void sendSystemStatusSnapshot(const SnapshotContext& ctx) {
     httpInfo["closes"] = http.closeCount;
     httpInfo["lastOpenMs"] = http.lastOpenMs;
     httpInfo["lastCloseMs"] = http.lastCloseMs;
+    httpInfo["wsActiveClients"] = http.wsActiveClients;
+    httpInfo["wsPeakClients"] = http.wsPeakClients;
+    httpInfo["wsOpens"] = http.wsOpenCount;
+    httpInfo["wsCloses"] = http.wsCloseCount;
+    httpInfo["lastWsOpenMs"] = http.lastWsOpenMs;
+    httpInfo["lastWsCloseMs"] = http.lastWsCloseMs;
     httpInfo["wsForcedRemovals"] = http.wsForcedRemovals;
     httpInfo["wsQueueDrops"] = http.wsQueueDrops;
     httpInfo["lastWsQueueDropMs"] = http.lastWsQueueDropMs;

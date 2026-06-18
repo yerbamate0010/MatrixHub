@@ -115,6 +115,12 @@ export interface SystemStatusHttpDiagnostics {
   closes?: number;
   lastOpenMs?: number;
   lastCloseMs?: number;
+  wsActiveClients?: number;
+  wsPeakClients?: number;
+  wsOpens?: number;
+  wsCloses?: number;
+  lastWsOpenMs?: number;
+  lastWsCloseMs?: number;
   wsForcedRemovals?: number;
   wsQueueDrops?: number;
   lastWsQueueDropMs?: number;
@@ -200,6 +206,17 @@ export interface SensorTelemetryEvent {
   lastReadOk: boolean;
   timestamp_ms: number;
 }
+
+export type SnapshotChannel =
+  | "shelly"
+  | "alarms"
+  | "ble"
+  | "sensing"
+  | "telemetry"
+  | "system_status"
+  | "airmouse"
+  | "telegram"
+  | "notif_stats";
 
 export interface BleSensorConfig {
   mac: string;

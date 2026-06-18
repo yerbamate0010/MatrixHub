@@ -96,6 +96,28 @@ void test_counts_forced_ws_removals() {
     TEST_ASSERT_EQUAL_UINT32(0, snapshot.activeClients);
 }
 
+void test_counts_websocket_session_lifecycle_separately_from_http_clients() {
+    TEST_STUBS::ARDUINO::millisValue = 100;
+    HttpServerHealthTracker::recordOpen();
+    HttpServerHealthTracker::recordWsOpen();
+    HttpServerHealthTracker::recordWsOpen();
+
+    TEST_STUBS::ARDUINO::millisValue = 250;
+    HttpServerHealthTracker::recordWsClose();
+    HttpServerHealthTracker::recordWsClose();
+    HttpServerHealthTracker::recordWsClose();
+
+    const auto snapshot = HttpServerHealthTracker::getSnapshot();
+    TEST_ASSERT_EQUAL_UINT32(1, snapshot.activeClients);
+    TEST_ASSERT_EQUAL_UINT32(1, snapshot.openCount);
+    TEST_ASSERT_EQUAL_UINT32(2, snapshot.wsOpenCount);
+    TEST_ASSERT_EQUAL_UINT32(3, snapshot.wsCloseCount);
+    TEST_ASSERT_EQUAL_UINT32(0, snapshot.wsActiveClients);
+    TEST_ASSERT_EQUAL_UINT32(2, snapshot.wsPeakClients);
+    TEST_ASSERT_EQUAL_UINT32(100, snapshot.lastWsOpenMs);
+    TEST_ASSERT_EQUAL_UINT32(250, snapshot.lastWsCloseMs);
+}
+
 void test_peak_logs_stay_silent_at_info_level() {
     HttpServerHealthTracker::recordOpen();
 
@@ -146,6 +168,7 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_counts_open_close_and_peak_clients);
     RUN_TEST(test_counts_forced_ws_removals);
+    RUN_TEST(test_counts_websocket_session_lifecycle_separately_from_http_clients);
     RUN_TEST(test_peak_logs_stay_silent_at_info_level);
     RUN_TEST(test_forced_ws_removal_keeps_warning_visibility);
     RUN_TEST(test_counts_ws_queue_drops_with_timestamp_and_payload);

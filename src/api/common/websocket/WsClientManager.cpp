@@ -57,14 +57,17 @@ esp_err_t WsClientManager::handleHandshake(httpd_req_t *req) {
         _serverHandle = req->handle;
         bool shouldNotifyConnected = false;
         bool clientRegistered = false;
+        bool shouldRecordWsOpen = false;
         
         {
             SYSTEM::ScopeLock lock(_lock);
             if (lock.isLocked()) {
-                bool wasEmpty = _clients.empty();
+                const bool wasEmpty = _clients.empty();
+                const bool wasKnown = _clients.find(fd) != _clients.end();
                 _clients[fd] = 0; 
                 _clientCount.store(_clients.size(), std::memory_order_release);
                 clientRegistered = true;
+                shouldRecordWsOpen = !wasKnown;
                 LOGD("[%s] Client Connected: %d (Total: %zu)", _logTag, fd, _clients.size());
                 if (wasEmpty) {
                     _disconnectCallbackPending.store(false, std::memory_order_release);
@@ -81,6 +84,9 @@ esp_err_t WsClientManager::handleHandshake(httpd_req_t *req) {
             // The framework already counted this socket in its onOpen hook.
             // A successful WS handshake reuses that same TCP connection, so
             // counting here would inflate active/peak client diagnostics.
+            if (shouldRecordWsOpen) {
+                SYSTEM::HEALTH::HttpServerHealthTracker::recordWsOpen();
+            }
         }
         if (shouldNotifyConnected) {
             _onStateChange(true);
@@ -108,6 +114,7 @@ void WsClientManager::removeClient(int fd, bool triggerClose, bool isBroadcastTa
     bool shouldTriggerClose = false;
     bool shouldNotifyDisconnected = false;
     bool shouldDrainPendingDisconnect = false;
+    bool shouldRecordWsClose = false;
 
     SYSTEM::ScopeLock lock(_lock, pdMS_TO_TICKS(100));
     if (lock.isLocked()) {
@@ -115,6 +122,7 @@ void WsClientManager::removeClient(int fd, bool triggerClose, bool isBroadcastTa
         if (it != _clients.end()) {
             _clients.erase(it);
             _clientCount.store(_clients.size(), std::memory_order_release);
+            shouldRecordWsClose = true;
             LOGD("[%s] Client Disconnected: %d (Remaining: %zu)", _logTag, fd, _clients.size());
 
             if (_clients.empty() && _onStateChange) {
@@ -138,6 +146,9 @@ void WsClientManager::removeClient(int fd, bool triggerClose, bool isBroadcastTa
     if (shouldTriggerClose && _serverHandle) {
         LOGW("[%s] Forcing session close for fd %d", _logTag, fd);
         httpd_sess_trigger_close(_serverHandle, fd);
+    }
+    if (shouldRecordWsClose) {
+        SYSTEM::HEALTH::HttpServerHealthTracker::recordWsClose();
     }
     if (shouldNotifyDisconnected) {
         _onStateChange(false);

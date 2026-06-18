@@ -127,6 +127,27 @@ void HttpServerHealthTracker::recordClose() {
     }
 }
 
+void HttpServerHealthTracker::recordWsOpen() {
+    HttpHealthGuard guard;
+    const uint32_t now = millis();
+    _snapshot.wsOpenCount++;
+    _snapshot.lastWsOpenMs = now;
+    _snapshot.wsActiveClients++;
+    if (_snapshot.wsActiveClients > _snapshot.wsPeakClients) {
+        _snapshot.wsPeakClients = _snapshot.wsActiveClients;
+    }
+}
+
+void HttpServerHealthTracker::recordWsClose() {
+    HttpHealthGuard guard;
+    const uint32_t now = millis();
+    _snapshot.wsCloseCount++;
+    _snapshot.lastWsCloseMs = now;
+    if (_snapshot.wsActiveClients > 0) {
+        _snapshot.wsActiveClients--;
+    }
+}
+
 void HttpServerHealthTracker::recordWsForcedRemoval(int fd) {
     uint32_t totalForcedRemovals = 0;
     {

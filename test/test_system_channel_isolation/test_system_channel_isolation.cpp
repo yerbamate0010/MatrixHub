@@ -47,6 +47,10 @@ esp_log_level_t Logging::stringToLevel(std::string_view name, esp_log_level_t fa
 namespace SYSTEM::HEALTH {
 void HttpServerHealthTracker::recordOpen() {}
 
+void HttpServerHealthTracker::recordWsOpen() {}
+
+void HttpServerHealthTracker::recordWsClose() {}
+
 void HttpServerHealthTracker::recordWsForcedRemoval(int fd) {
     (void)fd;
 }

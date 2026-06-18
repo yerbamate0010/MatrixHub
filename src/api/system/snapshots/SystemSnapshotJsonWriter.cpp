@@ -224,6 +224,12 @@ StateHandlerResult SystemSnapshotJsonWriter::writeNetwork(
     writer.key("closes"); writer.value(static_cast<unsigned long>(snapshot.http.closeCount)); writer.raw(",");
     writer.key("last_open_ms"); writer.value(static_cast<unsigned long>(snapshot.http.lastOpenMs)); writer.raw(",");
     writer.key("last_close_ms"); writer.value(static_cast<unsigned long>(snapshot.http.lastCloseMs)); writer.raw(",");
+    writer.key("ws_active_clients"); writer.value(static_cast<unsigned long>(snapshot.http.wsActiveClients)); writer.raw(",");
+    writer.key("ws_peak_clients"); writer.value(static_cast<unsigned long>(snapshot.http.wsPeakClients)); writer.raw(",");
+    writer.key("ws_opens"); writer.value(static_cast<unsigned long>(snapshot.http.wsOpenCount)); writer.raw(",");
+    writer.key("ws_closes"); writer.value(static_cast<unsigned long>(snapshot.http.wsCloseCount)); writer.raw(",");
+    writer.key("last_ws_open_ms"); writer.value(static_cast<unsigned long>(snapshot.http.lastWsOpenMs)); writer.raw(",");
+    writer.key("last_ws_close_ms"); writer.value(static_cast<unsigned long>(snapshot.http.lastWsCloseMs)); writer.raw(",");
     writer.key("ws_forced_removals"); writer.value(static_cast<unsigned long>(snapshot.http.wsForcedRemovals)); writer.raw(",");
     writer.key("ws_queue_drops"); writer.value(static_cast<unsigned long>(snapshot.http.wsQueueDrops)); writer.raw(",");
     writer.key("last_ws_queue_drop_ms"); writer.value(static_cast<unsigned long>(snapshot.http.lastWsQueueDropMs)); writer.raw(",");

@@ -17,6 +17,15 @@ struct HttpServerHealthSnapshot {
     uint32_t closeCount = 0;
     uint32_t lastOpenMs = 0;
     uint32_t lastCloseMs = 0;
+    // WebSocket counters describe registered WS sessions inside WsClientManager.
+    // They are intentionally separate from HTTP transport counters because a
+    // WS upgrade reuses one accepted socket and can outlive many REST polls.
+    uint32_t wsActiveClients = 0;
+    uint32_t wsPeakClients = 0;
+    uint32_t wsOpenCount = 0;
+    uint32_t wsCloseCount = 0;
+    uint32_t lastWsOpenMs = 0;
+    uint32_t lastWsCloseMs = 0;
     uint32_t wsForcedRemovals = 0;
     uint32_t wsQueueDrops = 0;
     uint32_t lastWsQueueDropMs = 0;
@@ -35,6 +44,8 @@ public:
     static void reset();
     static void recordOpen();
     static void recordClose();
+    static void recordWsOpen();
+    static void recordWsClose();
     static void recordWsForcedRemoval(int fd);
     static void recordWsQueueDrop(size_t payloadLen = 0);
     // Record that the WS path had to leave the fixed-buffer fast path and fall

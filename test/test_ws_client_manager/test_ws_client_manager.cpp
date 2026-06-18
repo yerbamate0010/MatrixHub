@@ -34,9 +34,19 @@ esp_log_level_t Logging::stringToLevel(std::string_view name, esp_log_level_t fa
 
 namespace SYSTEM::HEALTH {
 inline int s_recordOpenCalls = 0;
+inline int s_recordWsOpenCalls = 0;
+inline int s_recordWsCloseCalls = 0;
 
 void HttpServerHealthTracker::recordOpen() {
     s_recordOpenCalls++;
+}
+
+void HttpServerHealthTracker::recordWsOpen() {
+    s_recordWsOpenCalls++;
+}
+
+void HttpServerHealthTracker::recordWsClose() {
+    s_recordWsCloseCalls++;
 }
 
 void HttpServerHealthTracker::recordWsForcedRemoval(int fd) {
@@ -148,6 +158,8 @@ void resetState() {
     TEST_STUBS::HTTPD::reset();
     g_stateChanges.clear();
     SYSTEM::HEALTH::s_recordOpenCalls = 0;
+    SYSTEM::HEALTH::s_recordWsOpenCalls = 0;
+    SYSTEM::HEALTH::s_recordWsCloseCalls = 0;
 }
 
 httpd_req_t makeReq(httpd_method_t method, int sockfd, httpd_handle_t handle = reinterpret_cast<httpd_handle_t>(0x1)) {
@@ -181,6 +193,32 @@ void test_handshake_registers_first_client_and_sets_timeout() {
     TEST_ASSERT_EQUAL(1, TEST_STUBS::HTTPD::lastTimeoutSec);
     TEST_ASSERT_EQUAL(500000, TEST_STUBS::HTTPD::lastTimeoutUsec);
     TEST_ASSERT_EQUAL(0, SYSTEM::HEALTH::s_recordOpenCalls);
+    TEST_ASSERT_EQUAL(1, SYSTEM::HEALTH::s_recordWsOpenCalls);
+    TEST_ASSERT_EQUAL(0, SYSTEM::HEALTH::s_recordWsCloseCalls);
+}
+
+void test_ws_health_counters_follow_registered_clients_without_counting_duplicate_handshakes() {
+    TestAuthenticator auth(true);
+    API::WEBSOCKET::WsClientManager mgr("test", &auth, nullptr, 500);
+
+    httpd_req_t reqA = makeReq(HTTP_GET, 71);
+    httpd_req_t reqADuplicate = makeReq(HTTP_GET, 71);
+    httpd_req_t reqB = makeReq(HTTP_GET, 72);
+
+    TEST_ASSERT_EQUAL(ESP_OK, mgr.handleHandshake(&reqA));
+    TEST_ASSERT_EQUAL(ESP_OK, mgr.handleHandshake(&reqADuplicate));
+    TEST_ASSERT_EQUAL(ESP_OK, mgr.handleHandshake(&reqB));
+    TEST_ASSERT_EQUAL(2, mgr.getClientCount());
+    TEST_ASSERT_EQUAL(2, SYSTEM::HEALTH::s_recordWsOpenCalls);
+
+    mgr.removeClient(71);
+    mgr.removeClient(71);
+    TEST_ASSERT_EQUAL(1, mgr.getClientCount());
+    TEST_ASSERT_EQUAL(1, SYSTEM::HEALTH::s_recordWsCloseCalls);
+
+    mgr.removeClient(72);
+    TEST_ASSERT_FALSE(mgr.hasClients());
+    TEST_ASSERT_EQUAL(2, SYSTEM::HEALTH::s_recordWsCloseCalls);
 }
 
 void test_handshake_auth_failure_closes_socket() {
@@ -321,6 +359,7 @@ int main(int argc, char** argv) {
 
     UNITY_BEGIN();
     RUN_TEST(test_handshake_registers_first_client_and_sets_timeout);
+    RUN_TEST(test_ws_health_counters_follow_registered_clients_without_counting_duplicate_handshakes);
     RUN_TEST(test_handshake_auth_failure_closes_socket);
     RUN_TEST(test_soft_errors_require_threshold_before_removal);
     RUN_TEST(test_hard_error_removes_immediately);

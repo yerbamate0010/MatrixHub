@@ -80,7 +80,9 @@ export type SnapshotChannel =
 	| 'sensing'
 	| 'telemetry'
 	| 'system_status'
-	| 'airmouse';
+	| 'airmouse'
+	| 'telegram'
+	| 'notif_stats';
 
 export type SystemEvent =
 	| { type: 'event'; source: string; data: unknown }

@@ -35,6 +35,19 @@ def validate(path: str, payload: dict[str, Any]) -> None:
         for key in ("schema", "firmware", "boot", "watchdog", "heap", "http", "features"):
             if key not in payload:
                 raise DeviceClientError(f"{path} missing {key}")
+        http = payload.get("http")
+        if not isinstance(http, dict):
+            raise DeviceClientError(f"{path} http is not an object")
+        for key in (
+            "wsActiveClients",
+            "wsPeakClients",
+            "wsOpens",
+            "wsCloses",
+            "wsForcedRemovals",
+            "wsQueueDrops",
+        ):
+            if key not in http:
+                raise DeviceClientError(f"{path} missing http.{key}")
     elif path.startswith("/api/diagnostics/heap"):
         regions = payload.get("regions")
         if not isinstance(regions, dict) or "internal" not in regions or "psram" not in regions:

@@ -50,6 +50,12 @@ void DiagnosticsJsonWriter::writeHttpHealth(
     writer.key("closes"); writer.value(static_cast<unsigned long>(snapshot.closeCount)); writer.raw(",");
     writer.key("lastOpenMs"); writer.value(static_cast<unsigned long>(snapshot.lastOpenMs)); writer.raw(",");
     writer.key("lastCloseMs"); writer.value(static_cast<unsigned long>(snapshot.lastCloseMs)); writer.raw(",");
+    writer.key("wsActiveClients"); writer.value(static_cast<unsigned long>(snapshot.wsActiveClients)); writer.raw(",");
+    writer.key("wsPeakClients"); writer.value(static_cast<unsigned long>(snapshot.wsPeakClients)); writer.raw(",");
+    writer.key("wsOpens"); writer.value(static_cast<unsigned long>(snapshot.wsOpenCount)); writer.raw(",");
+    writer.key("wsCloses"); writer.value(static_cast<unsigned long>(snapshot.wsCloseCount)); writer.raw(",");
+    writer.key("lastWsOpenMs"); writer.value(static_cast<unsigned long>(snapshot.lastWsOpenMs)); writer.raw(",");
+    writer.key("lastWsCloseMs"); writer.value(static_cast<unsigned long>(snapshot.lastWsCloseMs)); writer.raw(",");
     writer.key("wsForcedRemovals"); writer.value(static_cast<unsigned long>(snapshot.wsForcedRemovals)); writer.raw(",");
     writer.key("wsQueueDrops"); writer.value(static_cast<unsigned long>(snapshot.wsQueueDrops)); writer.raw(",");
     writer.key("lastWsQueueDropMs"); writer.value(static_cast<unsigned long>(snapshot.lastWsQueueDropMs)); writer.raw(",");

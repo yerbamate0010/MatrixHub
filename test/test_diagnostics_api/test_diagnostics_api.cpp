@@ -148,6 +148,38 @@ void test_endpoints_writer_lists_all_diagnostics_routes() {
     TEST_ASSERT_EQUAL_STRING("/api/diagnostics/summary", doc["diagnostics"][0]["path"].as<const char*>());
 }
 
+void test_summary_writer_exposes_websocket_runtime_counters() {
+    API::DiagnosticsSummarySnapshot snapshot{};
+    snapshot.schema = "diagnostics.v1";
+    snapshot.http.activeClients = 1;
+    snapshot.http.openCount = 3;
+    snapshot.http.closeCount = 2;
+    snapshot.http.wsActiveClients = 2;
+    snapshot.http.wsPeakClients = 4;
+    snapshot.http.wsOpenCount = 6;
+    snapshot.http.wsCloseCount = 4;
+    snapshot.http.lastWsOpenMs = 100;
+    snapshot.http.lastWsCloseMs = 200;
+
+    httpd_req_t req{};
+    req.uri = "/api/diagnostics/summary";
+    Utils::JsonResponseWriter writer(&req);
+
+    TEST_ASSERT_TRUE(writer.beginResponse());
+    API::DiagnosticsJsonWriter::writeSummary(writer, snapshot);
+    TEST_ASSERT_TRUE(writer.finish());
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, g_responseBuffer);
+    TEST_ASSERT_FALSE(err);
+    TEST_ASSERT_EQUAL(2U, doc["http"]["wsActiveClients"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(4U, doc["http"]["wsPeakClients"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(6U, doc["http"]["wsOpens"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(4U, doc["http"]["wsCloses"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(100U, doc["http"]["lastWsOpenMs"].as<unsigned int>());
+    TEST_ASSERT_EQUAL(200U, doc["http"]["lastWsCloseMs"].as<unsigned int>());
+}
+
 void test_mutex_writer_exposes_runtime_lock_counters() {
     SYSTEM::LOCK_DIAGNOSTICS::recordAcquire(false, pdMS_TO_TICKS(25), pdMS_TO_TICKS(100), true);
     SYSTEM::LOCK_DIAGNOSTICS::recordAcquire(true, pdMS_TO_TICKS(5), 0, false);
@@ -185,6 +217,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_heap_writer_serializes_regions_and_fragmentation);
     RUN_TEST(test_features_writer_marks_unmeasured_runtime_explicitly);
     RUN_TEST(test_endpoints_writer_lists_all_diagnostics_routes);
+    RUN_TEST(test_summary_writer_exposes_websocket_runtime_counters);
     RUN_TEST(test_mutex_writer_exposes_runtime_lock_counters);
     return UNITY_END();
 }
