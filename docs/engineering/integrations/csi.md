@@ -143,4 +143,10 @@ Keep this document aligned with runtime reality. If CSI-side motion scoring is r
 2. `/ws/csi` payload semantics
 3. this document
 
+CSI alarm integration is tracked separately in
+[`csi-alarms-plan.md`](./csi-alarms-plan.md). That plan is intentionally
+deferred until offline quiet/motion/noisy captures prove false-positive safety.
+The helper `scripts/sensing_analysis/csi_alarm_harness.py` provides the current
+offline test harness.
+
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Integrations](../README.md#integrations-and-specialized-subsystems)
