@@ -18,7 +18,8 @@ const { mockPage, mockUser, refs, modalStack, mockNotifications, mockCreateServi
 			bearer_token: 'token'
 		},
 		refs: {
-			systemStatus: null as unknown
+			systemStatus: null as unknown,
+			connectionState: null as unknown
 		},
 		modalStack: {
 			open: vi.fn(),
@@ -49,8 +50,25 @@ class MockSystemStatusStore {
 	}
 }
 
+class MockConnectionState {
+	status = $state<'connected' | 'connecting' | 'disconnected' | 'error'>('connected');
+	reconnectAttempt = $state(0);
+	lastError = $state<string | null>(null);
+
+	setState(
+		status: 'connected' | 'connecting' | 'disconnected' | 'error',
+		options: { reconnectAttempt?: number; lastError?: string | null } = {}
+	) {
+		this.status = status;
+		this.reconnectAttempt = options.reconnectAttempt ?? 0;
+		this.lastError = options.lastError ?? null;
+	}
+}
+
 const mockSystemStatusStore = new MockSystemStatusStore();
+const mockConnectionState = new MockConnectionState();
 refs.systemStatus = mockSystemStatusStore;
+refs.connectionState = mockConnectionState;
 
 vi.mock('svelte', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('svelte')>();
@@ -71,6 +89,10 @@ vi.mock('$lib/stores/user', () => ({
 
 vi.mock('$lib/stores/systemStatus.svelte', () => ({
 	systemStatus: refs.systemStatus
+}));
+
+vi.mock('$lib/stores/connectionState.svelte', () => ({
+	connectionState: refs.connectionState
 }));
 
 vi.mock('$lib/i18n.svelte', () => ({
@@ -121,6 +143,12 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	sleep_abort_btn: () => 'Cancel',
 	sleep_enter_btn: () => 'Sleep',
 	sleep_request_failed: () => 'Sleep failed.',
+	statusbar_api_connected: () => 'API and live status connected',
+	statusbar_api_connecting: ({ attempt }: { attempt: number }) =>
+		`Reconnecting live status, attempt ${attempt}`,
+	statusbar_api_disconnected: () => 'Live status disconnected',
+	statusbar_api_error: ({ error }: { error: string }) => `Live status issue: ${error}`,
+	request_error_network: () => 'Network error. Device may be unreachable.',
 	error_prefix: ({ error }: { error: string }) => `Error: ${error}`
 }));
 
@@ -134,7 +162,40 @@ describe('useStatusbarManagement', () => {
 			isConnected: true,
 			isStaConnected: true
 		});
+		mockConnectionState.setState('connected');
 		mockCreateService.mockReturnValue({ requestSleep: vi.fn().mockResolvedValue(undefined) });
+	});
+
+	it('exposes live connection state for the statusbar indicator', async () => {
+		const { useStatusbarManagement } = await import('./useStatusbarManagement.svelte');
+		let cleanup: (() => void) | undefined;
+
+		cleanup = $effect.root(() => {
+			const statusbar = useStatusbarManagement({
+				modalStack,
+				now: () => 0
+			});
+
+			expect(statusbar.connectionStatus).toBe('connected');
+			expect(statusbar.connectionClass).toBe('text-success');
+			expect(statusbar.connectionTooltip).toBe('API and live status connected');
+
+			mockConnectionState.setState('connecting', { reconnectAttempt: 3 });
+			expect(statusbar.connectionStatus).toBe('connecting');
+			expect(statusbar.connectionClass).toBe('text-warning');
+			expect(statusbar.connectionTooltip).toBe('Reconnecting live status, attempt 3');
+
+			mockConnectionState.setState('error', { lastError: 'System WebSocket Disconnected' });
+			expect(statusbar.connectionStatus).toBe('error');
+			expect(statusbar.connectionClass).toBe('text-error');
+			expect(statusbar.connectionTooltip).toBe('Live status issue: System WebSocket Disconnected');
+
+			mockConnectionState.setState('disconnected');
+			expect(statusbar.connectionStatus).toBe('disconnected');
+			expect(statusbar.connectionTooltip).toBe('Live status disconnected');
+		});
+
+		cleanup?.();
 	});
 
 	it('shows error toast when sleep request fails', async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	createStatusbarClock,
+	getStatusbarConnectionClass,
 	getStatusbarTempColor,
 	resolveStatusbarTitle
 } from './statusbarModel';
@@ -63,5 +64,12 @@ describe('statusbarModel', () => {
 	it('maps temperature to adaptive color-mix style', () => {
 		expect(getStatusbarTempColor(40)).toContain('hsl(140');
 		expect(getStatusbarTempColor(90)).toContain('hsl(0');
+	});
+
+	it('maps live connection statuses to stable utility classes', () => {
+		expect(getStatusbarConnectionClass('connected')).toBe('text-success');
+		expect(getStatusbarConnectionClass('connecting')).toBe('text-warning');
+		expect(getStatusbarConnectionClass('disconnected')).toBe('text-error');
+		expect(getStatusbarConnectionClass('error')).toBe('text-error');
 	});
 });

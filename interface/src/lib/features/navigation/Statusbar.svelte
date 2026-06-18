@@ -8,6 +8,10 @@
 	import Hamburger from '~icons/tabler/menu-2';
 	import Power from '~icons/tabler/power';
 	import Chip from '~icons/tabler/cpu';
+	import CloudCheck from '~icons/tabler/cloud-check';
+	import CloudOff from '~icons/tabler/cloud-off';
+	import Refresh from '~icons/tabler/refresh';
+	import AlertCircle from '~icons/tabler/alert-circle';
 
 	const statusbar = useStatusbarManagement();
 	const features = $derived(appFeatures.features);
@@ -39,6 +43,23 @@
 		<span>{statusbar.currentClock}</span>
 	</div>
 	<div class="flex flex-none items-center gap-2 pl-1 sm:gap-3 sm:pr-1">
+		<div
+			class="tooltip tooltip-bottom flex h-8 w-8 items-center justify-center"
+			data-tip={statusbar.connectionTooltip}
+			aria-label={statusbar.connectionTooltip}
+			title={statusbar.connectionTooltip}
+		>
+			{#if statusbar.connectionStatus === 'connected'}
+				<CloudCheck class={`h-5 w-5 ${statusbar.connectionClass}`} />
+			{:else if statusbar.connectionStatus === 'connecting'}
+				<Refresh class={`h-5 w-5 animate-spin ${statusbar.connectionClass}`} />
+			{:else if statusbar.connectionStatus === 'error'}
+				<AlertCircle class={`h-5 w-5 ${statusbar.connectionClass}`} />
+			{:else}
+				<CloudOff class={`h-5 w-5 ${statusbar.connectionClass}`} />
+			{/if}
+		</div>
+
 		{#if statusbar.status.coreTemp !== undefined}
 			<div class="hidden md:flex items-center text-sm font-mono text-base-content/80">
 				<Chip class="h-5 w-5 mr-1 transition-colors duration-500" style={statusbar.cpuTempStyle} />

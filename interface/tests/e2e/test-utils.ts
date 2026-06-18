@@ -1,6 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 
-const defaultCredentialsDialogTitle = /Default Credentials Detected|Wykryto domyślne dane logowania/;
+const defaultCredentialsDialogTitle =
+	/Default Credentials Detected|Wykryto domyślne dane logowania/;
 const defaultCredentialsDismissLabel = /Skip for now|Pomiń na teraz|Close|Zamknij/;
 const usernameLabel = /Username|Nazwa użytkownika/;
 const passwordLabel = /Password|Hasło/;
@@ -71,7 +72,10 @@ export async function authenticateByApi(page: Page) {
 	await page.addInitScript((token) => {
 		const payloadPart = token.split('.')[1] ?? '';
 		const normalizedPayload = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-		const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '=');
+		const paddedPayload = normalizedPayload.padEnd(
+			Math.ceil(normalizedPayload.length / 4) * 4,
+			'='
+		);
 		const payload = JSON.parse(atob(paddedPayload));
 
 		window.localStorage.setItem(
@@ -92,7 +96,12 @@ export async function waitForAuthenticatedShell(page: Page) {
 	try {
 		await expect(drawer).toBeVisible({ timeout: 20000 });
 	} catch (error) {
-		const bodyText = (await page.locator('body').innerText().catch(() => '')).trim();
+		const bodyText = (
+			await page
+				.locator('body')
+				.innerText()
+				.catch(() => '')
+		).trim();
 		if (bodyText) {
 			throw error;
 		}
@@ -114,12 +123,19 @@ export async function loginAsAdmin(page: Page) {
 	try {
 		await expect(appEntry).toBeVisible({ timeout: 15000 });
 	} catch (e) {
-		const bodyText = (await page.locator('body').innerText().catch(() => '')).trim();
+		const bodyText = (
+			await page
+				.locator('body')
+				.innerText()
+				.catch(() => '')
+		).trim();
 		if (!bodyText) {
 			await page.reload({ waitUntil: 'domcontentloaded' });
 			await expect(appEntry).toBeVisible({ timeout: 15000 });
 		} else {
-			console.log(`Timeout waiting for drawer or login form. Body starts with: ${bodyText.slice(0, 160)}`);
+			console.log(
+				`Timeout waiting for drawer or login form. Body starts with: ${bodyText.slice(0, 160)}`
+			);
 			throw e;
 		}
 	}

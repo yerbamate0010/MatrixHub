@@ -1,4 +1,5 @@
 import type { SystemStatus } from '$lib/types/system/systemStatus';
+import type { ConnectionStatus } from '$lib/stores/connectionState.svelte';
 import type { MenuItem } from './menuConfig';
 
 const VALID_EPOCH_MS = 1_000_000_000_000;
@@ -34,6 +35,20 @@ export function getStatusbarTempColor(tempCelsius: number) {
 	hue = Math.max(endHue, Math.min(startHue, hue));
 
 	return `color: color-mix(in srgb, hsl(${hue}, 75%, 50%) 30%, currentColor)`;
+}
+
+export function getStatusbarConnectionClass(status: ConnectionStatus) {
+	switch (status) {
+		case 'connected':
+			return 'text-success';
+		case 'connecting':
+			return 'text-warning';
+		case 'error':
+			return 'text-error';
+		case 'disconnected':
+		default:
+			return 'text-error';
+	}
 }
 
 export function resolveStatusbarTitle(
