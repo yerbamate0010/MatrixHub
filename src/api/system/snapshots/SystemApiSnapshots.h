@@ -41,6 +41,16 @@ struct SystemInfoSnapshot {
     int resetReason = 0;
 };
 
+struct SystemMemoryRegionSnapshot {
+    bool available = false;
+    uint32_t total = 0;
+    uint32_t free = 0;
+    uint32_t used = 0;
+    uint32_t minimumFree = 0;
+    uint32_t largestBlock = 0;
+    uint8_t fragmentationPercent = 0;
+};
+
 struct SystemTasksSnapshot {
     TaskStatus_t* tasks = nullptr;
     bool watchdogInitialized = false;
@@ -50,6 +60,9 @@ struct SystemTasksSnapshot {
     uint32_t freeHeap = 0;
     uint32_t minFreeHeap = 0;
     uint32_t freePsram = 0;
+    SystemMemoryRegionSnapshot defaultHeap;
+    SystemMemoryRegionSnapshot internalHeap;
+    SystemMemoryRegionSnapshot psram;
     UBaseType_t actualCount = 0;
     bool allocationFailed = false;
     bool detailsIncluded = false;

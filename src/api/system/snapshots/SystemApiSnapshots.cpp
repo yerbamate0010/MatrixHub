@@ -22,6 +22,39 @@
 
 namespace API {
 
+namespace {
+
+uint8_t calculateMemoryFragmentationPercent(size_t freeBytes, size_t largestBlock) {
+    if (freeBytes == 0 || largestBlock >= freeBytes) {
+        return 0;
+    }
+    const size_t fragmented = freeBytes - largestBlock;
+    const size_t percent = (fragmented * 100U + (freeBytes / 2U)) / freeBytes;
+    return static_cast<uint8_t>(percent > 100U ? 100U : percent);
+}
+
+SystemMemoryRegionSnapshot buildMemoryRegionSnapshot(uint32_t caps) {
+    SystemMemoryRegionSnapshot snapshot{};
+    const size_t total = heap_caps_get_total_size(caps);
+    const size_t free = heap_caps_get_free_size(caps);
+    const size_t minimumFree = heap_caps_get_minimum_free_size(caps);
+    size_t largest = heap_caps_get_largest_free_block(caps);
+    if (largest > free) {
+        largest = free;
+    }
+
+    snapshot.available = total > 0 || free > 0 || largest > 0;
+    snapshot.total = static_cast<uint32_t>(total);
+    snapshot.free = static_cast<uint32_t>(free);
+    snapshot.used = static_cast<uint32_t>((total >= free) ? (total - free) : 0);
+    snapshot.minimumFree = static_cast<uint32_t>(minimumFree);
+    snapshot.largestBlock = static_cast<uint32_t>(largest);
+    snapshot.fragmentationPercent = calculateMemoryFragmentationPercent(free, largest);
+    return snapshot;
+}
+
+}  // namespace
+
 SystemTasksSnapshot::~SystemTasksSnapshot() {
     if (tasks) {
         heap_caps_free(tasks);
@@ -50,14 +83,19 @@ SystemTasksSnapshot& SystemTasksSnapshot::operator=(SystemTasksSnapshot&& other)
     freeHeap = other.freeHeap;
     minFreeHeap = other.minFreeHeap;
     freePsram = other.freePsram;
+    defaultHeap = other.defaultHeap;
+    internalHeap = other.internalHeap;
+    psram = other.psram;
     actualCount = other.actualCount;
     allocationFailed = other.allocationFailed;
+    detailsIncluded = other.detailsIncluded;
 
     other.tasks = nullptr;
     other.actualCount = 0;
     other.taskCount = 0;
     other.totalRunTime = 0;
     other.allocationFailed = false;
+    other.detailsIncluded = false;
     return *this;
 }
 
@@ -151,11 +189,12 @@ SystemTasksSnapshot buildSystemTasksSnapshot(const SystemApiTaskDeps& deps, bool
     snapshot.watchdogTimeoutSec =
         deps.getWatchdogTimeoutSec ? deps.getWatchdogTimeoutSec() : 0;
     snapshot.taskCount = uxTaskGetNumberOfTasks();
-    snapshot.freeHeap =
-        heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    snapshot.minFreeHeap =
-        heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    snapshot.freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    snapshot.defaultHeap = buildMemoryRegionSnapshot(MALLOC_CAP_8BIT);
+    snapshot.internalHeap = buildMemoryRegionSnapshot(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    snapshot.psram = buildMemoryRegionSnapshot(MALLOC_CAP_SPIRAM);
+    snapshot.freeHeap = snapshot.internalHeap.free;
+    snapshot.minFreeHeap = snapshot.internalHeap.minimumFree;
+    snapshot.freePsram = snapshot.psram.free;
 
     if (!includeDetails) {
         return snapshot;

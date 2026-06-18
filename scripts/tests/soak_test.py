@@ -31,7 +31,7 @@ import statistics
 import sys
 import time
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from device_client import DeviceClient, DeviceClientError, add_common_device_args  # noqa: E402
@@ -48,6 +48,20 @@ CSV_FIELDS = [
     "task_count",
     "min_stack_watermark",
     "min_stack_task_name",
+    "stack_details_available",
+    "internal_largest_block",
+    "internal_fragmentation_percent",
+    "psram_largest_block",
+    "psram_fragmentation_percent",
+    "ws_queue_drops",
+    "ws_heap_fallbacks",
+    "lock_standard_timeouts",
+    "lock_recursive_timeouts",
+    "lock_standard_slow_acquires",
+    "lock_recursive_slow_acquires",
+    "boot_count",
+    "unexpected_restarts",
+    "current_reset_reason",
 ]
 
 DURATION_RE = re.compile(r"^\s*(\d+)\s*([smhd]?)\s*$", re.IGNORECASE)
@@ -96,10 +110,30 @@ def get_with_auth(
         return None
 
 
-def extract_sample(info: dict | None, tasks: dict | None) -> dict:
+def nested(data: dict[str, Any], path: tuple[str, ...], default: Any = None) -> Any:
+    current: Any = data
+    for key in path:
+        if not isinstance(current, dict):
+            return default
+        current = current.get(key)
+    return current if current is not None else default
+
+
+def extract_sample(
+    info: dict | None,
+    tasks: dict | None,
+    summary: dict | None,
+    mutexes: dict | None,
+) -> dict:
     info = info or {}
     tasks = tasks or {}
+    summary = summary or {}
+    mutexes = mutexes or {}
     task_list = tasks.get("tasks") or []
+    task_stack = tasks.get("stack") or {}
+    task_memory = tasks.get("memory") or {}
+    internal = task_memory.get("internal") or {}
+    psram = task_memory.get("psram") or {}
 
     min_watermark = None
     min_watermark_name = ""
@@ -110,6 +144,10 @@ def extract_sample(info: dict | None, tasks: dict | None) -> dict:
         if min_watermark is None or wm < min_watermark:
             min_watermark = wm
             min_watermark_name = task.get("name", "")
+
+    if min_watermark is None and isinstance(task_stack, dict):
+        min_watermark = task_stack.get("worstHighWaterMark")
+        min_watermark_name = task_stack.get("worstTask", "")
 
     return {
         "timestamp_iso": datetime.datetime.now(datetime.timezone.utc)
@@ -124,6 +162,20 @@ def extract_sample(info: dict | None, tasks: dict | None) -> dict:
         "task_count": tasks.get("taskCount"),
         "min_stack_watermark": min_watermark,
         "min_stack_task_name": min_watermark_name,
+        "stack_details_available": bool(task_stack.get("detailsAvailable")),
+        "internal_largest_block": internal.get("largestBlock") or info.get("max_alloc_heap"),
+        "internal_fragmentation_percent": internal.get("fragmentationPercent"),
+        "psram_largest_block": psram.get("largestBlock"),
+        "psram_fragmentation_percent": psram.get("fragmentationPercent"),
+        "ws_queue_drops": nested(summary, ("http", "wsQueueDrops")),
+        "ws_heap_fallbacks": nested(summary, ("http", "wsHeapFallbacks")),
+        "lock_standard_timeouts": nested(mutexes, ("runtime", "standard", "timeouts")),
+        "lock_recursive_timeouts": nested(mutexes, ("runtime", "recursive", "timeouts")),
+        "lock_standard_slow_acquires": nested(mutexes, ("runtime", "standard", "slowAcquires")),
+        "lock_recursive_slow_acquires": nested(mutexes, ("runtime", "recursive", "slowAcquires")),
+        "boot_count": nested(summary, ("boot", "bootCount")),
+        "unexpected_restarts": nested(summary, ("boot", "unexpectedRestarts")),
+        "current_reset_reason": nested(summary, ("boot", "currentResetReason")),
     }
 
 
@@ -139,6 +191,16 @@ def summarize(samples: list[dict], threshold: float) -> int:
     min_free = column("min_free_heap")
     psram = column("free_psram")
     watermark = column("min_stack_watermark")
+    internal_largest = column("internal_largest_block")
+    psram_largest = column("psram_largest_block")
+    ws_drops = column("ws_queue_drops")
+    ws_fallbacks = column("ws_heap_fallbacks")
+    std_timeouts = column("lock_standard_timeouts")
+    rec_timeouts = column("lock_recursive_timeouts")
+    std_slow = column("lock_standard_slow_acquires")
+    rec_slow = column("lock_recursive_slow_acquires")
+    boot_counts = column("boot_count")
+    restarts = column("unexpected_restarts")
 
     print("\n=== soak summary ===")
     print(f"samples              : {len(samples)}")
@@ -160,6 +222,16 @@ def summarize(samples: list[dict], threshold: float) -> int:
             f"free_psram    min/med/max: {min(psram)} / "
             f"{int(statistics.median(psram))} / {max(psram)}"
         )
+    if internal_largest:
+        print(
+            f"internal largest min/med/max: {min(internal_largest)} / "
+            f"{int(statistics.median(internal_largest))} / {max(internal_largest)}"
+        )
+    if psram_largest:
+        print(
+            f"psram largest    min/med/max: {min(psram_largest)} / "
+            f"{int(statistics.median(psram_largest))} / {max(psram_largest)}"
+        )
     if watermark:
         worst = min(watermark)
         worst_idx = watermark.index(worst)
@@ -169,6 +241,22 @@ def summarize(samples: list[dict], threshold: float) -> int:
             if s.get("min_stack_watermark") is not None
         ][worst_idx]
         print(f"worst stack watermark    : {worst} bytes (task: {worst_task})")
+    if ws_drops:
+        print(f"ws_queue_drops first/last: {ws_drops[0]} -> {ws_drops[-1]}")
+    if ws_fallbacks:
+        print(f"ws_heap_fallbacks first/last: {ws_fallbacks[0]} -> {ws_fallbacks[-1]}")
+    if std_timeouts or rec_timeouts:
+        print(
+            "lock timeouts first/last : "
+            f"standard {std_timeouts[0] if std_timeouts else 0} -> {std_timeouts[-1] if std_timeouts else 0}, "
+            f"recursive {rec_timeouts[0] if rec_timeouts else 0} -> {rec_timeouts[-1] if rec_timeouts else 0}"
+        )
+    if std_slow or rec_slow:
+        print(
+            "slow lock acquires       : "
+            f"standard {std_slow[0] if std_slow else 0} -> {std_slow[-1] if std_slow else 0}, "
+            f"recursive {rec_slow[0] if rec_slow else 0} -> {rec_slow[-1] if rec_slow else 0}"
+        )
 
     if min_free and len(min_free) >= 2:
         first, last = min_free[0], min_free[-1]
@@ -178,6 +266,30 @@ def summarize(samples: list[dict], threshold: float) -> int:
                 f"{threshold:.0%} (configured --regression-threshold)"
             )
             return 1
+    if boot_counts and len(boot_counts) >= 2 and boot_counts[-1] != boot_counts[0]:
+        print(f"\nFAIL: boot_count changed during soak ({boot_counts[0]} -> {boot_counts[-1]})")
+        return 1
+    if restarts and len(restarts) >= 2 and restarts[-1] != restarts[0]:
+        print(
+            "\nFAIL: unexpected_restarts changed during soak "
+            f"({restarts[0]} -> {restarts[-1]})"
+        )
+        return 1
+    if ws_drops and len(ws_drops) >= 2 and ws_drops[-1] != ws_drops[0]:
+        print(f"\nFAIL: ws_queue_drops changed during soak ({ws_drops[0]} -> {ws_drops[-1]})")
+        return 1
+    if std_timeouts and len(std_timeouts) >= 2 and std_timeouts[-1] != std_timeouts[0]:
+        print(
+            "\nFAIL: standard lock timeouts changed during soak "
+            f"({std_timeouts[0]} -> {std_timeouts[-1]})"
+        )
+        return 1
+    if rec_timeouts and len(rec_timeouts) >= 2 and rec_timeouts[-1] != rec_timeouts[0]:
+        print(
+            "\nFAIL: recursive lock timeouts changed during soak "
+            f"({rec_timeouts[0]} -> {rec_timeouts[-1]})"
+        )
+        return 1
     print("\nPASS")
     return 0
 
@@ -284,7 +396,9 @@ def main(argv: list[str] | None = None) -> int:
             sample_start = time.monotonic()
             info = get_with_auth(client, "/api/system/info")
             tasks = get_with_auth(client, "/api/system/tasks?details=1")
-            sample = extract_sample(info, tasks)
+            summary = get_with_auth(client, "/api/diagnostics/summary")
+            mutexes = get_with_auth(client, "/api/diagnostics/mutexes")
+            sample = extract_sample(info, tasks, summary, mutexes)
             samples.append(sample)
             writer.writerow(sample)
             fh.flush()
@@ -294,7 +408,9 @@ def main(argv: list[str] | None = None) -> int:
                 f"free={sample['free_heap']} "
                 f"min_free={sample['min_free_heap']} "
                 f"psram={sample['free_psram']} "
-                f"wm={sample['min_stack_watermark']} ({sample['min_stack_task_name']})"
+                f"wm={sample['min_stack_watermark']} ({sample['min_stack_task_name']}) "
+                f"wsDrops={sample['ws_queue_drops']} "
+                f"lockTimeouts={sample['lock_standard_timeouts']}/{sample['lock_recursive_timeouts']}"
             )
 
             if deadline is not None and time.monotonic() >= deadline:

@@ -42,6 +42,19 @@ def validate(path: str, payload: dict[str, Any]) -> None:
     elif path.startswith("/api/diagnostics/tasks"):
         if "watchdog" not in payload or "memory" not in payload:
             raise DeviceClientError(f"{path} missing watchdog/memory")
+        memory = payload.get("memory")
+        if not isinstance(memory, dict):
+            raise DeviceClientError(f"{path} memory is not an object")
+        for region_name in ("default", "internal", "psram"):
+            region = memory.get(region_name)
+            if not isinstance(region, dict):
+                raise DeviceClientError(f"{path} missing memory.{region_name}")
+            for key in ("free", "minimumFree", "largestBlock", "fragmentationPercent"):
+                if key not in region:
+                    raise DeviceClientError(f"{path} missing memory.{region_name}.{key}")
+        stack = payload.get("stack")
+        if not isinstance(stack, dict) or "detailsAvailable" not in stack:
+            raise DeviceClientError(f"{path} missing stack summary")
     elif path.startswith("/api/diagnostics/mutexes"):
         if "instrumented" not in payload or "criticalLocks" not in payload:
             raise DeviceClientError(f"{path} missing mutex coverage fields")

@@ -38,6 +38,20 @@ void writeIpIfSet(
     writer.string(ip.toString().c_str());
 }
 
+void writeMemoryRegion(
+    Utils::JsonResponseWriter& writer,
+    const SystemMemoryRegionSnapshot& snapshot) {
+    writer.raw("{");
+    writer.key("available"); writer.value(snapshot.available); writer.raw(",");
+    writer.key("total"); writer.value(static_cast<unsigned long>(snapshot.total)); writer.raw(",");
+    writer.key("free"); writer.value(static_cast<unsigned long>(snapshot.free)); writer.raw(",");
+    writer.key("used"); writer.value(static_cast<unsigned long>(snapshot.used)); writer.raw(",");
+    writer.key("minimumFree"); writer.value(static_cast<unsigned long>(snapshot.minimumFree)); writer.raw(",");
+    writer.key("largestBlock"); writer.value(static_cast<unsigned long>(snapshot.largestBlock)); writer.raw(",");
+    writer.key("fragmentationPercent"); writer.value(static_cast<unsigned long>(snapshot.fragmentationPercent));
+    writer.raw("}");
+}
+
 const char* taskStateName(eTaskState state) {
     switch (state) {
         case eRunning:
@@ -97,6 +111,16 @@ void SystemSnapshotJsonWriter::writeSystemInfo(
 void SystemSnapshotJsonWriter::writeTasks(
     Utils::JsonResponseWriter& writer,
     const SystemTasksSnapshot& snapshot) {
+    const TaskStatus_t* worstTask = nullptr;
+    if (snapshot.detailsIncluded && snapshot.tasks) {
+        for (UBaseType_t i = 0; i < snapshot.actualCount; i++) {
+            const TaskStatus_t& task = snapshot.tasks[i];
+            if (!worstTask || task.usStackHighWaterMark < worstTask->usStackHighWaterMark) {
+                worstTask = &task;
+            }
+        }
+    }
+
     writer.raw("{");
     writer.key("watchdog"); writer.raw("{");
     writer.key("initialized"); writer.value(snapshot.watchdogInitialized); writer.raw(",");
@@ -133,10 +157,21 @@ void SystemSnapshotJsonWriter::writeTasks(
     }
 
     writer.raw(",");
+    writer.key("stack"); writer.raw("{");
+    writer.key("detailsAvailable"); writer.value(worstTask != nullptr);
+    if (worstTask) {
+        writer.raw(",");
+        writer.key("worstTask"); writer.string(worstTask->pcTaskName); writer.raw(",");
+        writer.key("worstHighWaterMark"); writer.value(static_cast<unsigned long>(worstTask->usStackHighWaterMark));
+    }
+    writer.raw("},");
     writer.key("memory"); writer.raw("{");
     writer.key("freeHeap"); writer.value(static_cast<unsigned long>(snapshot.freeHeap)); writer.raw(",");
     writer.key("minFreeHeap"); writer.value(static_cast<unsigned long>(snapshot.minFreeHeap)); writer.raw(",");
-    writer.key("freePsram"); writer.value(static_cast<unsigned long>(snapshot.freePsram));
+    writer.key("freePsram"); writer.value(static_cast<unsigned long>(snapshot.freePsram)); writer.raw(",");
+    writer.key("default"); writeMemoryRegion(writer, snapshot.defaultHeap); writer.raw(",");
+    writer.key("internal"); writeMemoryRegion(writer, snapshot.internalHeap); writer.raw(",");
+    writer.key("psram"); writeMemoryRegion(writer, snapshot.psram);
     writer.raw("}");
     writer.raw("}");
 }
