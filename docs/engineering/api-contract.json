@@ -752,7 +752,7 @@
       "firmware": ["src/api/airmouse/AirMouseApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/AirMouseApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/airmouse_api.sh", "scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/airmouse_api.sh", "scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "airmouse.config",
@@ -765,7 +765,7 @@
       "firmware": ["src/api/airmouse/AirMouseApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/AirMouseApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/airmouse_api.sh", "scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/airmouse_api.sh", "scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "airmouse.calibrate",
@@ -778,7 +778,7 @@
       "firmware": ["src/api/airmouse/AirMouseApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/AirMouseApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/airmouse_api.sh", "scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/airmouse_api.sh", "scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "keyboard.config",
@@ -791,7 +791,7 @@
       "firmware": ["src/api/keyboard/KeyboardApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/KeyboardApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "keyboard.type",
@@ -804,7 +804,7 @@
       "firmware": ["src/api/keyboard/KeyboardApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/KeyboardApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "keyboard.press",
@@ -817,7 +817,7 @@
       "firmware": ["src/api/keyboard/KeyboardApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/KeyboardApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "usbTerminal.config",
@@ -830,7 +830,7 @@
       "firmware": ["src/api/usb_terminal/UsbTerminalApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/UsbTerminalApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_usb_features.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "usbTerminal.websocket",
