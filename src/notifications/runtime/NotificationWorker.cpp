@@ -324,7 +324,9 @@ StopStatus NotificationWorker::stop() {
     // The expected shutdown path is:
     // 1) publish cancel=false,
     // 2) break any sleep,
-    // 3) actively tear down sockets/TLS so blocking calls unwind quickly,
+    // 3) tear down idle transports immediately. If Telegram is inside its
+    //    serialized TLS/HTTP call, do not close NetworkClientSecure from this
+    //    shutdown task; let the active owner unwind on its bounded timeout.
     // 4) only then wait for the loop to exit.
     //
     // If stop() still times out after this point, the bug is likely below the

@@ -124,6 +124,23 @@ void test_begin_does_not_count_restart_when_shutdown_marker_exists() {
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(ESP_RST_SW), SYSTEM::rtcBootState.lastResetReason);
 }
 
+void test_begin_treats_restart_command_marker_as_controlled_software_restart() {
+    SYSTEM::rtcBootState = makeValidRtcState();
+    SYSTEM::rtcBootState.lastShutdownReason =
+        static_cast<uint8_t>(SYSTEM::ShutdownReason::RESTART_COMMAND);
+    TEST_STUBS::ESP::resetReason = ESP_RST_SW;
+
+    SYSTEM::BootTracker::begin();
+
+    TEST_ASSERT_EQUAL_UINT32(8, SYSTEM::BootTracker::getBootCount());
+    TEST_ASSERT_EQUAL_UINT16(2, SYSTEM::BootTracker::getUnexpectedRestarts());
+    TEST_ASSERT_FALSE(SYSTEM::BootTracker::wasLastBootUnexpected());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(SYSTEM::ShutdownReason::RESTART_COMMAND),
+                            SYSTEM::BootTracker::getLastShutdownReason());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(ESP_RST_SW),
+                            SYSTEM::rtcBootState.lastResetReason);
+}
+
 void test_begin_caps_unexpected_restart_counter_at_uint16_max() {
     SYSTEM::rtcBootState = makeValidRtcState();
     SYSTEM::rtcBootState.lastShutdownReason = 0;
@@ -172,6 +189,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_begin_is_idempotent_after_first_initialization);
     RUN_TEST(test_begin_counts_unexpected_restart_without_shutdown_marker);
     RUN_TEST(test_begin_does_not_count_restart_when_shutdown_marker_exists);
+    RUN_TEST(test_begin_treats_restart_command_marker_as_controlled_software_restart);
     RUN_TEST(test_begin_caps_unexpected_restart_counter_at_uint16_max);
     RUN_TEST(test_record_shutdown_persists_reason_uptime_and_heap);
     RUN_TEST(test_public_diagnostics_getters_expose_retained_shutdown_state);

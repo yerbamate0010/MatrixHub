@@ -21,16 +21,19 @@ The coredump partition itself stays untouched (read-only operation).
 from __future__ import annotations
 
 import argparse
+import csv
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
+from dataclasses import dataclass
 from pathlib import Path
 
-# Partition layout pinned to partitions/partitions_s3.csv (offset/size in hex).
-COREDUMP_OFFSET = 0x3E7000
-COREDUMP_SIZE = 0x10000
+# Fallback layout; the script normally reads partitions/partitions_s3.csv.
+DEFAULT_COREDUMP_OFFSET = 0x3E7000
+DEFAULT_COREDUMP_SIZE = 0x10000
 CHIP = "esp32s3"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -46,6 +49,18 @@ ESPTOOL_BIN = next(
     (p for p in (PIO_PENV_BIN / "esptool", PIO_PENV_BIN / "esptool.py") if p.exists()),
     PIO_PENV_BIN / "esptool",
 )
+PARTITION_TABLE = REPO_ROOT / "partitions" / "partitions_s3.csv"
+DEFAULT_SERIAL_CANDIDATES = (
+    Path(os.environ.get("DEVICE_SERIAL_PORT", "")) if os.environ.get("DEVICE_SERIAL_PORT") else None,
+    Path("/dev/ttyACM0"),
+    Path("/dev/ttyUSB0"),
+)
+
+
+@dataclass(frozen=True)
+class CoredumpPartition:
+    offset: int = DEFAULT_COREDUMP_OFFSET
+    size: int = DEFAULT_COREDUMP_SIZE
 
 
 def resolve_elf(user_value: str | None) -> Path:
@@ -64,15 +79,47 @@ def resolve_elf(user_value: str | None) -> Path:
 
 
 def resolve_port(user_value: str | None) -> str | None:
+    if not user_value:
+        for candidate in DEFAULT_SERIAL_CANDIDATES:
+            if candidate and candidate.exists():
+                return str(candidate)
+        return None
+
     # esp-coredump does its own auto-detection when --port is omitted.
     # We only validate explicit user input here so the error is clear.
-    if user_value and not Path(user_value).exists():
+    if not Path(user_value).exists():
         print(
             f"warning: serial port {user_value} does not currently exist; "
             "esp-coredump will retry detection",
             file=sys.stderr,
         )
     return user_value
+
+
+def resolve_coredump_partition() -> CoredumpPartition:
+    if not PARTITION_TABLE.is_file():
+        return CoredumpPartition()
+
+    try:
+        with PARTITION_TABLE.open(newline="") as fh:
+            reader = csv.reader(line for line in fh if not line.lstrip().startswith("#"))
+            for row in reader:
+                if len(row) < 5:
+                    continue
+                name = row[0].strip()
+                part_type = row[1].strip()
+                subtype = row[2].strip()
+                if name != "coredump" and subtype != "coredump":
+                    continue
+                if part_type != "data":
+                    continue
+                return CoredumpPartition(offset=int(row[3].strip(), 0), size=int(row[4].strip(), 0))
+    except Exception as exc:  # noqa: BLE001 - keep diagnostic script resilient.
+        print(
+            f"warning: could not parse {PARTITION_TABLE}: {exc}; using fallback layout",
+            file=sys.stderr,
+        )
+    return CoredumpPartition()
 
 
 def ensure_tooling() -> None:
@@ -87,18 +134,55 @@ def ensure_tooling() -> None:
 
 BOOTLOADER_HINT = (
     "esptool could not talk to the chip. This board uses native USB, so it does\n"
-    "NOT auto-enter bootloader mode. Put the ESP32-S3 into download mode first:\n"
+    "not always auto-enter bootloader mode from every host state. Try:\n"
+    "  python scripts/diagnostics/decode_coredump.py --port /dev/ttyACM0\n"
+    "The script will attempt the native-USB 1200-baud touch first. If that still\n"
+    "fails, put the ESP32-S3 into download mode manually:\n"
     "  1. hold the BOOT button\n"
     "  2. tap RESET (RST) while still holding BOOT\n"
-    "  3. release BOOT — the USB device will re-enumerate as a download port\n"
-    "Then re-run this script. After decoding, press RESET once to resume the app."
+    "  3. release BOOT, then re-run with --no-touch-bootloader --no-reset\n"
+    "After decoding, reset the board once to resume the app."
 )
+
+
+def touch_native_usb_bootloader(port: str | None) -> None:
+    if not port:
+        print("[0/3] no serial port selected; relying on esptool auto-detection")
+        return
+    if not Path(port).exists():
+        print(f"[0/3] serial port {port} not present; relying on esptool", file=sys.stderr)
+        return
+
+    try:
+        import serial  # type: ignore[import-not-found]
+    except ImportError:
+        print(
+            "[0/3] pyserial is not installed; skipping 1200-baud bootloader touch",
+            file=sys.stderr,
+        )
+        return
+
+    print(f"[0/3] touching native USB bootloader on {port} at 1200 baud")
+    try:
+        connection = serial.Serial(port=port, baudrate=1200)
+        try:
+            connection.dtr = False
+        finally:
+            connection.close()
+    except OSError as exc:
+        # Native USB commonly disappears while the host is still closing it.
+        # Treat that as informational and give enumeration time to settle.
+        print(f"      port re-enumerated during touch: {exc}")
+    except Exception as exc:  # noqa: BLE001 - keep going to let esptool report clearly.
+        print(f"      warning: bootloader touch failed: {exc}", file=sys.stderr)
+    time.sleep(1.5)
 
 
 def read_partition_to_file(
     port: str | None,
     baud: int,
     dest: Path,
+    partition: CoredumpPartition,
     no_reset: bool,
 ) -> None:
     """Use esptool to dump the raw coredump partition into ``dest``."""
@@ -112,11 +196,14 @@ def read_partition_to_file(
         "--baud",
         str(baud),
         "read-flash",
-        hex(COREDUMP_OFFSET),
-        hex(COREDUMP_SIZE),
+        hex(partition.offset),
+        hex(partition.size),
         str(dest),
     ]
-    print(f"[1/3] dumping coredump partition -> {dest}")
+    print(
+        "[1/3] dumping coredump partition "
+        f"(offset={hex(partition.offset)} size={hex(partition.size)}) -> {dest}"
+    )
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as exc:
@@ -158,7 +245,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--port",
-        help="Serial port (default: auto-detect via esp-coredump/esptool).",
+        help="Serial port. Default: DEVICE_SERIAL_PORT, /dev/ttyACM0, /dev/ttyUSB0, "
+        "then esptool auto-detect.",
     )
     parser.add_argument(
         "--baud",
@@ -183,16 +271,27 @@ def main(argv: list[str] | None = None) -> int:
         "have already put the chip into download mode by holding BOOT and "
         "pressing RESET (required on boards with native USB).",
     )
+    parser.add_argument(
+        "--touch-bootloader",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Attempt a native-USB 1200-baud touch before read_flash. "
+        "Default: enabled unless --no-touch-bootloader is passed.",
+    )
     args = parser.parse_args(argv)
 
     ensure_tooling()
     elf = resolve_elf(args.elf)
     port = resolve_port(args.port)
+    partition = resolve_coredump_partition()
+
+    if args.touch_bootloader and not args.no_reset:
+        touch_native_usb_bootloader(port)
 
     tmpdir = Path(tempfile.mkdtemp(prefix="coredump_"))
     try:
         raw = tmpdir / "coredump.bin"
-        read_partition_to_file(port, args.baud, raw, args.no_reset)
+        read_partition_to_file(port, args.baud, raw, partition, args.no_reset)
 
         print("[2/3] validating partition contents")
         if partition_is_empty(raw):

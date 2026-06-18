@@ -61,9 +61,10 @@ public:
     // shutdown of in-flight network work.
     void setCancelFlag(std::atomic<bool>* flag);
 
-    // Force-close the active socket before the higher layer acquires its mutex.
-    // This is intentionally low-level because it is the fastest way to nudge
-    // blocking HTTP/TLS calls back to user code during shutdown.
+    // Force-close the active socket from the task that owns the TelegramClient
+    // mutex. Do not call this out-of-band while another task may be inside
+    // NetworkClientSecure/mbedTLS; that stack is not safe to tear down from a
+    // concurrent shutdown task during handshake.
     void cancelActiveIo();
     
     /**

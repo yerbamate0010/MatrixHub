@@ -58,6 +58,7 @@ lint_report.txt
 compile_commands.json
 coredump.bin
 coredump_report.txt
+crashlogs/
 build_error.log
 
 # Auto-generated files

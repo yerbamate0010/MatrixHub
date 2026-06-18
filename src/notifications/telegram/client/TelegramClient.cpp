@@ -138,18 +138,17 @@ void TelegramClient::resetSession() {
 }
 
 void TelegramClient::cancelAndReset() {
-    // Best-effort cancel for blocking TLS/HTTP calls:
-    // stop the socket immediately, then try to grab the client mutex and clean
-    // up HTTPClient state. If the mutex is busy, the active caller is expected
-    // to observe the closed socket/cancel flag and finish its own cleanup path.
-    _tlsMgr.cancelActiveIo();
-
     SYSTEM::ScopeLock lock(_mutex, 0);
     if (!lock.isLocked()) {
-        // Worth checking first when shutdown still looks slow: if this log
-        // appears repeatedly, a caller is holding the Telegram client mutex for
-        // too long and cleanup is being deferred to that active path.
-        LOGW("cancelAndReset: mutex busy, cleanup deferred to active caller");
+        // Do not force-close NetworkClientSecure from a different task while
+        // the worker owns the Telegram client mutex. A restart soak caught a
+        // LoadProhibited panic inside mbedTLS certificate verification when
+        // shutdown called _client.stop() concurrently with a TLS handshake.
+        //
+        // The worker cancel flag is already false before this method is called.
+        // Let the active Telegram call unwind on its bounded connect/read
+        // timeout, then clean up from its owning task.
+        LOGW("cancelAndReset: active Telegram call in progress; deferred cleanup");
         return;
     }
 
@@ -196,9 +195,10 @@ bool TelegramClient::forEachUpdateLite(int64_t lastUpdateId,
         return false;
     }
 
-    // Long-poll remains serialized under the client mutex. The expected behavior
-    // after the refactor is that stop() closes the socket underneath this call,
-    // so even a blocked poll should unwind within the configured timeout window.
+    // Long-poll remains serialized under the client mutex. Shutdown publishes
+    // cancel=false and then waits for this call to unwind on the bounded
+    // connect/read timeout; it deliberately does not close NetworkClientSecure
+    // from a second task while mbedTLS may be in handshake.
     // The polling helper also borrows the same client-owned scratch bundle, so
     // this path no longer depends on a hidden translation-unit URL buffer.
     NetworkClient* stream = UpdatesFetcher::beginStream(

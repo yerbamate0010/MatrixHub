@@ -52,9 +52,9 @@ bool TlsManager::isCancelled() const {
 }
 
 void TlsManager::cancelActiveIo() {
-    // Risk hotspot: this is only as effective as the underlying client stack.
-    // If shutdown still times out, inspect whether HTTPClient/WiFiClientSecure
-    // actually returns promptly after stop() on the current firmware/toolchain.
+    // Caller must hold TelegramClient's mutex. NetworkClientSecure/mbedTLS can
+    // crash if another task force-closes the socket while a TLS handshake is
+    // reading certificate state.
     _client.stop();
     _currentTlsMode = TlsMode::NotConfigured;
 }

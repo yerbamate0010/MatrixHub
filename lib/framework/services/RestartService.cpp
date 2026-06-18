@@ -55,6 +55,8 @@ esp_err_t RestartService::restart(PsychicRequest *request)
 
 void RestartService::restartNow()
 {
+    _restartPending = true;
+
     // Prefer the application-defined restart path when available.
     // This keeps framework-owned restart entry points aligned with the
     // firmware's newer shutdown orchestration instead of bypassing it with the
@@ -63,7 +65,7 @@ void RestartService::restartNow()
     {
         ESP_LOGI("RestartService", "Delegating restart to application hook");
         svk_appRestartNow();
-        return;
+        ESP_LOGE("RestartService", "Application restart hook returned; falling back to framework restart");
     }
 
     ESP_LOGI("RestartService", "Restarting system now...");
@@ -77,35 +79,42 @@ void RestartService::restartNow()
 
 void RestartService::scheduleRestart(uint32_t delayMs)
 {
-    if (_restartPending) {
+    if (_restartPending.exchange(true)) {
         ESP_LOGW("RestartService", "Restart already scheduled, ignoring duplicate request");
         return;
     }
 
-    _restartPending = true;
-    ESP_LOGI("RestartService", "Scheduling restart in %lu ms", delayMs);
+    const uint32_t safeDelayMs = delayMs == 0 ? 1 : delayMs;
+    TickType_t timerTicks = pdMS_TO_TICKS(safeDelayMs);
+    if (timerTicks == 0) {
+        timerTicks = 1;
+    }
+    ESP_LOGI("RestartService", "Scheduling restart in %lu ms", safeDelayMs);
 
     // Create timer on first use (lazy initialization)
     if (_restartTimer == nullptr) {
         _restartTimer = xTimerCreate(
             "RestartTimer",
-            pdMS_TO_TICKS(delayMs),
+            timerTicks,
             pdFALSE,  // One-shot
             nullptr,
             [](TimerHandle_t) {
-                _restartPending = false;
                 restartNow();
             }
         );
-    } else {
-        // Update period for existing timer
-        xTimerChangePeriod(_restartTimer, pdMS_TO_TICKS(delayMs), 0);
+        if (_restartTimer == nullptr) {
+            ESP_LOGE("RestartService", "Failed to create restart timer");
+            _restartPending = false;
+            return;
+        }
+    } else if (xTimerChangePeriod(_restartTimer, timerTicks, 0) != pdPASS) {
+        ESP_LOGE("RestartService", "Failed to update restart timer period");
+        _restartPending = false;
+        return;
     }
 
-    if (_restartTimer) {
-        xTimerStart(_restartTimer, 0);
-    } else {
-        ESP_LOGE("RestartService", "Failed to create restart timer!");
+    if (xTimerStart(_restartTimer, 0) != pdPASS) {
+        ESP_LOGE("RestartService", "Failed to start restart timer");
         _restartPending = false;
     }
 }
