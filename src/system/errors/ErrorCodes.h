@@ -119,6 +119,16 @@ namespace Busy {
 }
 
 /**
+ * Shelly integration errors
+ * Used by Shelly device CRUD/control endpoints and clients.
+ */
+namespace Shelly {
+    constexpr const char* DEVICE_NOT_FOUND = "shelly/device_not_found";
+    constexpr const char* DEVICE_DISABLED = "shelly/device_disabled";
+    constexpr const char* CONTROL_NOT_QUEUED = "shelly/control_not_queued";
+}
+
+/**
  * Internal/system errors
  * Used for unexpected internal failures (allocation, task creation, etc.)
  */

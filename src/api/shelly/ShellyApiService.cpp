@@ -100,6 +100,13 @@ esp_err_t ShellyApiService::handleDeviceList(PsychicRequest* request) {
 }
 
 esp_err_t ShellyApiService::handleDeviceUpsert(PsychicRequest* request) {
+    if (!_service) {
+        return Response::error(request,
+                               503,
+                               ErrorCodes::Service::UNAVAILABLE,
+                               "Shelly service unavailable");
+    }
+
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::SHELLY_DEVICE_UPSERT);
     if (auto err = Response::parseJsonBody(
             request, doc, LIMITS::API::JSON_DOC::SHELLY_DEVICE_UPSERT); err != ESP_OK) {
@@ -111,11 +118,17 @@ esp_err_t ShellyApiService::handleDeviceUpsert(PsychicRequest* request) {
     const char* name = doc[CONFIG::Keys::kName] | "Shelly";
 
     if (!id || !id[0] || !ip || !ip[0]) {
-        return Response::error(request, 400, "Missing id or ip");
+        return Response::error(request, 400, ErrorCodes::Input::MISSING_FIELD, [](JsonVariant& root) {
+            root["field"] = "id/ip";
+            root["message"] = "Missing id or ip";
+        });
     }
     
     if (!SHELLY::ShellyService::isValidPrivateIp(ip)) {
-        return Response::error(request, 400, "Invalid IP address. Only private network IPs are allowed (192.168.x.x, 10.x.x.x, 172.16-31.x.x)");
+        return Response::error(request, 400, ErrorCodes::Input::INVALID_FORMAT, [](JsonVariant& root) {
+            root["field"] = CONFIG::Keys::kIp;
+            root["message"] = "Invalid IP address. Only private network IPs are allowed (192.168.x.x, 10.x.x.x, 172.16-31.x.x)";
+        });
     }
 
     SHELLY::ShellyDevice device;
@@ -140,13 +153,23 @@ esp_err_t ShellyApiService::handleDeviceUpsert(PsychicRequest* request) {
             root["status"] = "ok";
         });
     } else {
-        return Response::error(request, 500, "Failed to save");
+        return Response::error(request, 500, ErrorCodes::Internal::UNEXPECTED_ERROR, "Failed to save");
     }
 }
 
 esp_err_t ShellyApiService::handleDeviceDelete(PsychicRequest* request) {
+    if (!_service) {
+        return Response::error(request,
+                               503,
+                               ErrorCodes::Service::UNAVAILABLE,
+                               "Shelly service unavailable");
+    }
+
     if (!request->hasParam("id")) {
-        return Response::error(request, 400, "Missing id");
+        return Response::error(request, 400, ErrorCodes::Input::MISSING_FIELD, [](JsonVariant& root) {
+            root["field"] = CONFIG::Keys::kId;
+            root["message"] = "Missing id";
+        });
     }
     
     const char* id = request->getParam("id")->value().c_str();
@@ -159,29 +182,62 @@ esp_err_t ShellyApiService::handleDeviceDelete(PsychicRequest* request) {
             root["ok"] = true;
         });
     } else {
-        return Response::error(request, 404, "Not found");
+        return Response::error(request, 404, ErrorCodes::Shelly::DEVICE_NOT_FOUND, "Shelly device not found");
     }
 }
 
 esp_err_t ShellyApiService::handleRelayControl(PsychicRequest* request) {
+    if (!_service) {
+        return Response::error(request,
+                               503,
+                               ErrorCodes::Service::UNAVAILABLE,
+                               "Shelly service unavailable");
+    }
+
     SYSTEM::SpiRamJsonDocument doc(LIMITS::API::JSON_DOC::SHELLY_RELAY_CONTROL);
     if (auto err = Response::parseJsonBody(
             request, doc, LIMITS::API::JSON_DOC::SHELLY_RELAY_CONTROL); err != ESP_OK) {
         return err;
     }
 
-    const char* id = doc["id"];
-    bool turnOn = doc["on"];
+    const char* id = doc[CONFIG::Keys::kId] | "";
 
-    if (!id) {
-        return Response::error(request, 400, "Missing id");
+    if (!id || id[0] == '\0') {
+        return Response::error(request, 400, ErrorCodes::Input::MISSING_FIELD, [](JsonVariant& root) {
+            root["field"] = CONFIG::Keys::kId;
+            root["message"] = "Missing id";
+        });
     }
 
-    _service->setRelayState(id, turnOn);
+    if (!doc["on"].is<bool>()) {
+        return Response::error(request, 400, ErrorCodes::Input::MISSING_FIELD, [](JsonVariant& root) {
+            root["field"] = "on";
+            root["message"] = "Missing on";
+        });
+    }
 
-    return Response::success(request, [](JsonVariant& root) {
+    SHELLY::ShellyDevice device;
+    if (!_service->getDevice(id, device)) {
+        return Response::error(request, 404, ErrorCodes::Shelly::DEVICE_NOT_FOUND, "Shelly device not found");
+    }
+
+    if (!device.enabled) {
+        return Response::error(request, 409, ErrorCodes::Shelly::DEVICE_DISABLED, "Shelly device is disabled");
+    }
+
+    const bool turnOn = doc["on"].as<bool>();
+    if (!_service->setRelayState(id, turnOn)) {
+        return Response::error(request,
+                               503,
+                               ErrorCodes::Shelly::CONTROL_NOT_QUEUED,
+                               "Shelly relay command was not queued");
+    }
+
+    return Response::success(request, [id, turnOn](JsonVariant& root) {
         root["ok"] = true;
         root["status"] = "queued";
+        root[CONFIG::Keys::kId] = id;
+        root["on"] = turnOn;
     });
 }
 

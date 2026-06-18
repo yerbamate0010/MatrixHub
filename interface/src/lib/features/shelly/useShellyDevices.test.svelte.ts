@@ -307,6 +307,43 @@ describe('useShellyDevices', () => {
 		cleanup();
 	});
 
+	it('reverts optimistic toggles when relay control is rejected', async () => {
+		mockApi.controlDevice.mockRejectedValue(new Error('Shelly device not found'));
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const shelly = useShellyDevices({
+					access: createAccess(),
+					initialDevicesFn: () => [
+						{
+							id: 'a1',
+							name: 'Desk',
+							ip: '192.168.1.10',
+							relay_index: 0,
+							generation: 2,
+							isOn: false,
+							isOnline: true
+						}
+					]
+				});
+
+				void shelly.toggleDevice('a1', true);
+				expect(shelly.state.devices[0].isOn).toBe(true);
+
+				setTimeout(() => {
+					expect(mockApi.controlDevice).toHaveBeenCalledWith({ id: 'a1', on: true });
+					expect(shelly.state.devices[0].isOn).toBe(false);
+					expect(shelly.state.error).toBe('Shelly device not found');
+					expect(mockNotifications.error).toHaveBeenCalledWith('Shelly device not found', 4000);
+					resolve();
+				}, 0);
+			});
+		});
+
+		cleanup?.();
+	});
+
 	it('stays read-only when management is disabled', async () => {
 		const cleanup = $effect.root(() => {
 			const shelly = useShellyDevices({
