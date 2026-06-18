@@ -101,6 +101,10 @@ namespace BLE {
     constexpr int kTransmitPowerLevel = ESP_PWR_LVL_P9; // +9dBm
     constexpr uint16_t kMaxMtu = 512;
 
+    // Publish scanner readings to runtime diagnostics/Telegram without
+    // rewriting persistent config on every advertising packet.
+    constexpr uint32_t kRuntimeReadingsFlushIntervalMs = 500;
+
 }
 
 // --- Merged from src/config/NetworkConfig.h ---

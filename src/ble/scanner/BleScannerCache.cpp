@@ -3,6 +3,7 @@
 
 #include "../../config/System.h"
 #include "BleDeviceProcessor.h"
+#include "../../system/rtc/types/RtcRuntimeTypes.h"
 
 #include <cstring>
 
@@ -95,6 +96,9 @@ bool BleScanner::shouldReport(
                 LOGW("Mutex busy in shouldReport - allowing pass-through (throttled)");
                 lastLockWarn = millis();
             }
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return true;
         }
     }
@@ -161,6 +165,9 @@ bool BleScanner::getCachedDeviceData(
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in getCachedDeviceData");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return false;
         }
     }
@@ -208,6 +215,9 @@ bool BleScanner::getCachedDeviceDataAt(
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in getCachedDeviceDataAt");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return false;
         }
     }
@@ -254,6 +264,9 @@ bool BleScanner::updateDiscoveryCache(
             if (millis() - lastLockWarn > TASK_MONITOR::BLE_WARNING_THROTTLE_MS) {
                 LOGW("Mutex busy in updateDiscoveryCache - skipping packet (throttled)");
                 lastLockWarn = millis();
+            }
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
             }
             return false;
         }
@@ -319,6 +332,9 @@ bool BleScanner::getDiscoveryEntryAt(
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in getDiscoveryEntryAt");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return false;
         }
     }
@@ -347,6 +363,9 @@ void BleScanner::clearDiscoveryCache() {
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in clearDiscoveryCache");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return;
         }
     }

@@ -38,7 +38,7 @@ bool BleDeviceProcessor::process(
         const uint32_t dValid = telemetry.advParsedValid - telemetry.lastAdvParsedValid;
         const uint32_t dCb = telemetry.advCallback - telemetry.lastAdvCallback;
 
-        LOGD("BLE telem (60s): adv=%u match=%u valid=%u cb=%u | totals: adv=%u match=%u tp357=%u bthome=%u valid=%u wl=%u cb=%u",
+        LOGD("BLE telem (60s): adv=%u match=%u valid=%u cb=%u | totals: adv=%u match=%u tp357=%u bthome=%u valid=%u wl=%u cb=%u parserErr=%u cacheDrop=%u mutexTo=%u",
              (unsigned)dAdv, (unsigned)dMatch, (unsigned)dValid, (unsigned)dCb,
              (unsigned)telemetry.advTotal,
              (unsigned)telemetry.advMatchedNamePrefix,
@@ -46,7 +46,10 @@ bool BleDeviceProcessor::process(
              (unsigned)telemetry.advBtHomeData,
              (unsigned)telemetry.advParsedValid,
              (unsigned)telemetry.advWhitelisted,
-             (unsigned)telemetry.advCallback);
+             (unsigned)telemetry.advCallback,
+             (unsigned)telemetry.parserErrors,
+             (unsigned)telemetry.cacheDrops,
+             (unsigned)telemetry.mutexTimeouts);
 
         telemetry.lastLogMs = now;
         telemetry.lastAdvTotal = telemetry.advTotal;
@@ -125,11 +128,13 @@ bool BleDeviceProcessor::process(
         if (!isWhitelisted) {
             bool updated = scanner.updateDiscoveryCache(macBuf, data.temperature, data.humidity, data.battery, rssi, nowMs);
             if (!updated) {
+                 telemetry.cacheDrops++;
                  LOGW("Failed to update discovery cache for %s (Full or Rejected)", macBuf);
             }
         }
         return true;
     } else {
+        telemetry.parserErrors++;
         // LOGW("Data INVALID for %s (Type: %d)", macBuf, (int)detection.type);
     }
     

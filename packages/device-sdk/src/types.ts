@@ -242,6 +242,14 @@ export interface BleStatus {
   enabled: boolean;
   running: boolean;
   scanner_active?: boolean;
+  metrics?: {
+    adv_total: number;
+    valid_packets: number;
+    parser_errors: number;
+    cache_drops: number;
+    mutex_timeouts: number;
+    scanner_running: boolean;
+  };
   settings?: BleSettings;
   devices?: BleDevice[];
 }

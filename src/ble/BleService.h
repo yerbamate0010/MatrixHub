@@ -59,6 +59,7 @@ private:
     BleScanner* _pScanner = nullptr;
     BleScanner::DiscoveryCallback _discoveryCallback = nullptr;
     std::atomic<bool> _pendingApScannerStop{false};
+    uint32_t _lastRuntimeFlushMs = 0;
     bool _apStartEventRegistered = false;
     BleConfig _config;
 };

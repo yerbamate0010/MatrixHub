@@ -9,6 +9,7 @@
 #include "../../ble/BleService.h"
 #include "../../ble/settings/BleSettingsService.h"
 #include "../../system/power/PowerManager.h"
+#include "../../system/rtc/RtcConfig.h"
 #include "../../system/utils/json/JsonResponseWriter.h"
 #include <utils/ResponseUtils.h>
 
@@ -78,6 +79,16 @@ esp_err_t BleApiService::handleGetStatus(PsychicRequest* request) {
     w.key(kRunning); w.value(_bleService->isRunning()); w.raw(",");
     w.key(kScannerActive); w.value(status.scannerActive);
     w.raw(",");
+
+    const auto& metrics = RTC::runtimeStats.ble;
+    w.key("metrics"); w.raw("{");
+    w.key("adv_total"); w.value((unsigned long)metrics.advTotal); w.raw(",");
+    w.key("valid_packets"); w.value((unsigned long)metrics.advParsedValid); w.raw(",");
+    w.key("parser_errors"); w.value((unsigned long)metrics.parserErrors); w.raw(",");
+    w.key("cache_drops"); w.value((unsigned long)metrics.cacheDrops); w.raw(",");
+    w.key("mutex_timeouts"); w.value((unsigned long)metrics.mutexTimeouts); w.raw(",");
+    w.key("scanner_running"); w.value(status.scannerActive);
+    w.raw("},");
 
     w.key(kDevices); w.raw("[");
     const uint32_t nowMs = millis();

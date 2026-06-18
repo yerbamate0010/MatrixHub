@@ -47,7 +47,9 @@ struct __attribute__((packed)) BleDiscoveryEntry {
 struct __attribute__((packed)) BleData {
     bool enabled = Defaults::Ble::Enabled;
     BLE::BleSensorConfig sensors[kMaxBleSensors];       // Config (whitelist)
-    BleSensorReading readings[kMaxBleSensors];          // Runtime readings for whitelist
+    // Legacy in-config cache kept for layout compatibility; live scanner
+    // readings are stored in RTC::runtimeStats.bleReadings.
+    BleSensorReading readings[kMaxBleSensors];
     uint8_t sensorCount = 0;
 };
 

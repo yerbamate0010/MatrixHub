@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <cstring>
 
 namespace TELEGRAM::Commands::Sections {
 
@@ -137,9 +138,10 @@ void appendHealthSection(TelegramReplyBuilder& reply, bool detailed, bool useHea
 
 void appendBleSection(TelegramReplyBuilder& reply, bool detailed, bool useHeader) {
     // Telegram commands run on the notification worker, so they should use the
-    // control-plane RTC accessor and render from a stable snapshot instead of
-    // reading the live config store lock-free.
+    // control-plane RTC accessor for config and a local runtime cache copy.
     const RTC::BleData ble = RTC::copyConfigSection(&RTC::ConfigStore::ble);
+    RTC::BleSensorReading readings[RTC::kMaxBleSensors];
+    memcpy(readings, RTC::runtimeStats.bleReadings, sizeof(readings));
     const uint8_t count = ble.sensorCount;
 
     writeSectionTitle(reply, useHeader, "🔵", "BLE Thermometers");
@@ -151,7 +153,7 @@ void appendBleSection(TelegramReplyBuilder& reply, bool detailed, bool useHeader
 
     bool hasReadings = false;
     for (uint8_t i = 0; i < count; i++) {
-        if (ble.readings[i].lastSeenTime > 0) {
+        if (readings[i].lastSeenTime > 0) {
             hasReadings = true;
             break;
         }
@@ -165,7 +167,7 @@ void appendBleSection(TelegramReplyBuilder& reply, bool detailed, bool useHeader
     const uint32_t now = millis();
     for (uint8_t i = 0; i < count && !reply.isTruncated(); i++) {
         const auto& sensor = ble.sensors[i];
-        const auto& reading = ble.readings[i];
+        const auto& reading = readings[i];
         if (reading.lastSeenTime == 0) {
             continue;
         }

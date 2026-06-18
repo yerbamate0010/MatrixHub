@@ -77,6 +77,8 @@ void test_processor_increments_total_adv() {
     
     TEST_ASSERT_EQUAL(1, telemetry.advTotal);
     TEST_ASSERT_EQUAL(1, telemetry.advMatchedNamePrefix);
+    TEST_ASSERT_EQUAL(0, telemetry.advParsedValid);
+    TEST_ASSERT_EQUAL(1, telemetry.parserErrors);
 }
 
 void test_processor_filters_unknown_devices_in_targeted_mode() {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RtcBleTypes.h"
 #include "RtcSystemTypes.h"
 
 namespace RTC {
@@ -78,7 +79,8 @@ struct RtcHeapHistory {
 /**
  * Runtime statistics counters in RTC.
  * Survives deep sleep and soft reboot.
- * Size: 4 + 8 + 12 + 16 + 12 + 8 + 52 + 4 = 116 bytes → 120 aligned
+ * Size notes are intentionally approximate; use sizeof(RtcRuntimeStats) for
+ * diagnostics because this struct is extended by feature runtime caches.
  */
 /**
  * BLE scanning telemetry counters.
@@ -103,6 +105,9 @@ struct RtcBleStats {
     uint32_t advWhitelisted = 0;
     uint32_t advCallback = 0;
     uint32_t advSkippedTargeted = 0;
+    uint32_t parserErrors = 0;
+    uint32_t cacheDrops = 0;
+    uint32_t mutexTimeouts = 0;
 
     // Helper fields for delta calculation (telemetry logging)
     uint32_t lastLogMs = 0;
@@ -164,8 +169,9 @@ struct RtcRuntimeStats {
     // Heartbeat stats (4 slots * 12 bytes = 48 bytes)
     RtcHeartbeatSlotStats heartbeatSlots[kMaxHeartbeatSlots];
     
-    // BLE stats (52 bytes)
+    // BLE stats (64 bytes) and runtime-only whitelist readings (128 bytes)
     RtcBleStats ble;
+    BleSensorReading bleReadings[kMaxBleSensors];
     
     // Maintenance sleep tracking (12 bytes)
     bool hygieneSleepActive = false;   // Latched before maintenance sleep, cleared after warm wake

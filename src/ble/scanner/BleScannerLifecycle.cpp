@@ -43,6 +43,9 @@ void BleScanner::setDiscoveryCallback(DiscoveryCallback cb) {
 
     if (xSemaphoreTake(_callbackMutex, pdMS_TO_TICKS(20)) != pdTRUE) {
         LOGW("Callback mutex timeout in setDiscoveryCallback");
+        if (_bleStats) {
+            _bleStats->mutexTimeouts++;
+        }
         return;
     }
     _discoveryCallback = cb;
@@ -72,11 +75,15 @@ void BleScanner::syncStateFromRtc() {
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in syncStateFromRtc");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return;
         }
     }
 
     _state = snapshot;
+    memcpy(_state.readings, RTC::runtimeStats.bleReadings, sizeof(_state.readings));
     _runtimeStateVersion.store(0, std::memory_order_relaxed);
     _flushedRuntimeStateVersion.store(0, std::memory_order_relaxed);
     sanitizeLocked();
@@ -98,6 +105,9 @@ void BleScanner::flushRuntimeStateIfDirty() {
 
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return;
         }
     }
@@ -109,18 +119,7 @@ void BleScanner::flushRuntimeStateIfDirty() {
         xSemaphoreGive(_mutex);
     }
 
-    const bool ok = RTC::updateConfigSection(&RTC::ConfigStore::ble, [&](RTC::BleData& ble) {
-        memcpy(ble.readings, readingsSnapshot, sizeof(readingsSnapshot));
-    });
-
-    if (!ok) {
-        static uint32_t lastFlushWarnMs = 0;
-        if (millis() - lastFlushWarnMs >= TASK_MONITOR::BLE_WARNING_THROTTLE_MS) {
-            LOGW("Failed to flush BLE runtime cache to RTC (throttled)");
-            lastFlushWarnMs = millis();
-        }
-        return;
-    }
+    memcpy(RTC::runtimeStats.bleReadings, readingsSnapshot, sizeof(readingsSnapshot));
 
     _flushedRuntimeStateVersion.store(capturedVersion, std::memory_order_release);
 }
@@ -207,6 +206,9 @@ void BleScanner::updateWhitelist(const BleSensorConfig* sensors, size_t count) {
     if (_mutex) {
         if (xSemaphoreTake(_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
             LOGW("Mutex timeout in updateWhitelist");
+            if (_bleStats) {
+                _bleStats->mutexTimeouts++;
+            }
             return;
         }
     }

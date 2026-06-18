@@ -52,6 +52,16 @@ export const BleStatusSchema = z.object({
 	enabled: z.boolean(),
 	running: z.boolean(),
 	scanner_active: z.boolean().optional(),
+	metrics: z
+		.object({
+			adv_total: z.number(),
+			valid_packets: z.number(),
+			parser_errors: z.number(),
+			cache_drops: z.number(),
+			mutex_timeouts: z.number(),
+			scanner_running: z.boolean()
+		})
+		.optional(),
 	devices: z
 		.array(
 			z.object({

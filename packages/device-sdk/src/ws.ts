@@ -216,6 +216,39 @@ function sanitizeBleDevice(value: unknown): BleDevice | null {
   return device;
 }
 
+function sanitizeBleMetrics(value: unknown): BleStatus["metrics"] | null {
+  if (!isObject(value)) {
+    return null;
+  }
+
+  const advTotal = optionalNumber(value.adv_total);
+  const validPackets = optionalNumber(value.valid_packets);
+  const parserErrors = optionalNumber(value.parser_errors);
+  const cacheDrops = optionalNumber(value.cache_drops);
+  const mutexTimeouts = optionalNumber(value.mutex_timeouts);
+  const scannerRunning = optionalBoolean(value.scanner_running);
+
+  if (
+    advTotal === undefined ||
+    validPackets === undefined ||
+    parserErrors === undefined ||
+    cacheDrops === undefined ||
+    mutexTimeouts === undefined ||
+    scannerRunning === undefined
+  ) {
+    return null;
+  }
+
+  return {
+    adv_total: advTotal,
+    valid_packets: validPackets,
+    parser_errors: parserErrors,
+    cache_drops: cacheDrops,
+    mutex_timeouts: mutexTimeouts,
+    scanner_running: scannerRunning
+  };
+}
+
 export function parseBleSettings(value: unknown): BleSettings | null {
   if (!isObject(value)) {
     return null;
@@ -262,6 +295,11 @@ export function parseBleStatusSnapshot(value: unknown): BleStatus | null {
   const settings = parseBleSettings(value.settings);
   if (settings) {
     status.settings = settings;
+  }
+
+  const metrics = sanitizeBleMetrics(value.metrics);
+  if (metrics) {
+    status.metrics = metrics;
   }
 
   if (Array.isArray(value.devices)) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WifiNetworkSchema } from './schemas';
+import { BleStatusSchema, WifiNetworkSchema } from './schemas';
 
 describe('WifiNetworkSchema', () => {
 	it('accepts SSIDs up to 32 UTF-8 bytes', () => {
@@ -28,5 +28,25 @@ describe('WifiNetworkSchema', () => {
 		}
 
 		expect(result.error.flatten().fieldErrors.ssid).toContain('SSID too long (max 32 bytes)');
+	});
+});
+
+describe('BleStatusSchema', () => {
+	it('accepts runtime metrics from the BLE status endpoint', () => {
+		const result = BleStatusSchema.safeParse({
+			enabled: true,
+			running: true,
+			scanner_active: true,
+			metrics: {
+				adv_total: 100,
+				valid_packets: 12,
+				parser_errors: 4,
+				cache_drops: 1,
+				mutex_timeouts: 0,
+				scanner_running: true
+			}
+		});
+
+		expect(result.success).toBe(true);
 	});
 });

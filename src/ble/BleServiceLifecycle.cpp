@@ -143,6 +143,12 @@ void BleService::loop() {
 
     if (_pScanner) {
         _status.setScannerActive(_pScanner->isScanning());
+
+        const uint32_t nowMs = millis();
+        if (nowMs - _lastRuntimeFlushMs >= kRuntimeReadingsFlushIntervalMs) {
+            _pScanner->flushRuntimeStateIfDirty();
+            _lastRuntimeFlushMs = nowMs;
+        }
     }
 }
 
