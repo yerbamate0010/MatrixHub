@@ -19,6 +19,12 @@ const EXPECTED_VERSION = 3;
 const HEADER_SIZE = 8;
 const RECORD_SIZE = 10;
 const MIN_VALID_EPOCH = 1_000_000_000; // 2001-09-09 (matches firmware MIN_VALID_EPOCH)
+const CO2_MIN_PPM = 400;
+const CO2_MAX_PPM = 10_000;
+const TEMP_MIN_C = -20;
+const TEMP_MAX_C = 70;
+const HUMID_MIN_PCT = 0;
+const HUMID_MAX_PCT = 100;
 
 interface BinaryLogHeader {
 	magic: number;
@@ -84,14 +90,17 @@ function parseRecord(view: DataView, offset: number) {
 
 	// Convert fixed-point values to floats
 	// INT16_MIN is used as NaN marker
+	const normalizedCo2 = co2 >= CO2_MIN_PPM && co2 <= CO2_MAX_PPM ? co2 : null;
 	const temp = temp_10x === -32768 ? null : temp_10x / 10.0;
+	const normalizedTemp = temp !== null && temp >= TEMP_MIN_C && temp <= TEMP_MAX_C ? temp : null;
 	const humid = humid_10x / 10.0;
+	const normalizedHumid = humid >= HUMID_MIN_PCT && humid <= HUMID_MAX_PCT ? humid : null;
 
 	return {
 		timestamp,
-		co2,
-		temp,
-		humid
+		co2: normalizedCo2,
+		temp: normalizedTemp,
+		humid: normalizedHumid
 	};
 }
 
