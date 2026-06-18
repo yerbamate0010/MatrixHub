@@ -100,7 +100,9 @@ bool TerminalInput::sendCommand(const char* targetPort, const char* cmdStart, si
             return false;
         }
     } else {
-        LOGI("Executing on port %s: %.*s", targetPort, (int)cmdLen, cmdStart);
+        LOGI("Executing command on port %s (len=%u, content redacted)",
+             targetPort,
+             static_cast<unsigned>(cmdLen));
 
         const bool wrapWithPwd = isStandaloneCdCommand(cmdStart, cmdLen);
         const char* format = wrapWithPwd

@@ -13,6 +13,32 @@
 namespace UTILS {
 namespace HARDWARE {
 
+namespace {
+
+constexpr uint32_t kRecoveryLogIntervalMs = 60000;
+uint32_t g_lastRecoveryLogMs = 0;
+uint32_t g_suppressedRecoveryLogs = 0;
+
+bool shouldLogRecovery(uint32_t nowMs) {
+    if (g_lastRecoveryLogMs == 0 || nowMs - g_lastRecoveryLogMs >= kRecoveryLogIntervalMs) {
+        g_lastRecoveryLogMs = nowMs;
+        return true;
+    }
+
+    if (g_suppressedRecoveryLogs < UINT32_MAX) {
+        ++g_suppressedRecoveryLogs;
+    }
+    return false;
+}
+
+uint32_t consumeSuppressedRecoveryLogs() {
+    const uint32_t suppressed = g_suppressedRecoveryLogs;
+    g_suppressedRecoveryLogs = 0;
+    return suppressed;
+}
+
+}  // namespace
+
 // Global I2C bus lock for coordinated access
 static SemaphoreHandle_t _i2cBusLock = nullptr;
 
@@ -38,7 +64,18 @@ void I2cUtils::recoverBus(int sda_pin, int scl_pin) {
     //   1. Before any I2C transaction starts (safe), or
     //   2. After a timeout when we know no valid transaction is in progress
     
-    LOGW("Performing I2C Bus Recovery on SDA=%d, SCL=%d", sda_pin, scl_pin);
+    const bool logRecovery = shouldLogRecovery(millis());
+    if (logRecovery) {
+        const uint32_t suppressed = consumeSuppressedRecoveryLogs();
+        if (suppressed > 0) {
+            LOGW("Performing I2C bus recovery on SDA=%d, SCL=%d (suppressed %lu repeats)",
+                 sda_pin,
+                 scl_pin,
+                 static_cast<unsigned long>(suppressed));
+        } else {
+            LOGW("Performing I2C bus recovery on SDA=%d, SCL=%d", sda_pin, scl_pin);
+        }
+    }
     
     // Prepare pins
     pinMode(sda_pin, INPUT_PULLUP);
@@ -58,9 +95,10 @@ void I2cUtils::recoverBus(int sda_pin, int scl_pin) {
     // Release bus by setting SCL to Input
     pinMode(scl_pin, INPUT_PULLUP);
     
-    LOGI("I2C Bus Recovery complete");
+    if (logRecovery) {
+        LOGI("I2C bus recovery complete");
+    }
 }
 
 } // namespace HARDWARE
 } // namespace UTILS
-

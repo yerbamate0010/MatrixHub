@@ -7,9 +7,9 @@
 #include "../../../system/health/heap/HeapMonitor.h"
 #include "../../../system/errors/ErrorCodes.h"
 #include "../../../system/utils/json/JsonResponseWriter.h"
+#include "../../../system/logging/Logging.h"
 #include <utils/ResponseUtils.h>
 #include <LittleFS.h>
-#include <esp_log.h>
 #include <esp_http_server.h>
 #include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
@@ -17,7 +17,8 @@
 #include <array>
 #include <utility>
 
-static const char* TAG = "LogFileHandler";
+#undef LOG_TAG
+#define LOG_TAG "LogFile"
 
 namespace API {
 namespace Handlers {
@@ -394,33 +395,33 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
     uint32_t largestBefore = ESP.getMaxAllocHeap();
 
     if (!request->hasParam("file")) {
-        ESP_LOGW(TAG, "Download request missing file parameter");
+        LOGW("Download request missing file parameter");
         return Response::error(request, 400, "missing_param");
     }
 
     const char* filename = request->getParam("file")->value().c_str();
-    ESP_LOGI(TAG, "Download request for: %s", filename);
+    LOGI("Download request for: %s", filename);
 
     if (strncmp(filename, "/data/", 6) != 0 || strstr(filename, "..") != nullptr) {
-        ESP_LOGW(TAG, "Invalid file path (not under /data or traversal): %s", filename);
+        LOGW("Invalid file path (not under /data or traversal): %s", filename);
         return Response::error(request, 400, "missing_param");
     }
 
     SYSTEM::ScopeLock lock(_fsMutex, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
 
     if (!lock.isLocked()) {
-        ESP_LOGW(TAG, "Filesystem busy for: %s", filename);
+        LOGW("Filesystem busy for: %s", filename);
         return Response::error(request, 503, "fs/busy");
     }
 
     if (!LittleFS.exists(filename)) {
-        ESP_LOGW(TAG, "File not found: %s", filename);
+        LOGW("File not found: %s", filename);
         return Response::error(request, 404, "not_found");
     }
 
     File file = LittleFS.open(filename, "r");
     if (!file) {
-        ESP_LOGE(TAG, "Failed to open file: %s", filename);
+        LOGE("Failed to open file: %s", filename);
         return Response::error(request, 500, "fs/open_failed");
     }
 
@@ -442,7 +443,7 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
                     // mutex, but we still prefer releasing the handle now over
                     // leaking it until scope exit if another FS user holds the
                     // lock at the tail end of a chunked download.
-                    ESP_LOGW(TAG, "FS busy during download close, using unlocked fallback");
+                    LOGW("FS busy during download close, using unlocked fallback");
                     file.close();
                 }
             }
@@ -487,17 +488,17 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
     uint8_t* buffer = (uint8_t*)heap_caps_malloc(bufSize, MALLOC_CAP_SPIRAM);
 
     if (!buffer) {
-       ESP_LOGE(TAG, "Failed to allocate PSRAM buffer (%u bytes)", (unsigned)bufSize);
+       LOGE("Failed to allocate PSRAM buffer (%u bytes)", (unsigned)bufSize);
        closeAndRelease(true);
        return ESP_ERR_NO_MEM;
     }
 
     if (fileSize <= kInlineMax) {
-        ESP_LOGI(TAG, "Sending file inline: %s (size: %u bytes)", filename, (unsigned)fileSize);
+        LOGI("Sending file inline: %s (size: %u bytes)", filename, (unsigned)fileSize);
 
         const size_t readLen = file.read(buffer, fileSize);
         if (readLen != fileSize) {
-            ESP_LOGE(TAG, "Short read for: %s (expected %u, got %u)", filename, (unsigned)fileSize, (unsigned)readLen);
+            LOGE("Short read for: %s (expected %u, got %u)", filename, (unsigned)fileSize, (unsigned)readLen);
             err = ESP_FAIL;
         }
 
@@ -508,7 +509,7 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
             err = httpd_resp_send(rawReq, reinterpret_cast<const char*>(buffer), (ssize_t)readLen);
         }
     } else {
-        ESP_LOGI(TAG, "Streaming file (chunked): %s (size: %u bytes)", filename, (unsigned)fileSize);
+        LOGI("Streaming file (chunked): %s (size: %u bytes)", filename, (unsigned)fileSize);
 
         // Release the broad lock — we'll use point-locking per chunk
         lock.unlock();
@@ -518,7 +519,7 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
             // Point-lock: acquire only for file.read()
             SYSTEM::ScopeLock readLock(_fsMutex, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
             if (!readLock.isLocked()) {
-                ESP_LOGW(TAG, "FS busy during chunked read, aborting download");
+                LOGW("FS busy during chunked read, aborting download");
                 err = ESP_FAIL;
                 break;
             }
@@ -555,7 +556,7 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
     int32_t deltaLargest = (int32_t)largestAfter - (int32_t)largestBefore;
 
     if (abs(deltaFree) > 500 || deltaLargest < -1000) {
-        ESP_LOGW(TAG, "[WebUI] /api/logs/download: \u0394Free=%+d \u0394Largest=%+d (now: %u/%u)",
+        LOGW("[WebUI] /api/logs/download: deltaFree=%+d deltaLargest=%+d (now: %u/%u)",
                 deltaFree, deltaLargest, heapAfter, largestAfter);
     }
 
@@ -566,9 +567,9 @@ esp_err_t LogFileHandler::handleDownload(PsychicRequest* request) {
     }
 
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "Download complete: %s (%u bytes)", filename, (unsigned)fileSize);
+        LOGI("Download complete: %s (%u bytes)", filename, (unsigned)fileSize);
     } else {
-        ESP_LOGE(TAG, "Download failed: %s (err=%d)", filename, err);
+        LOGE("Download failed: %s (err=%d)", filename, err);
     }
 
     return err;
@@ -583,7 +584,7 @@ esp_err_t LogFileHandler::handleDelete(PsychicRequest* request) {
 
     // Path validation: must be under /data/ and must not contain path traversal
     if (strncmp(filename, "/data/", 6) != 0 || strstr(filename, "..") != nullptr) {
-        ESP_LOGW(TAG, "Invalid delete path (not under /data or traversal): %s", filename);
+        LOGW("Invalid delete path (not under /data or traversal): %s", filename);
         return Response::error(request, 400, "missing_param");
     }
 

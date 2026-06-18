@@ -57,6 +57,24 @@ bool waitUntilNextReadSlot(uint32_t deadlineMs, std::atomic<bool>* shouldRunFlag
     return false;
 }
 
+bool shouldLogThrottled(uint32_t nowMs, uint32_t& lastLogMs, uint32_t intervalMs, uint32_t& suppressed) {
+    if (lastLogMs == 0 || nowMs - lastLogMs >= intervalMs) {
+        lastLogMs = nowMs;
+        return true;
+    }
+
+    if (suppressed < UINT32_MAX) {
+        ++suppressed;
+    }
+    return false;
+}
+
+uint32_t consumeSuppressed(uint32_t& suppressed) {
+    const uint32_t value = suppressed;
+    suppressed = 0;
+    return value;
+}
+
 uint32_t advanceReadDeadline(uint32_t previousDeadlineMs, uint32_t nowMs) {
     uint32_t nextDeadlineMs = previousDeadlineMs + SENSOR::READ_INTERVAL_MS;
 
@@ -185,10 +203,18 @@ void SensorTaskLoop::run() {
     static uint8_t consecutiveFailures = 0;
     static bool firstFlashAttempted = false;
     static uint32_t lastCallbackDropMs = 0;
+    static uint32_t lastReadErrorLogMs = 0;
+    static uint32_t suppressedReadErrorLogs = 0;
+    static uint32_t lastSelfHealLogMs = 0;
+    static uint32_t suppressedSelfHealLogs = 0;
     nextReadDeadlineMs = millis();
     consecutiveFailures = 0;
     firstFlashAttempted = false;
     lastCallbackDropMs = 0;
+    lastReadErrorLogMs = 0;
+    suppressedReadErrorLogs = 0;
+    lastSelfHealLogMs = 0;
+    suppressedSelfHealLogs = 0;
 
     // Main loop: continuous polling
     while (shouldRun()) {
@@ -223,6 +249,14 @@ void SensorTaskLoop::run() {
         LOG_PROFILE_END_SMART(i2cStart, "I2C readAll", TASK_MONITOR::INTERVAL_I2C_READ_MS, TASK_MONITOR::THRESHOLD_I2C_READ_US);
 
         if (readStatus.ok) {
+            const uint32_t suppressedErrors = consumeSuppressed(suppressedReadErrorLogs);
+            if (suppressedErrors > 0) {
+                LOGI("Sensor reads recovered after %lu suppressed error logs",
+                     static_cast<unsigned long>(suppressedErrors));
+            }
+            lastReadErrorLogMs = 0;
+            lastSelfHealLogMs = 0;
+            suppressedSelfHealLogs = 0;
             consecutiveFailures = 0;
             // New data available - update state
             SensorSnapshot prev = SensorState::getSnapshot();
@@ -316,7 +350,20 @@ void SensorTaskLoop::run() {
         // Only log actual read errors
         else if (readStatus.error_code && strcmp(readStatus.error_code, "NO_DATA") != 0) {
             SensorState::updateAfterReadFailure(readStatus);
-            LOGW("Read error: %s", readStatus.error_code);
+            if (shouldLogThrottled(
+                    now,
+                    lastReadErrorLogMs,
+                    SENSOR::TASK_LOOP::READ_ERROR_LOG_INTERVAL_MS,
+                    suppressedReadErrorLogs)) {
+                const uint32_t suppressed = consumeSuppressed(suppressedReadErrorLogs);
+                if (suppressed > 0) {
+                    LOGW("Read error persists: %s (suppressed %lu repeats)",
+                         readStatus.error_code,
+                         static_cast<unsigned long>(suppressed));
+                } else {
+                    LOGW("Read error: %s", readStatus.error_code);
+                }
+            }
 
             // Surface hard read failures to live telemetry consumers immediately
             // instead of waiting for a later full snapshot/reconnect. We reuse
@@ -346,15 +393,34 @@ void SensorTaskLoop::run() {
             
             consecutiveFailures++;
             if (consecutiveFailures >= SENSOR::TASK_LOOP::SELF_HEAL_FAILURE_THRESHOLD) {
-                LOGE("Self-healing: re-initializing sensor after %d failures", consecutiveFailures);
+                const bool logSelfHeal = shouldLogThrottled(
+                    now,
+                    lastSelfHealLogMs,
+                    SENSOR::TASK_LOOP::SELF_HEAL_LOG_INTERVAL_MS,
+                    suppressedSelfHealLogs);
+
+                if (logSelfHeal) {
+                    const uint32_t suppressed = consumeSuppressed(suppressedSelfHealLogs);
+                    if (suppressed > 0) {
+                        LOGW("Self-healing reinit after %d failures (suppressed %lu attempts)",
+                             consecutiveFailures,
+                             static_cast<unsigned long>(suppressed));
+                    } else {
+                        LOGW("Self-healing reinit after %d failures", consecutiveFailures);
+                    }
+                }
                 
                 // Attempt to re-initialize the bus and sensor
                 // This call blocks for 1000ms, but we background task so it is safe
                 if (_pSensorService && _pSensorService->reinitialize()) {
-                    LOGI("Self-healing successful");
+                    LOGI("Self-healing recovered sensor");
                     consecutiveFailures = 0; 
                 } else {
-                    LOGE("Self-healing failed");
+                    if (!_pSensorService) {
+                        LOGE("Self-healing failed: sensor service unavailable");
+                    } else if (logSelfHeal) {
+                        LOGW("Self-healing did not recover sensor");
+                    }
                     // Backoff: don't spam re-init every loop, wait longer
                     consecutiveFailures = 0; // Reset to try again after another 10 failures
                     

@@ -28,6 +28,27 @@ namespace {
             default: return "UNKNOWN";
         }
     }
+
+    bool shouldLogThrottled(uint32_t nowMs, uint32_t& lastLogMs, uint32_t intervalMs, uint32_t& suppressed) {
+        if (lastLogMs == 0 || nowMs - lastLogMs >= intervalMs) {
+            lastLogMs = nowMs;
+            return true;
+        }
+
+        if (suppressed < UINT32_MAX) {
+            ++suppressed;
+        }
+        return false;
+    }
+
+    uint32_t consumeSuppressed(uint32_t& suppressed) {
+        const uint32_t value = suppressed;
+        suppressed = 0;
+        return value;
+    }
+
+    uint32_t g_lastSelfHealInitLogMs = 0;
+    uint32_t g_suppressedSelfHealInitLogs = 0;
 }  // namespace
 
 Scd4xSensorService::Scd4xSensorService(COMPENSATION::CompensationService* compensationService) 
@@ -43,7 +64,21 @@ bool Scd4xSensorService::begin() {
         LOGW("Compensation service not injected!");
     }
 
-    LOGW("Initializing I2C_SCD4X (Wire1) on SCL=%d, SDA=%d", I2C_SCD4X::SCL_PIN, I2C_SCD4X::SDA_PIN);
+    const bool logInit = !_selfHealingReinit ||
+        shouldLogThrottled(
+            millis(),
+            g_lastSelfHealInitLogMs,
+            SENSOR::TASK_LOOP::SELF_HEAL_LOG_INTERVAL_MS,
+            g_suppressedSelfHealInitLogs);
+
+    if (logInit) {
+        const uint32_t suppressed = consumeSuppressed(g_suppressedSelfHealInitLogs);
+        if (_selfHealingReinit && suppressed > 0) {
+            LOGW("SCD4x self-heal init retry (suppressed %lu attempts)",
+                 static_cast<unsigned long>(suppressed));
+        }
+        LOGW("Initializing I2C_SCD4X (Wire1) on SCL=%d, SDA=%d", I2C_SCD4X::SCL_PIN, I2C_SCD4X::SDA_PIN);
+    }
 
     // [Fix] I2C Bus Recovery: Toggle SCL to release SDA if slave is stuck
     UTILS::HARDWARE::I2cUtils::recoverBus(I2C_SCD4X::SDA_PIN, I2C_SCD4X::SCL_PIN);
@@ -52,15 +87,19 @@ bool Scd4xSensorService::begin() {
     Wire1.setTimeOut(100); // [Fix] Prevent infinite wait on NACK/stretch
     
     // SCD4x needs at least 1000ms after power-on before it can respond to I2C
-    LOGI("Waiting for SCD4x power-up (%dms)...", SENSOR::SCD4X::POWER_UP_DELAY_MS);
+    if (logInit) {
+        LOGI("Waiting for SCD4x power-up (%dms)...", SENSOR::SCD4X::POWER_UP_DELAY_MS);
+    }
     vTaskDelay(pdMS_TO_TICKS(SENSOR::SCD4X::POWER_UP_DELAY_MS));
     
     _scd4x.begin(Wire1, I2C_SCD4X::I2C_ADDRESS);
     
     int16_t error = _scd4x.stopPeriodicMeasurement();
     if (error != 0) {
-        LOGW("stopPeriodicMeasurement returned %d (Sensor missing?)", error);
-        LOGW("SCD4x init failed. Marking as missing.");
+        if (logInit) {
+            LOGW("stopPeriodicMeasurement returned %d (sensor missing?)", error);
+            LOGW("SCD4x init failed. Marking as missing.");
+        }
         _sensorPresent = false;
         _initialized = true;
         return true;
@@ -109,10 +148,12 @@ bool Scd4xSensorService::begin() {
 }
 
 bool Scd4xSensorService::reinitialize() {
-    LOGW("Reinitializing sensor (self-healing)");
     _initialized = false;
     _sensorPresent = false;
-    return begin();
+    _selfHealingReinit = true;
+    const bool initialized = begin();
+    _selfHealingReinit = false;
+    return initialized && _sensorPresent;
 }
 
 void Scd4xSensorService::readAll(SensorSnapshot& outSnap, PhaseStatus& outStatus) {

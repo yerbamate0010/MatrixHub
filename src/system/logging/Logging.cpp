@@ -1,6 +1,7 @@
 #include "Logging.h"
 
 #include <stdarg.h>
+#include <cstring>
 #include "../../config/System.h"
 
 namespace LOG {

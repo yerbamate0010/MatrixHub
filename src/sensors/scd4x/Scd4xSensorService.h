@@ -29,6 +29,7 @@ private:
     SensirionI2cScd4x _scd4x;
     bool _initialized = false;
     bool _sensorPresent = false;
+    bool _selfHealingReinit = false;
     COMPENSATION::CompensationService* _compensationService;
 };
 

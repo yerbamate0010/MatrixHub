@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <esp_log.h>
+#include <cstring>
 #include <string_view>
 #include <utility>
 #include "../../config/System.h"
@@ -33,6 +34,7 @@ public:
 
     static const char *levelToString(esp_log_level_t level);
     static esp_log_level_t stringToLevel(std::string_view name, esp_log_level_t fallback);
+    static void redactUrlForLog(const char* url, char* out, size_t outSize);
 
     // Helpers for consistent formatting
     static void logStackHwm(const char* taskName, uint32_t stackSize);
@@ -45,6 +47,85 @@ public:
 private:
     static Settings _settings;
 };
+
+inline void Logging::redactUrlForLog(const char* url, char* out, size_t outSize) {
+    if (!out || outSize == 0) {
+        return;
+    }
+
+    out[0] = '\0';
+
+    auto copyLiteral = [&](const char* value) {
+        size_t pos = 0;
+        if (!value) {
+            return;
+        }
+        while (value[pos] != '\0' && pos + 1 < outSize) {
+            out[pos] = value[pos];
+            pos++;
+        }
+        out[pos] = '\0';
+    };
+
+    if (!url || url[0] == '\0') {
+        copyLiteral("(empty)");
+        return;
+    }
+
+    size_t pos = 0;
+    auto appendSpan = [&](const char* start, const char* end) {
+        if (!start || !end || end <= start) {
+            return;
+        }
+        while (start < end && pos + 1 < outSize) {
+            out[pos++] = *start++;
+        }
+        out[pos] = '\0';
+    };
+
+    auto appendLiteral = [&](const char* value) {
+        if (!value) {
+            return;
+        }
+        appendSpan(value, value + strlen(value));
+    };
+
+    const char* const urlEnd = url + strlen(url);
+    const char* const schemeSep = strstr(url, "://");
+    const char* authorityStart = url;
+
+    if (schemeSep) {
+        appendSpan(url, schemeSep + 3);
+        authorityStart = schemeSep + 3;
+    }
+
+    const char* authorityEnd = authorityStart;
+    while (authorityEnd < urlEnd && *authorityEnd != '/' && *authorityEnd != '?' && *authorityEnd != '#') {
+        authorityEnd++;
+    }
+
+    const char* userInfoEnd = nullptr;
+    for (const char* p = authorityStart; p < authorityEnd; ++p) {
+        if (*p == '@') {
+            userInfoEnd = p;
+        }
+    }
+
+    if (userInfoEnd) {
+        appendLiteral("[redacted]@");
+        appendSpan(userInfoEnd + 1, authorityEnd);
+    } else {
+        appendSpan(authorityStart, authorityEnd);
+    }
+
+    if (authorityEnd < urlEnd) {
+        appendLiteral("/...");
+    }
+
+    if (pos == 0) {
+        copyLiteral("[redacted-url]");
+    }
+}
 
 class Stopwatch {
 public:

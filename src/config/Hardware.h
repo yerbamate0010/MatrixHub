@@ -142,6 +142,8 @@ namespace SENSOR {
         constexpr uint8_t SELF_HEAL_FAILURE_THRESHOLD = 10;
         constexpr uint32_t SELF_HEAL_BACKOFF_MS = 5000;
         constexpr uint32_t SELF_HEAL_BACKOFF_STEP_MS = 1000;
+        constexpr uint32_t READ_ERROR_LOG_INTERVAL_MS = 60000;
+        constexpr uint32_t SELF_HEAL_LOG_INTERVAL_MS = 300000;
         constexpr uint32_t UPDATE_CALLBACK_LOCK_TIMEOUT_MS = 5;
         constexpr uint32_t POLL_STEP_MS = 1000;
     }

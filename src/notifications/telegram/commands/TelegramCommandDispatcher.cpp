@@ -81,9 +81,9 @@ bool TelegramCommandDispatcher::dispatch(const ParsedMessage& msg, CommandContex
         return true;
     }
 
-    LOGI("Dispatching command: /%.*s (args: %.*s)",
+    LOGI("Dispatching command: /%.*s (args_len=%u, args redacted)",
          (int)msg.commandName.length(), msg.commandName.data(),
-         (int)msg.commandArgs.length(), msg.commandArgs.data() ? msg.commandArgs.data() : "(none)");
+         (unsigned)msg.commandArgs.length());
 
     return findAndExecute(msg.commandName, ctx);
 }

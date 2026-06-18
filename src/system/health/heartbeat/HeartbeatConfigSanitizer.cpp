@@ -122,7 +122,9 @@ HeartbeatSanitizeResult sanitizeConfig(RTC::HeartbeatData& heartbeat) {
                 } else {
                     strlcpy(slot.url, normalized, sizeof(slot.url));
                     slot.allowInsecure = false;
-                    LOGI("Slot %u URL normalized to '%s'", i, slot.url);
+                    char safeUrl[96];
+                    LOG::Logging::redactUrlForLog(slot.url, safeUrl, sizeof(safeUrl));
+                    LOGI("Slot %u URL normalized to '%s'", i, safeUrl);
                 }
                 result.changed = true;
             } else {

@@ -189,7 +189,9 @@ bool UnifiedHttpClient::getWithRetry(const char* url, char* responseBuffer, size
             // example Heartbeat stop) or we already consumed the final slot,
             // leave the loop immediately instead of accidentally issuing one
             // more full HTTP attempt on the next iteration.
-            LOGW("HTTP GET failed after %d attempts: %s", maxRetries, url);
+            char safeUrl[96];
+            LOG::Logging::redactUrlForLog(url, safeUrl, sizeof(safeUrl));
+            LOGW("HTTP GET failed after %d attempts: %s", maxRetries, safeUrl);
             break;
         }
     }
@@ -387,7 +389,9 @@ bool UnifiedHttpClient::performRequestOnce(const char* url, const char* method, 
         } else if (_allowInsecure) {
             _secureClient.setInsecure();
         } else {
-            LOGW("HTTPS requested without a TLS verification mode: %s", url);
+            char safeUrl[96];
+            LOG::Logging::redactUrlForLog(url, safeUrl, sizeof(safeUrl));
+            LOGW("HTTPS requested without a TLS verification mode: %s", safeUrl);
         }
         _secureClient.setTimeout(timeout); // WiFiClientSecure uses ms
 
@@ -579,10 +583,12 @@ bool UnifiedHttpClient::performRequestOnce(const char* url, const char* method, 
         clearConnectionState();
         
     } else {
+        char safeUrl[96];
+        LOG::Logging::redactUrlForLog(url, safeUrl, sizeof(safeUrl));
         if (suppressTransportErrorLogs) {
-            LOGD("HTTP begin failed: %s", url);
+            LOGD("HTTP begin failed: %s", safeUrl);
         } else {
-            LOGE("HTTP begin failed: %s", url);
+            LOGE("HTTP begin failed: %s", safeUrl);
         }
         // begin() never established a request, so do not retain host/protocol
         // metadata that could make the next failure look like stale keep-alive.
