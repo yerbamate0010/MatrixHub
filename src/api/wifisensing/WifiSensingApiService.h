@@ -38,6 +38,7 @@ public:
 private:
     bool ensureCsiTransportReady();
     void teardownCsiTransport();
+    esp_err_t handleGetStatus(PsychicRequest* request);
 
     WIFISENSING::WifiSensingSettings* _settings = nullptr;
     WIFISENSING::CSI::CsiService* _csiService = nullptr;

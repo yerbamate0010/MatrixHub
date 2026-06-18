@@ -34,6 +34,7 @@ RssiSample createSample(int8_t rssi, uint32_t ts) {
 }
 
 void setUp(void) {
+    RssiVarianceAnalyzer::resetState();
 }
 
 void tearDown(void) {
@@ -67,6 +68,7 @@ void test_constant_signal_zero_variance() {
     TEST_ASSERT_EQUAL(-50, stats.max);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, -50.0f, stats.avg);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, stats.variance); // No change = 0 variance
+    TEST_ASSERT_EQUAL_UINT32(1300, stats.windowMs);
 }
 
 void test_alternating_signal_variance() {
@@ -88,6 +90,7 @@ void test_alternating_signal_variance() {
     TEST_ASSERT_EQUAL(14, stats.sampleCount);
     TEST_ASSERT_FLOAT_WITHIN(0.1f, -45.0f, stats.avg);
     TEST_ASSERT_FLOAT_WITHIN(0.1f, 25.0f, stats.variance);
+    TEST_ASSERT_EQUAL_UINT32(13000, stats.windowMs);
 }
 
 void test_linear_change_buffer_wrapped() {

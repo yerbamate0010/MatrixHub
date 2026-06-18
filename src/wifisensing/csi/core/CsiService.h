@@ -30,6 +30,35 @@ enum class CsiConsumer : uint8_t {
     Boot = 2,
 };
 
+struct CsiMetricsSnapshot {
+    bool enabled = false;
+    bool queueAllocated = false;
+    uint32_t activeConsumerMask = 0;
+    uint8_t activeConsumerCount = 0;
+    bool frontendConsumerActive = false;
+    bool alarmConsumerActive = false;
+    bool bootConsumerActive = false;
+    size_t queueDepth = 0;
+    size_t queueCapacity = 0;
+    uint32_t queueDropsTotal = 0;
+    uint32_t queueDropsLastSec = 0;
+    uint32_t rxFramesTotal = 0;
+    uint32_t rxAcceptedTotal = 0;
+    uint32_t rxThrottledTotal = 0;
+    uint32_t queuedPacketsTotal = 0;
+    uint32_t dequeuedPacketsTotal = 0;
+    uint32_t packetsForwardedTotal = 0;
+    uint32_t batchesForwardedTotal = 0;
+    uint32_t batchesDroppedTotal = 0;
+    uint32_t packetsPerSec = 0;
+    uint32_t batchesPerSec = 0;
+    uint32_t lastPacketMs = 0;
+    uint32_t lastBatchMs = 0;
+    int calibrationCount = 0;
+    int calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
+    const char* calibrationState = "unknown";
+};
+
 class CsiService {
 public:
     CsiService();
@@ -40,6 +69,8 @@ public:
     bool setConsumerActive(CsiConsumer consumer, bool active);
     bool isConsumerActive(CsiConsumer consumer) const;
     bool hasActiveConsumers() const;
+    CsiMetricsSnapshot getMetricsSnapshot() const;
+    void recordBatchDelivery(size_t packetCount, bool accepted);
 
     // Register a callback to receive processed CSI packets (for API streaming)
     void setCsiCallback(CsiCallback cb);
@@ -84,6 +115,7 @@ public:
     CsiCallback getCsiCallbackSnapshot();
     bool reapStoppedProcessingTask(TickType_t waitTicks);
     void destroyProcessingTaskResources();
+    void resetRuntimeMetrics();
 
     CsiDataQueue* _queue = nullptr;
     TaskHandle_t _processingTaskHandle = nullptr;
@@ -100,6 +132,22 @@ public:
     // Shutdown waits for this counter after detaching the callback so the queue can
     // be destroyed without racing a callback that already started copying data.
     std::atomic<uint32_t> _rxCallbacksInFlight{0};
+
+    std::atomic<uint32_t> _rxFramesTotal{0};
+    std::atomic<uint32_t> _rxAcceptedTotal{0};
+    std::atomic<uint32_t> _rxThrottledTotal{0};
+    std::atomic<uint32_t> _queuedPacketsTotal{0};
+    std::atomic<uint32_t> _dequeuedPacketsTotal{0};
+    std::atomic<uint32_t> _packetsForwardedTotal{0};
+    std::atomic<uint32_t> _batchesForwardedTotal{0};
+    std::atomic<uint32_t> _batchesDroppedTotal{0};
+    std::atomic<uint32_t> _packetsPerSec{0};
+    std::atomic<uint32_t> _batchesPerSec{0};
+    std::atomic<uint32_t> _queueDropsLastSec{0};
+    std::atomic<uint32_t> _lastPacketMs{0};
+    std::atomic<uint32_t> _lastBatchMs{0};
+    uint32_t _lastPacketsRateTotal = 0;
+    uint32_t _lastBatchesRateTotal = 0;
     
     CsiPacket* _batchBuffer = nullptr;
     static constexpr size_t BATCH_CAPACITY = MAX_CSI_BATCH_PACKETS;

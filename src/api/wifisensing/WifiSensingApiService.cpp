@@ -105,6 +105,10 @@ void WifiSensingApiService::begin() {
     _csiEndpoint.begin();
 
     // --- REST Registration ---
+    _server->on("/api/wifisensing/status", HTTP_GET,
+                wrapAuth([this](PsychicRequest* request) {
+                    return handleGetStatus(request);
+                }));
 
     if (_configEndpoint) {
         _configEndpoint->begin();
@@ -128,11 +132,12 @@ void WifiSensingApiService::begin() {
 
                 // Keep this byte layout aligned with docs/engineering/integrations/csi.md
                 // and interface/src/lib/features/wifisensing/csi/parseCsiFrame.ts.
-                _csiEndpoint.broadcaster().broadcastSerialized(
+                const bool delivered = _csiEndpoint.broadcaster().broadcastSerialized(
                     reserveLen,
                     [batchStart, batchCount](uint8_t* buffer, size_t capacity) -> size_t {
                         return API::CSI_WIRE::writeBatch(buffer, capacity, batchStart, batchCount);
                     });
+                _csiService->recordBatchDelivery(batchCount, delivered);
 
                 offset += batchCount;
             }
@@ -169,6 +174,96 @@ void WifiSensingApiService::teardownCsiTransport() {
 
 void WifiSensingApiService::cleanupClient(int fd) {
     _csiEndpoint.cleanupClient(fd);
+}
+
+esp_err_t WifiSensingApiService::handleGetStatus(PsychicRequest* request) {
+    RTC::WifiSensingData config{};
+    RTC::withConfig([&](const RTC::ConfigStore& cfg) {
+        config = cfg.wifiSensing;
+    });
+
+    WIFISENSING::RssiStats stats{};
+    bool running = false;
+    bool active = false;
+    bool motionDetected = false;
+    const char* connectedSsid = "";
+    uint8_t connectedChannel = 0;
+
+    if (_wifiSensingService) {
+        running = _wifiSensingService->isRunning();
+        active = _wifiSensingService->isActive();
+        motionDetected = _wifiSensingService->isMotionDetected();
+        connectedSsid = _wifiSensingService->getConnectedSSID();
+        connectedChannel = _wifiSensingService->getConnectedChannel();
+        stats = _wifiSensingService->getStats();
+    }
+
+    WIFISENSING::CSI::CsiMetricsSnapshot csi{};
+    if (_csiService) {
+        csi = _csiService->getMetricsSnapshot();
+    }
+
+    Utils::JsonResponseWriter writer(request->request());
+    if (!writer.beginResponse()) {
+        return ESP_FAIL;
+    }
+
+    writer.raw("{");
+    writer.key("schema"); writer.string("wifisensing.status.v1"); writer.raw(",");
+    writer.key("enabled"); writer.value(config.enabled); writer.raw(",");
+    writer.key("running"); writer.value(running); writer.raw(",");
+    writer.key("active"); writer.value(active); writer.raw(",");
+    writer.key("connectedSSID"); writer.string(connectedSsid); writer.raw(",");
+    writer.key("connectedChannel"); writer.value(static_cast<unsigned int>(connectedChannel)); writer.raw(",");
+    writer.key("motionDetected"); writer.value(motionDetected); writer.raw(",");
+    writer.key("variance_threshold"); writer.value(config.varianceThreshold, 2); writer.raw(",");
+    writer.key("sample_interval_ms"); writer.value(static_cast<unsigned int>(config.sampleIntervalMs)); writer.raw(",");
+
+    writer.key("stats"); writer.raw("{");
+    writer.key("current"); writer.value(static_cast<int>(stats.current)); writer.raw(",");
+    writer.key("filtered"); writer.value(static_cast<int>(stats.filtered)); writer.raw(",");
+    writer.key("min"); writer.value(static_cast<int>(stats.min)); writer.raw(",");
+    writer.key("max"); writer.value(static_cast<int>(stats.max)); writer.raw(",");
+    writer.key("avg"); writer.value(stats.avg, 2); writer.raw(",");
+    writer.key("variance"); writer.value(stats.variance, 2); writer.raw(",");
+    writer.key("sampleCount"); writer.value(static_cast<unsigned int>(stats.sampleCount)); writer.raw(",");
+    writer.key("windowMs"); writer.value(static_cast<unsigned long>(stats.windowMs));
+    writer.raw("},");
+
+    writer.key("csi"); writer.raw("{");
+    writer.key("enabled"); writer.value(csi.enabled); writer.raw(",");
+    writer.key("queue_allocated"); writer.value(csi.queueAllocated); writer.raw(",");
+    writer.key("active_consumer_mask"); writer.value(static_cast<unsigned long>(csi.activeConsumerMask)); writer.raw(",");
+    writer.key("consumer_count"); writer.value(static_cast<unsigned int>(csi.activeConsumerCount)); writer.raw(",");
+    writer.key("frontend_consumer_active"); writer.value(csi.frontendConsumerActive); writer.raw(",");
+    writer.key("alarm_consumer_active"); writer.value(csi.alarmConsumerActive); writer.raw(",");
+    writer.key("boot_consumer_active"); writer.value(csi.bootConsumerActive); writer.raw(",");
+    writer.key("queue_depth"); writer.value(static_cast<unsigned long>(csi.queueDepth)); writer.raw(",");
+    writer.key("queue_capacity"); writer.value(static_cast<unsigned long>(csi.queueCapacity)); writer.raw(",");
+    writer.key("queue_drops_total"); writer.value(static_cast<unsigned long>(csi.queueDropsTotal)); writer.raw(",");
+    writer.key("queue_drops_last_sec"); writer.value(static_cast<unsigned long>(csi.queueDropsLastSec)); writer.raw(",");
+    writer.key("rx_frames_total"); writer.value(static_cast<unsigned long>(csi.rxFramesTotal)); writer.raw(",");
+    writer.key("rx_accepted_total"); writer.value(static_cast<unsigned long>(csi.rxAcceptedTotal)); writer.raw(",");
+    writer.key("rx_throttled_total"); writer.value(static_cast<unsigned long>(csi.rxThrottledTotal)); writer.raw(",");
+    writer.key("queued_packets_total"); writer.value(static_cast<unsigned long>(csi.queuedPacketsTotal)); writer.raw(",");
+    writer.key("dequeued_packets_total"); writer.value(static_cast<unsigned long>(csi.dequeuedPacketsTotal)); writer.raw(",");
+    writer.key("packets_forwarded_total"); writer.value(static_cast<unsigned long>(csi.packetsForwardedTotal)); writer.raw(",");
+    writer.key("batches_forwarded_total"); writer.value(static_cast<unsigned long>(csi.batchesForwardedTotal)); writer.raw(",");
+    writer.key("batches_dropped_total"); writer.value(static_cast<unsigned long>(csi.batchesDroppedTotal)); writer.raw(",");
+    writer.key("packets_per_sec"); writer.value(static_cast<unsigned long>(csi.packetsPerSec)); writer.raw(",");
+    writer.key("batches_per_sec"); writer.value(static_cast<unsigned long>(csi.batchesPerSec)); writer.raw(",");
+    writer.key("last_packet_ms"); writer.value(static_cast<unsigned long>(csi.lastPacketMs)); writer.raw(",");
+    writer.key("last_batch_ms"); writer.value(static_cast<unsigned long>(csi.lastBatchMs)); writer.raw(",");
+    writer.key("calibration_count"); writer.value(csi.calibrationCount); writer.raw(",");
+    writer.key("calibration_target"); writer.value(csi.calibrationTarget); writer.raw(",");
+    writer.key("calibration_state"); writer.string(csi.calibrationState); writer.raw(",");
+    writer.key("ws_client_count"); writer.value(static_cast<unsigned long>(_csiEndpoint.broadcaster().getClientCount())); writer.raw(",");
+    writer.key("ws_queue_enabled"); writer.value(_csiEndpoint.broadcaster().isQueueEnabled());
+    writer.raw("}");
+
+    writer.raw("}");
+    writer.finish();
+    return ESP_OK;
 }
 
 }  // namespace API

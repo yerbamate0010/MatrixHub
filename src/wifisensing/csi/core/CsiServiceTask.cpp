@@ -196,6 +196,8 @@ void CsiService::processingTask(void* param) {
 
         // Wait briefly for the first packet so the idle path is cheap.
         if (self->_queue && self->_queue->pop(packet, pdMS_TO_TICKS(10))) {
+            self->_dequeuedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
+            self->_lastPacketMs.store(now, std::memory_order_relaxed);
             packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
             // Wire format already reserves motion fields, but CSI-side motion
             // detection is not active yet. Keep them explicit to avoid silent
@@ -207,6 +209,8 @@ void CsiService::processingTask(void* param) {
             // Once awake, drain the rest of the burst without blocking so multiple
             // queued frames can be forwarded in one callback invocation.
             while (batchCount < BATCH_CAPACITY && self->_queue->pop(packet, 0)) {
+                self->_dequeuedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
+                self->_lastPacketMs.store(now, std::memory_order_relaxed);
                 packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
                 packet.isMotionDetected = false;
                 packet.motionScore = 0.0f;
@@ -219,12 +223,20 @@ void CsiService::processingTask(void* param) {
         // Statistics are surfaced for debugging queue pressure. The current code
         // resets counters here but does not auto-tune ping cadence from them yet.
         if (now - self->_lastRateCheckTime >= 1000) {
+             uint32_t droppedPackets = 0;
              if (self->_queue) {
-                 const uint32_t droppedPackets = self->_queue->takeDroppedPackets();
+                 droppedPackets = self->_queue->takeDroppedPackets();
                  if (droppedPackets > 0) {
                      LOGW("CSI ISR queue dropped %u packets in the last interval", droppedPackets);
                  }
              }
+             self->_queueDropsLastSec.store(droppedPackets, std::memory_order_relaxed);
+             const uint32_t forwardedPackets = self->_packetsForwardedTotal.load(std::memory_order_relaxed);
+             const uint32_t forwardedBatches = self->_batchesForwardedTotal.load(std::memory_order_relaxed);
+             self->_packetsPerSec.store(forwardedPackets - self->_lastPacketsRateTotal, std::memory_order_relaxed);
+             self->_batchesPerSec.store(forwardedBatches - self->_lastBatchesRateTotal, std::memory_order_relaxed);
+             self->_lastPacketsRateTotal = forwardedPackets;
+             self->_lastBatchesRateTotal = forwardedBatches;
              self->_rxFrameCount.store(0, std::memory_order_relaxed);
              self->_lastRateCheckTime = now;
              self->_currentPingInterval = SENSOR::WIFI_SENSING::CSI_PING_INTERVAL_MS;
@@ -245,6 +257,8 @@ void CsiService::processingTask(void* param) {
             CsiCallback callback = self->getCsiCallbackSnapshot();
             if (callback) {
                 callback(self->_batchBuffer, batchCount);
+            } else {
+                self->recordBatchDelivery(batchCount, false);
             }
             batchCount = 0;
         }

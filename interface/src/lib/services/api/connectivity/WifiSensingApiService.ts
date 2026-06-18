@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClientOptions } from '$lib/utils';
-import type { WifiSensingSettings } from '$lib/types/connectivity/wifiSensing';
+import type { WifiSensingSettings, WifiSensingStatus } from '$lib/types/connectivity/wifiSensing';
 import type { WifiStatus } from '$lib/types/connectivity/wifi';
 
 export class WifiSensingApiService {
@@ -17,6 +17,12 @@ export class WifiSensingApiService {
 	async getSettings(): Promise<WifiSensingSettings> {
 		return this.client.get<WifiSensingSettings>('/api/wifisensing/config', {
 			signal: AbortSignal.timeout(WifiSensingApiService.SETTINGS_TIMEOUT_MS)
+		});
+	}
+
+	async getStatus(): Promise<WifiSensingStatus> {
+		return this.client.get<WifiSensingStatus>('/api/wifisensing/status', {
+			signal: AbortSignal.timeout(WifiSensingApiService.STATS_TIMEOUT_MS)
 		});
 	}
 

@@ -42,12 +42,16 @@ RssiStats RssiVarianceAnalyzer::calculateStats(const RssiSample* samples, uint16
     
     uint16_t filteredCount = 0;
     
-    // Helper lambda to safe-read from circular buffer relative to Head
-    // relIndex 0 = Newest sample (at head-1)
-    auto getRawSample = [&](uint16_t relIndex) -> int8_t {
+    // Helper lambda to safe-read from circular buffer relative to Head.
+    // relIndex 0 = Newest sample (at head-1).
+    auto getRawEntry = [&](uint16_t relIndex) -> const RssiSample& {
          int32_t idx = (int32_t)head - 1 - relIndex;
          while (idx < 0) idx += bufferSize;
-         return samples[idx].rssi;
+         return samples[idx];
+    };
+
+    auto getRawSample = [&](uint16_t relIndex) -> int8_t {
+         return getRawEntry(relIndex).rssi;
     };
     
     // Filter Helper: Calculate median of 5 samples centered at relIndex
@@ -132,7 +136,11 @@ RssiStats RssiVarianceAnalyzer::calculateStats(const RssiSample* samples, uint16
         stats.min = minVal;
         stats.max = maxVal;
         stats.sampleCount = filteredCount;
-        stats.windowMs = filteredCount * 20; // 20ms assumed (approx)
+        const uint16_t newestAnalyzedRel = MEDIAN_WINDOW / 2;
+        const uint16_t oldestAnalyzedRel = limit - 1;
+        stats.windowMs =
+            getRawEntry(newestAnalyzedRel).timestampMs -
+            getRawEntry(oldestAnalyzedRel).timestampMs;
         
         // Fast 1-Pass Integer Variance Calculation to avoid FPU loops
         // Var(X) = (N * Sum(X^2) - Sum(X)^2) / N^2

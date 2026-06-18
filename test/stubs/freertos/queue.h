@@ -69,6 +69,15 @@ inline BaseType_t xQueueSend(QueueHandle_t xQueue, const void* pvItemToQueue, Ti
     return pdTRUE;
 }
 
+inline BaseType_t xQueueSendFromISR(QueueHandle_t xQueue,
+                                    const void* pvItemToQueue,
+                                    BaseType_t* pxHigherPriorityTaskWoken) {
+    if (pxHigherPriorityTaskWoken) {
+        *pxHigherPriorityTaskWoken = pdFALSE;
+    }
+    return xQueueSend(xQueue, pvItemToQueue, 0);
+}
+
 inline BaseType_t xQueueReceive(QueueHandle_t xQueue, void* pvBuffer, TickType_t xTicksToWait) {
     (void)xTicksToWait;
     auto* queue = static_cast<TEST_STUBS::FREERTOS::QueueStub*>(xQueue);

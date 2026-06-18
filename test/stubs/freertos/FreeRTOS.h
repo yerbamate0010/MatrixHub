@@ -39,6 +39,9 @@ typedef int portMUX_TYPE;
 #ifndef portEXIT_CRITICAL_ISR
 #define portEXIT_CRITICAL_ISR(mux) ((void)(mux))
 #endif
+#ifndef portYIELD_FROM_ISR
+#define portYIELD_FROM_ISR() ((void)0)
+#endif
 
 #ifndef pdMS_TO_TICKS
 #define pdMS_TO_TICKS(ms) ((ms) / portTICK_PERIOD_MS)

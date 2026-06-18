@@ -50,6 +50,21 @@ public:
         return compensate_gain;
     }
 
+    int calibrationCount() const { return _calibrationCount; }
+
+    const char* stateName() const {
+        switch (esp_csi_gain_ctrl_get_gain_status()) {
+            case RX_GAIN_COLLECT:
+                return "collecting";
+            case RX_GAIN_READY:
+                return "ready";
+            case RX_GAIN_FORCE:
+                return "forced";
+            default:
+                return "unknown";
+        }
+    }
+
 private:
     int _calibrationCount = 0;
 };

@@ -482,6 +482,19 @@
       "tests": ["scripts/tests/stress_test.py", "scripts/diagnostics/trigger_wifisensing.py", "scripts/contract/verify_api_contract.py"]
     },
     {
+      "id": "wifiSensing.status",
+      "method": "GET",
+      "path": "/api/wifisensing/status",
+      "auth": "authenticated",
+      "request": "GET none",
+      "response": "JSON schema wifisensing.status.v1 with RSSI runtime stats, CSI queue/transport counters, consumer state, calibration state, and WebSocket client/queue state",
+      "restartRequired": false,
+      "firmware": ["src/api/wifisensing/WifiSensingApiService.cpp", "src/wifisensing/csi/core/CsiService.cpp"],
+      "frontend": ["interface/src/lib/services/api/connectivity/WifiSensingApiService.ts", "interface/src/lib/types/connectivity/wifiSensing.ts"],
+      "sdk": [],
+      "tests": ["scripts/diagnostics/trigger_wifisensing.py", "tools/csi_client.py", "scripts/contract/verify_api_contract.py"]
+    },
+    {
       "id": "wifiSensing.csiWs",
       "method": "WS",
       "path": "/ws/csi",

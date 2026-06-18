@@ -19,6 +19,10 @@ public:
     bool pushFromIsr(const CsiPacket& packet);
     bool pop(CsiPacket& packet, TickType_t waitTicks);
     uint32_t takeDroppedPackets();
+    uint32_t getDroppedPacketsTotal() const;
+    size_t getDepth() const;
+    size_t getCapacity() const { return _queueSize; }
+    void resetStats();
     
     // Returns true if queue was created successfully
     bool begin();
@@ -32,6 +36,7 @@ private:
     uint8_t* _queueStorageBuffer = nullptr;
     StaticQueue_t* _queueStructure = nullptr;
     std::atomic<uint32_t> _droppedPackets{0};
+    std::atomic<uint32_t> _droppedPacketsTotal{0};
 };
 
 } // namespace CSI

@@ -12,6 +12,18 @@
 
 namespace WIFISENSING {
 namespace CSI {
+namespace {
+
+uint8_t countActiveConsumers(uint32_t mask) {
+    uint8_t count = 0;
+    while (mask != 0) {
+        count += static_cast<uint8_t>(mask & 1u);
+        mask >>= 1;
+    }
+    return count;
+}
+
+} // namespace
 
 CsiService::CsiService() {
     _stateMutex = xSemaphoreCreateMutex();
@@ -76,6 +88,89 @@ void CsiService::setCsiCallback(CsiCallback cb) {
     }
 
     _csiCallback = std::move(cb);
+}
+
+void CsiService::resetRuntimeMetrics() {
+    _rxFramesTotal.store(0, std::memory_order_relaxed);
+    _rxAcceptedTotal.store(0, std::memory_order_relaxed);
+    _rxThrottledTotal.store(0, std::memory_order_relaxed);
+    _queuedPacketsTotal.store(0, std::memory_order_relaxed);
+    _dequeuedPacketsTotal.store(0, std::memory_order_relaxed);
+    _packetsForwardedTotal.store(0, std::memory_order_relaxed);
+    _batchesForwardedTotal.store(0, std::memory_order_relaxed);
+    _batchesDroppedTotal.store(0, std::memory_order_relaxed);
+    _packetsPerSec.store(0, std::memory_order_relaxed);
+    _batchesPerSec.store(0, std::memory_order_relaxed);
+    _queueDropsLastSec.store(0, std::memory_order_relaxed);
+    _lastPacketMs.store(0, std::memory_order_relaxed);
+    _lastBatchMs.store(0, std::memory_order_relaxed);
+    _lastPacketsRateTotal = 0;
+    _lastBatchesRateTotal = 0;
+    if (_queue) {
+        _queue->resetStats();
+    }
+}
+
+CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
+    CsiMetricsSnapshot snapshot;
+    snapshot.enabled = isEnabled();
+
+    const uint32_t mask = _activeConsumers.load(std::memory_order_relaxed);
+    snapshot.activeConsumerMask = mask;
+    snapshot.activeConsumerCount = countActiveConsumers(mask);
+    snapshot.frontendConsumerActive = (mask & consumerBit(CsiConsumer::Frontend)) != 0;
+    snapshot.alarmConsumerActive = (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0;
+    snapshot.bootConsumerActive = (mask & consumerBit(CsiConsumer::Boot)) != 0;
+
+    snapshot.rxFramesTotal = _rxFramesTotal.load(std::memory_order_relaxed);
+    snapshot.rxAcceptedTotal = _rxAcceptedTotal.load(std::memory_order_relaxed);
+    snapshot.rxThrottledTotal = _rxThrottledTotal.load(std::memory_order_relaxed);
+    snapshot.queuedPacketsTotal = _queuedPacketsTotal.load(std::memory_order_relaxed);
+    snapshot.dequeuedPacketsTotal = _dequeuedPacketsTotal.load(std::memory_order_relaxed);
+    snapshot.packetsForwardedTotal = _packetsForwardedTotal.load(std::memory_order_relaxed);
+    snapshot.batchesForwardedTotal = _batchesForwardedTotal.load(std::memory_order_relaxed);
+    snapshot.batchesDroppedTotal = _batchesDroppedTotal.load(std::memory_order_relaxed);
+    snapshot.packetsPerSec = _packetsPerSec.load(std::memory_order_relaxed);
+    snapshot.batchesPerSec = _batchesPerSec.load(std::memory_order_relaxed);
+    snapshot.queueDropsLastSec = _queueDropsLastSec.load(std::memory_order_relaxed);
+    snapshot.lastPacketMs = _lastPacketMs.load(std::memory_order_relaxed);
+    snapshot.lastBatchMs = _lastBatchMs.load(std::memory_order_relaxed);
+    snapshot.calibrationCount = _gainCtrl.calibrationCount();
+    snapshot.calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
+    snapshot.calibrationState = _gainCtrl.stateName();
+
+    if (!_stateMutex) {
+        return snapshot;
+    }
+
+    SYSTEM::ScopeLock lock(_stateMutex, pdMS_TO_TICKS(50));
+    if (!lock.isLocked()) {
+        return snapshot;
+    }
+
+    snapshot.queueAllocated = _queue != nullptr;
+    if (_queue) {
+        snapshot.queueDepth = _queue->getDepth();
+        snapshot.queueCapacity = _queue->getCapacity();
+        snapshot.queueDropsTotal = _queue->getDroppedPacketsTotal();
+    }
+
+    return snapshot;
+}
+
+void CsiService::recordBatchDelivery(size_t packetCount, bool accepted) {
+    if (packetCount == 0) {
+        return;
+    }
+
+    if (accepted) {
+        _batchesForwardedTotal.fetch_add(1, std::memory_order_relaxed);
+        _packetsForwardedTotal.fetch_add(static_cast<uint32_t>(packetCount), std::memory_order_relaxed);
+        _lastBatchMs.store(millis(), std::memory_order_relaxed);
+        return;
+    }
+
+    _batchesDroppedTotal.fetch_add(1, std::memory_order_relaxed);
 }
 
 uint32_t CsiService::consumerBit(CsiConsumer consumer) {
@@ -173,6 +268,7 @@ bool CsiService::applyEnabledState(bool enabled) {
 
         // Reset Components
         _gainCtrl.reset();
+        resetRuntimeMetrics();
         
         // Adaptive Rate Reset
         _rxFrameCount.store(0, std::memory_order_relaxed);

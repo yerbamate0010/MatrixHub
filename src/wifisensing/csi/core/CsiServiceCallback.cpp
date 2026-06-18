@@ -32,6 +32,7 @@ void IRAM_ATTR CsiService::wifi_csi_rx_cb(void *ctx, wifi_csi_info_t *info) {
 
     // Rx Counting for Adaptive Rate
     self->_rxFrameCount.fetch_add(1, std::memory_order_relaxed);
+    self->_rxFramesTotal.fetch_add(1, std::memory_order_relaxed);
 
     // Early drops here are intentional backpressure. It is better to reject a
     // frame before the queue than to let short bursts hide the true source of loss.
@@ -41,10 +42,12 @@ void IRAM_ATTR CsiService::wifi_csi_rx_cb(void *ctx, wifi_csi_info_t *info) {
     uint32_t lastUs = self->_lastRxAcceptTimeUs.load(std::memory_order_relaxed);
     uint32_t elapsedUs = nowUs - lastUs;
     if (elapsedUs < CSI_RX_THROTTLE_INTERVAL_US) {
+        self->_rxThrottledTotal.fetch_add(1, std::memory_order_relaxed);
         self->_rxCallbacksInFlight.fetch_sub(1, std::memory_order_acq_rel);
         return;
     }
     self->_lastRxAcceptTimeUs.store(nowUs, std::memory_order_relaxed);
+    self->_rxAcceptedTotal.fetch_add(1, std::memory_order_relaxed);
 
     CsiPacket packet;
     memcpy(&packet.rx_ctrl, &info->rx_ctrl, sizeof(wifi_pkt_rx_ctrl_t));
@@ -55,7 +58,9 @@ void IRAM_ATTR CsiService::wifi_csi_rx_cb(void *ctx, wifi_csi_info_t *info) {
     packet.compensate_gain = 1.0f;
 
     // Queue tracks overflow statistics internally; the callback stays branch-light either way.
-    self->_queue->pushFromIsr(packet);
+    if (self->_queue->pushFromIsr(packet)) {
+        self->_queuedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
+    }
     self->_rxCallbacksInFlight.fetch_sub(1, std::memory_order_acq_rel);
 }
 

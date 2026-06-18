@@ -68,8 +68,44 @@ Notes:
 - `MAX_CSI_DATA_LEN` is `512` bytes in the queue/storage layer.
 - The frontend converts I/Q pairs into amplitudes with `sqrt(re^2 + im^2)`.
 - WebSocket payloads may contain a batch of multiple CSI packet records.
+- The worker currently batches up to `MAX_CSI_BATCH_PACKETS` records and the
+  API preserves that as one WebSocket payload. If a future worker ever emits a
+  larger callback batch, the API chunks it back to valid wire-format batches
+  rather than sending oversized frames.
 - Receivers should parse records until the payload is exhausted; a partial
   trailing record is malformed and should be dropped.
+
+## Runtime diagnostics
+
+`GET /api/wifisensing/status` returns the RSSI sensing state and CSI runtime
+metrics in a single authenticated JSON response. The schema field is
+`wifisensing.status.v1`.
+
+The RSSI fields include:
+
+- configured `enabled`, `sample_interval_ms`, and `variance_threshold`
+- task state: `running`, `active`, connected SSID/channel, and `motionDetected`
+- current statistics: raw `current`, median `filtered`, min/max/avg,
+  `variance`, `sampleCount`, and timestamp-derived `windowMs`
+
+The nested `csi` object includes:
+
+- consumer state: `active_consumer_mask`, `consumer_count`, and per-consumer
+  booleans for frontend, alarm, and boot users
+- queue pressure: `queue_allocated`, `queue_depth`, `queue_capacity`,
+  `queue_drops_total`, and `queue_drops_last_sec`
+- capture counters: `rx_frames_total`, `rx_accepted_total`,
+  `rx_throttled_total`, `queued_packets_total`, and `dequeued_packets_total`
+- transport counters: `packets_forwarded_total`, `batches_forwarded_total`,
+  `batches_dropped_total`, `packets_per_sec`, and `batches_per_sec`
+- freshness and calibration: `last_packet_ms`, `last_batch_ms`,
+  `calibration_count`, `calibration_target`, and `calibration_state`
+- WebSocket state: `ws_client_count` and `ws_queue_enabled`
+
+`scripts/diagnostics/trigger_wifisensing.py` records this status before and
+after toggling the feature. `tools/csi_client.py` prints the CSI status summary
+when the endpoint is available and continues to work against older firmware
+where the endpoint is not present.
 
 ## Current limitations
 
@@ -94,6 +130,9 @@ That path is the one currently wired into motion state evaluation and alarm inte
 - The processing task stack is allocated in PSRAM; the task control block remains in internal RAM.
 - `CsiService` also allocates a PSRAM batch buffer for WebSocket delivery.
 - CSI is turned off fully when there are no active consumers.
+- Queue depth and drops are measurable at runtime through
+  `/api/wifisensing/status`, which is the quickest check for whether CSI is
+  saturating the ISR queue or the WebSocket transport.
 
 ## When to extend this module
 

@@ -38,6 +38,14 @@ bool CsiDataQueue::begin() {
 
     if (!_queueStorageBuffer || !_queueStructure) {
         LOGE("Failed to allocate PSRAM for CSI Queue");
+        if (_queueStorageBuffer) {
+            heap_caps_free(_queueStorageBuffer);
+            _queueStorageBuffer = nullptr;
+        }
+        if (_queueStructure) {
+            heap_caps_free(_queueStructure);
+            _queueStructure = nullptr;
+        }
         return false;
     }
 
@@ -50,9 +58,14 @@ bool CsiDataQueue::begin() {
 
     if (!_queueHandle) {
         LOGE("Failed to create Static Queue");
+        heap_caps_free(_queueStorageBuffer);
+        heap_caps_free(_queueStructure);
+        _queueStorageBuffer = nullptr;
+        _queueStructure = nullptr;
         return false;
     }
 
+    resetStats();
     LOGI("CSI Queue created in PSRAM (Size: %d items, Bytes: %d)", _queueSize, bufferSize);
     return true;
 }
@@ -72,6 +85,7 @@ bool CsiDataQueue::pushFromIsr(const CsiPacket& packet) {
         return true;
     }
     _droppedPackets.fetch_add(1, std::memory_order_relaxed);
+    _droppedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
     return false; // Queue full
 }
 
@@ -82,6 +96,20 @@ bool CsiDataQueue::pop(CsiPacket& packet, TickType_t waitTicks) {
 
 uint32_t CsiDataQueue::takeDroppedPackets() {
     return _droppedPackets.exchange(0, std::memory_order_relaxed);
+}
+
+uint32_t CsiDataQueue::getDroppedPacketsTotal() const {
+    return _droppedPacketsTotal.load(std::memory_order_relaxed);
+}
+
+size_t CsiDataQueue::getDepth() const {
+    if (!_queueHandle) return 0;
+    return uxQueueMessagesWaiting(_queueHandle);
+}
+
+void CsiDataQueue::resetStats() {
+    _droppedPackets.store(0, std::memory_order_relaxed);
+    _droppedPacketsTotal.store(0, std::memory_order_relaxed);
 }
 
 } // namespace CSI
