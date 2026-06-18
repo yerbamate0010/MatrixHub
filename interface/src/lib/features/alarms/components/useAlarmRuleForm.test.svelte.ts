@@ -199,4 +199,46 @@ describe('useAlarmRuleForm', () => {
 
 		cleanup();
 	});
+
+	it('treats BLE battery and RSSI as BLE-backed sources', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				}
+			};
+		});
+
+		control.open();
+		await flushPromises();
+
+		form.handleSourceChange('ble_battery');
+		expect(form.isBleSource).toBe(true);
+		expect(form.thresholdConfig).toEqual({ min: 0, max: 100, step: 1, default: 20 });
+		expect(form.formData.threshold).toBe(20);
+		expect(form.formData.name).toBe('BLE Batt < 20% (LED)');
+
+		form.handleSourceChange('ble_rssi');
+		expect(form.isBleSource).toBe(true);
+		expect(form.thresholdConfig).toEqual({ min: -120, max: -20, step: 1, default: -90 });
+		expect(form.formData.threshold).toBe(-90);
+		expect(form.formData.name).toBe('BLE RSSI < -90dBm (LED)');
+
+		cleanup();
+	});
 });

@@ -52,6 +52,14 @@ void test_sourceToString_ble_humidity() {
     TEST_ASSERT_EQUAL_STRING("ble_humidity", sourceToString(AlarmSource::BleHumidity));
 }
 
+void test_sourceToString_ble_battery() {
+    TEST_ASSERT_EQUAL_STRING("ble_battery", sourceToString(AlarmSource::BleBattery));
+}
+
+void test_sourceToString_ble_rssi() {
+    TEST_ASSERT_EQUAL_STRING("ble_rssi", sourceToString(AlarmSource::BleRssi));
+}
+
 void test_sourceToString_unknown() {
     // Cast invalid value to test unknown case
     AlarmSource invalid = static_cast<AlarmSource>(255);
@@ -84,6 +92,14 @@ void test_stringToSource_ble_temperature() {
 
 void test_stringToSource_ble_humidity() {
     TEST_ASSERT_EQUAL(AlarmSource::BleHumidity, stringToSource("ble_humidity"));
+}
+
+void test_stringToSource_ble_battery() {
+    TEST_ASSERT_EQUAL(AlarmSource::BleBattery, stringToSource("ble_battery"));
+}
+
+void test_stringToSource_ble_rssi() {
+    TEST_ASSERT_EQUAL(AlarmSource::BleRssi, stringToSource("ble_rssi"));
 }
 
 void test_stringToSource_null() {
@@ -303,6 +319,8 @@ void run_all_tests() {
     RUN_TEST(test_sourceToString_wifi_motion);
     RUN_TEST(test_sourceToString_ble_temperature);
     RUN_TEST(test_sourceToString_ble_humidity);
+    RUN_TEST(test_sourceToString_ble_battery);
+    RUN_TEST(test_sourceToString_ble_rssi);
     RUN_TEST(test_sourceToString_unknown);
     
     // stringToSource tests
@@ -312,6 +330,8 @@ void run_all_tests() {
     RUN_TEST(test_stringToSource_wifi_motion);
     RUN_TEST(test_stringToSource_ble_temperature);
     RUN_TEST(test_stringToSource_ble_humidity);
+    RUN_TEST(test_stringToSource_ble_battery);
+    RUN_TEST(test_stringToSource_ble_rssi);
     RUN_TEST(test_stringToSource_null);
     RUN_TEST(test_stringToSource_empty);
     RUN_TEST(test_stringToSource_invalid);

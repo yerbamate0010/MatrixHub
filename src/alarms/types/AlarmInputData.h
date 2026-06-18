@@ -21,6 +21,8 @@ struct AlarmInputData {
     // Optional BLE fields for rule evaluation
     float bleTemp = NAN;
     float bleHumid = NAN;
+    float bleBattery = NAN;
+    float bleRssi = NAN;
 };
 
 }  // namespace ALARMS

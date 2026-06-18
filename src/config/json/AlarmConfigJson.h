@@ -9,7 +9,9 @@ namespace JSON {
 	    enum class AlarmRulesParseError : uint8_t {
 	        None = 0,
 	        InvalidRuleData,
-	        DuplicateRuleId
+	        DuplicateRuleId,
+	        DuplicateRuleName,
+	        TooManyRules
 	    };
 
 	    void loadAlarms(JsonObject& obj);

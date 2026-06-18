@@ -32,7 +32,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	source_humidity: () => 'Humidity',
 	source_wifi_motion: () => 'WiFi Motion',
 	source_ble_temperature: () => 'BLE Temperature',
-	source_ble_humidity: () => 'BLE Humidity'
+	source_ble_humidity: () => 'BLE Humidity',
+	source_ble_battery: () => 'BLE Battery',
+	source_ble_rssi: () => 'BLE RSSI'
 }));
 
 function createRule(id: string): AlarmRule {
@@ -120,5 +122,27 @@ describe('AlarmRuleList', () => {
 		expect(
 			(screen.getByRole('button', { name: 'Delete rule' }) as HTMLButtonElement).disabled
 		).toBe(true);
+	});
+
+	it('renders BLE battery and RSSI labels with units', () => {
+		render(AlarmRuleList, {
+			props: {
+				rules: [
+					{ ...createRule('battery'), source: 'ble_battery', threshold: 20 },
+					{ ...createRule('rssi'), source: 'ble_rssi', threshold: -90 }
+				],
+				canManage: true,
+				onEdit: vi.fn(),
+				onDelete: vi.fn(),
+				onToggle: vi.fn(),
+				onAdd: vi.fn(),
+				onInfo: vi.fn()
+			}
+		});
+
+		expect(screen.getByText(/BLE Battery/)).toBeTruthy();
+		expect(screen.getByText(/20%/)).toBeTruthy();
+		expect(screen.getByText(/BLE RSSI/)).toBeTruthy();
+		expect(screen.getByText(/-90dBm/)).toBeTruthy();
 	});
 });

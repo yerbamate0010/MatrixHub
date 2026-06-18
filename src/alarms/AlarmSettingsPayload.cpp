@@ -53,6 +53,14 @@ StateHandlerResult parseUpdate(JsonObject& jsonObject, AlarmRulesSnapshot* parse
             LOGW("parseUpdate: duplicate alarm rule id");
             return StateHandlerResult::failure("input/alarm_rules_duplicate_id", 400);
         }
+        if (parseError == CONFIG::JSON::AlarmRulesParseError::DuplicateRuleName) {
+            LOGW("parseUpdate: duplicate alarm rule name");
+            return StateHandlerResult::failure("input/alarm_rules_duplicate_name", 400);
+        }
+        if (parseError == CONFIG::JSON::AlarmRulesParseError::TooManyRules) {
+            LOGW("parseUpdate: too many alarm rules");
+            return StateHandlerResult::failure("input/alarm_rules_too_many", 400);
+        }
         LOGW("parseUpdate: invalid alarm rule data");
         return StateHandlerResult::failure("input/alarm_rules_invalid_rule", 400);
     }

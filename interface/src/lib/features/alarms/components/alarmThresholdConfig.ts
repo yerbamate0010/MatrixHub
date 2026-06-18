@@ -24,5 +24,9 @@ export function getThresholdConfig(source: AlarmSource): ThresholdConfig {
 			return { min: -20, max: 60, step: 1, default: 25 };
 		case 'ble_humidity':
 			return { min: 0, max: 100, step: 1, default: 50 };
+		case 'ble_battery':
+			return { min: 0, max: 100, step: 1, default: 20 };
+		case 'ble_rssi':
+			return { min: -120, max: -20, step: 1, default: -90 };
 	}
 }

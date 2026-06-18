@@ -125,6 +125,18 @@ export function useAlarmsManagement(deps: AlarmsManagementDeps = {}) {
 			return;
 		}
 
+		const normalizedName = rule.name.trim().toLowerCase();
+		const hasDuplicateName = source.rules.some(
+			(currentRule) =>
+				currentRule.id !== rule.id && currentRule.name.trim().toLowerCase() === normalizedName
+		);
+		if (hasDuplicateName) {
+			const message = m.alarms_error_duplicate_name({ locale: i18n.languageTag });
+			localError = message;
+			toast.error(message, 4000);
+			return;
+		}
+
 		modalSaving = true;
 		const nextRules = editingRule
 			? source.rules.map((currentRule) => (currentRule.id === rule.id ? rule : currentRule))

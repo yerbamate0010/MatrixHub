@@ -13,7 +13,9 @@ export type AlarmSource =
 	| 'humidity'
 	| 'wifi_motion'
 	| 'ble_temperature'
-	| 'ble_humidity';
+	| 'ble_humidity'
+	| 'ble_battery'
+	| 'ble_rssi';
 
 /** Comparison operator */
 export type AlarmOperator = 'above' | 'below';
@@ -36,7 +38,7 @@ export interface AlarmRule {
 	notify_channels: NotifyChannel[];
 	cooldown_seconds: number;
 	shelly_device_ids?: string[];
-	ble_device_mac?: string; // BLE device MAC for ble_temperature/ble_humidity sources
+	ble_device_mac?: string; // BLE device MAC for BLE-backed sources
 	created_at?: number;
 	updated_at?: number;
 	// Runtime state (mixed in from status endpoint)
@@ -58,7 +60,9 @@ export const ALARM_SOURCES: Record<AlarmSource, { unit: string; icon: string }> 
 	humidity: { unit: '%', icon: 'droplet' },
 	wifi_motion: { unit: 'v', icon: 'wifi' },
 	ble_temperature: { unit: '°C', icon: 'bluetooth' },
-	ble_humidity: { unit: '%', icon: 'bluetooth' }
+	ble_humidity: { unit: '%', icon: 'bluetooth' },
+	ble_battery: { unit: '%', icon: 'bluetooth' },
+	ble_rssi: { unit: 'dBm', icon: 'bluetooth' }
 };
 
 /** Display metadata for severity levels */

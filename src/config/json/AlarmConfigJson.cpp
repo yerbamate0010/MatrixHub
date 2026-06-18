@@ -5,6 +5,7 @@
 #include "../../system/rtc/RtcConfig.h"
 #include "../../alarms/serialization/AlarmEnumConverters.h"
 #include "../../system/memory/SystemAllocator.h"
+#include <cctype>
 #include <cstring>
 #include <limits>
 
@@ -18,6 +19,8 @@ constexpr uint8_t kAllowedNotifyChannelsMask =
     static_cast<uint8_t>(ALARMS::NotifyChannel::Led) |
     static_cast<uint8_t>(ALARMS::NotifyChannel::Webhook) |
     static_cast<uint8_t>(ALARMS::NotifyChannel::Pushover);
+
+bool alarmNamesEqual(const char* left, const char* right);
 
 void saveAlarmRulesSnapshot(JsonObject& obj, const ALARMS::AlarmRulesSnapshot& rulesSnapshot) {
     JsonArray rules = obj[Keys::kRules].to<JsonArray>();
@@ -50,7 +53,7 @@ bool tryParseSource(JsonVariantConst value, ALARMS::AlarmSource& out) {
     if (value.is<int>()) {
         const int srcInt = value.as<int>();
         if (srcInt < static_cast<int>(ALARMS::AlarmSource::CO2) ||
-            srcInt > static_cast<int>(ALARMS::AlarmSource::BleHumidity)) {
+            srcInt > static_cast<int>(ALARMS::AlarmSource::BleRssi)) {
             return false;
         }
         out = static_cast<ALARMS::AlarmSource>(srcInt);
@@ -84,6 +87,14 @@ bool tryParseSource(JsonVariantConst value, ALARMS::AlarmSource& out) {
     }
     if (strcmp(srcStr, "ble_humidity") == 0) {
         out = ALARMS::AlarmSource::BleHumidity;
+        return true;
+    }
+    if (strcmp(srcStr, "ble_battery") == 0) {
+        out = ALARMS::AlarmSource::BleBattery;
+        return true;
+    }
+    if (strcmp(srcStr, "ble_rssi") == 0) {
+        out = ALARMS::AlarmSource::BleRssi;
         return true;
     }
 
@@ -202,6 +213,76 @@ bool hasDuplicateRuleId(const ALARMS::AlarmRulesSnapshot& parsed, const char* id
     return false;
 }
 
+bool hasDuplicateRuleName(const ALARMS::AlarmRulesSnapshot& parsed, const char* name) {
+    if (!name || !*name) {
+        return true;
+    }
+
+    for (uint8_t i = 0; i < parsed.ruleCount; i++) {
+        if (alarmNamesEqual(parsed.rules[i].name, name)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool hasVisibleCharacter(const char* value) {
+    if (!value) {
+        return false;
+    }
+
+    while (*value) {
+        if (*value != ' ' && *value != '\t' && *value != '\r' && *value != '\n') {
+            return true;
+        }
+        value++;
+    }
+
+    return false;
+}
+
+const char* trimLeft(const char* value) {
+    if (!value) {
+        return "";
+    }
+
+    while (*value && std::isspace(static_cast<unsigned char>(*value))) {
+        value++;
+    }
+    return value;
+}
+
+size_t trimmedLength(const char* value) {
+    const char* begin = trimLeft(value);
+    const char* end = begin + strlen(begin);
+    while (end > begin && std::isspace(static_cast<unsigned char>(*(end - 1)))) {
+        end--;
+    }
+    return static_cast<size_t>(end - begin);
+}
+
+bool alarmNamesEqual(const char* left, const char* right) {
+    const char* leftBegin = trimLeft(left);
+    const char* rightBegin = trimLeft(right);
+    const size_t leftLen = trimmedLength(leftBegin);
+    const size_t rightLen = trimmedLength(rightBegin);
+
+    if (leftLen != rightLen) {
+        return false;
+    }
+
+    for (size_t i = 0; i < leftLen; i++) {
+        const auto leftChar = static_cast<unsigned char>(leftBegin[i]);
+        const auto rightChar = static_cast<unsigned char>(rightBegin[i]);
+        if (std::tolower(leftChar) != std::tolower(rightChar)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace
 
 // Shared logic: Deserializes a single rule from JSON into the struct.
@@ -217,7 +298,11 @@ bool deserializeAlarmRule(JsonObject& rule, ALARMS::AlarmRule& r) {
     }
     
     if (const char* rawName = rule[Keys::kName] | (const char*)nullptr) {
-        if (strlen(rawName) >= ALARMS::kMaxAlarmNameLen || strlen(rawName) == 0) return false;
+        if (strlen(rawName) >= ALARMS::kMaxAlarmNameLen ||
+            strlen(rawName) == 0 ||
+            !hasVisibleCharacter(rawName)) {
+            return false;
+        }
         strlcpy(r.name, rawName, sizeof(r.name));
     } else {
         return false; // Name is mandatory
@@ -320,11 +405,14 @@ bool deserializeAlarmRules(JsonArray& rules, ALARMS::AlarmRulesSnapshot& parsed,
         *error = AlarmRulesParseError::None;
     }
 
-    for (JsonObject ruleObj : rules) {
-        if (parsed.ruleCount >= RTC::kMaxAlarmRules) {
-            break;
+    if (rules.size() > RTC::kMaxAlarmRules) {
+        if (error) {
+            *error = AlarmRulesParseError::TooManyRules;
         }
+        return false;
+    }
 
+    for (JsonObject ruleObj : rules) {
         ALARMS::AlarmRule rule;
         if (!deserializeAlarmRule(ruleObj, rule)) {
             if (error) {
@@ -336,6 +424,13 @@ bool deserializeAlarmRules(JsonArray& rules, ALARMS::AlarmRulesSnapshot& parsed,
         if (hasDuplicateRuleId(parsed, rule.id)) {
             if (error) {
                 *error = AlarmRulesParseError::DuplicateRuleId;
+            }
+            return false;
+        }
+
+        if (hasDuplicateRuleName(parsed, rule.name)) {
+            if (error) {
+                *error = AlarmRulesParseError::DuplicateRuleName;
             }
             return false;
         }
@@ -366,6 +461,9 @@ void loadAlarms(JsonObject& obj) {
                 continue;
             }
             if (hasDuplicateRuleId(*parsed, rule.id)) {
+                continue;
+            }
+            if (hasDuplicateRuleName(*parsed, rule.name)) {
                 continue;
             }
 

@@ -72,6 +72,57 @@ void test_deserialize_source_int_wifi_motion() {
     TEST_ASSERT_EQUAL(ALARMS::AlarmSource::WifiMotion, rule.source);
 }
 
+void test_deserialize_source_string_ble_battery() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = "ble_battery";
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::BleBattery, rule.source);
+}
+
+void test_deserialize_source_string_ble_rssi() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = "ble_rssi";
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::BleRssi, rule.source);
+}
+
+void test_deserialize_source_int_ble_rssi() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = static_cast<int>(ALARMS::AlarmSource::BleRssi);
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::BleRssi, rule.source);
+}
+
+void test_deserialize_source_int_after_ble_rssi_fails() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = static_cast<int>(ALARMS::AlarmSource::BleRssi) + 1;
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+}
+
 void test_deserialize_operator_string_below() {
     JsonDocument doc;
     doc["id"] = "test";
@@ -114,12 +165,88 @@ void test_deserialize_notify_channels_unknown_string_fails() {
     TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
 }
 
+void test_deserialize_blank_name_fails() {
+    JsonDocument doc;
+    doc["id"] = "blank-name";
+    doc["name"] = "   ";
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+}
+
+static JsonObject addRule(JsonArray& rules, const char* id, const char* name) {
+    JsonObject rule = rules.add<JsonObject>();
+    rule["id"] = id;
+    rule["name"] = name;
+    return rule;
+}
+
+void test_deserialize_rules_rejects_duplicate_names() {
+    JsonDocument doc;
+    JsonArray rules = doc["rules"].to<JsonArray>();
+    addRule(rules, "one", "Same");
+    addRule(rules, "two", "Same");
+
+    ALARMS::AlarmRulesSnapshot parsed{};
+    CONFIG::JSON::AlarmRulesParseError error = CONFIG::JSON::AlarmRulesParseError::None;
+
+    TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRules(rules, parsed, &error));
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CONFIG::JSON::AlarmRulesParseError::DuplicateRuleName),
+        static_cast<uint8_t>(error));
+}
+
+void test_deserialize_rules_rejects_duplicate_names_trimmed_case_insensitive() {
+    JsonDocument doc;
+    JsonArray rules = doc["rules"].to<JsonArray>();
+    addRule(rules, "one", " High Temp ");
+    addRule(rules, "two", "high temp");
+
+    ALARMS::AlarmRulesSnapshot parsed{};
+    CONFIG::JSON::AlarmRulesParseError error = CONFIG::JSON::AlarmRulesParseError::None;
+
+    TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRules(rules, parsed, &error));
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CONFIG::JSON::AlarmRulesParseError::DuplicateRuleName),
+        static_cast<uint8_t>(error));
+}
+
+void test_deserialize_rules_rejects_more_than_max_rules() {
+    JsonDocument doc;
+    JsonArray rules = doc["rules"].to<JsonArray>();
+    for (uint8_t i = 0; i < RTC::kMaxAlarmRules + 1; i++) {
+        char id[16];
+        char name[24];
+        snprintf(id, sizeof(id), "rule-%u", i);
+        snprintf(name, sizeof(name), "Rule %u", i);
+        addRule(rules, id, name);
+    }
+
+    ALARMS::AlarmRulesSnapshot parsed{};
+    CONFIG::JSON::AlarmRulesParseError error = CONFIG::JSON::AlarmRulesParseError::None;
+
+    TEST_ASSERT_FALSE(CONFIG::JSON::deserializeAlarmRules(rules, parsed, &error));
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CONFIG::JSON::AlarmRulesParseError::TooManyRules),
+        static_cast<uint8_t>(error));
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_deserialize_source_string_wifi_motion);
     RUN_TEST(test_deserialize_source_int_wifi_motion);
+    RUN_TEST(test_deserialize_source_string_ble_battery);
+    RUN_TEST(test_deserialize_source_string_ble_rssi);
+    RUN_TEST(test_deserialize_source_int_ble_rssi);
+    RUN_TEST(test_deserialize_source_int_after_ble_rssi_fails);
     RUN_TEST(test_deserialize_operator_string_below);
     RUN_TEST(test_deserialize_severity_string_critical);
     RUN_TEST(test_deserialize_notify_channels_unknown_string_fails);
+    RUN_TEST(test_deserialize_blank_name_fails);
+    RUN_TEST(test_deserialize_rules_rejects_duplicate_names);
+    RUN_TEST(test_deserialize_rules_rejects_duplicate_names_trimmed_case_insensitive);
+    RUN_TEST(test_deserialize_rules_rejects_more_than_max_rules);
     return UNITY_END();
 }

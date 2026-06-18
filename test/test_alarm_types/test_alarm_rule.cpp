@@ -159,6 +159,18 @@ void test_isBleSource_ble_humidity_true() {
     TEST_ASSERT_TRUE(rule.isBleSource());
 }
 
+void test_isBleSource_ble_battery_true() {
+    AlarmRule rule;
+    rule.source = AlarmSource::BleBattery;
+    TEST_ASSERT_TRUE(rule.isBleSource());
+}
+
+void test_isBleSource_ble_rssi_true() {
+    AlarmRule rule;
+    rule.source = AlarmSource::BleRssi;
+    TEST_ASSERT_TRUE(rule.isBleSource());
+}
+
 // ============================================================================
 // Test: matchesSource()
 // ============================================================================
@@ -308,6 +320,8 @@ void run_all_tests() {
     RUN_TEST(test_isBleSource_wifi_motion_false);
     RUN_TEST(test_isBleSource_ble_temperature_true);
     RUN_TEST(test_isBleSource_ble_humidity_true);
+    RUN_TEST(test_isBleSource_ble_battery_true);
+    RUN_TEST(test_isBleSource_ble_rssi_true);
     
     // matchesSource tests
     RUN_TEST(test_matchesSource_same_true);

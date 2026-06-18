@@ -118,6 +118,26 @@ void test_serializer_defaults_missing_parallel_status() {
     TEST_ASSERT_EQUAL(std::string::npos, g_responseBuffer.find("\"current_value\""));
 }
 
+void test_serializer_includes_ble_mac_for_battery_source() {
+    ALARMS::AlarmRule rules[] = {
+        makeRule("ble-batt", "BLE battery"),
+    };
+    rules[0].source = ALARMS::AlarmSource::BleBattery;
+    strlcpy(rules[0].bleDeviceMac, "aa:bb:cc:dd:ee:ff", sizeof(rules[0].bleDeviceMac));
+
+    httpd_req_t req{};
+    req.uri = "/api/alarms/rules";
+    Utils::JsonResponseWriter writer(&req);
+    TEST_ASSERT_TRUE(writer.beginResponse());
+    TEST_ASSERT_TRUE(API::AlarmRulesSerializer::serialize(writer, rules, 1, nullptr, false));
+    TEST_ASSERT_TRUE(writer.finish());
+
+    TEST_ASSERT_NOT_EQUAL(std::string::npos, g_responseBuffer.find("\"source\":\"ble_battery\""));
+    TEST_ASSERT_NOT_EQUAL(
+        std::string::npos,
+        g_responseBuffer.find("\"ble_device_mac\":\"aa:bb:cc:dd:ee:ff\""));
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -125,5 +145,6 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_serializer_uses_parallel_status_index);
     RUN_TEST(test_serializer_defaults_missing_parallel_status);
+    RUN_TEST(test_serializer_includes_ble_mac_for_battery_source);
     return UNITY_END();
 }

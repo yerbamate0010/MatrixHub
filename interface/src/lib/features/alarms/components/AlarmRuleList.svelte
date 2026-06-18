@@ -48,6 +48,10 @@
 				return m.source_ble_temperature({ locale: i18n.languageTag });
 			case 'ble_humidity':
 				return m.source_ble_humidity({ locale: i18n.languageTag });
+			case 'ble_battery':
+				return m.source_ble_battery({ locale: i18n.languageTag });
+			case 'ble_rssi':
+				return m.source_ble_rssi({ locale: i18n.languageTag });
 		}
 	}
 

@@ -101,6 +101,8 @@ public:
             case AlarmSource::WifiMotion:     return "WiFi Motion";
             case AlarmSource::BleTemperature: return "BLE Temperature";
             case AlarmSource::BleHumidity:    return "BLE Humidity";
+            case AlarmSource::BleBattery:     return "BLE Battery";
+            case AlarmSource::BleRssi:        return "BLE RSSI";
             default:                          return "Unknown";
         }
     }
@@ -114,6 +116,8 @@ public:
             case AlarmSource::WifiMotion:     return "";
             case AlarmSource::BleTemperature: return "°C";
             case AlarmSource::BleHumidity:    return "%";
+            case AlarmSource::BleBattery:     return "%";
+            case AlarmSource::BleRssi:        return " dBm";
             default:                          return "";
         }
     }

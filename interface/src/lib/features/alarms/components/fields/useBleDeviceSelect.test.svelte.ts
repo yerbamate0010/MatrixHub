@@ -236,4 +236,96 @@ describe('useBleDeviceSelect', () => {
 		runDestroy();
 		cleanup();
 	});
+
+	it('shows battery in the device label when the alarm source is BLE battery', async () => {
+		const { useBleDeviceSelect } = await import('./useBleDeviceSelect.svelte');
+		const bleStore = {
+			devices: {
+				'aa:bb:cc:dd:ee:ff': {
+					mac: 'aa:bb:cc:dd:ee:ff',
+					temp: 21.5,
+					humid: 50,
+					batt: 90,
+					rssi: -55,
+					lastSeen: 1000,
+					saved: true
+				}
+			},
+			status: { enabled: true, running: true },
+			settings: { sensors: [{ mac: 'aa:bb:cc:dd:ee:ff', alias: 'Desk sensor' }] },
+			settingsLoading: false,
+			settingsError: null,
+			start: vi.fn(),
+			stop: vi.fn(),
+			refresh: vi.fn()
+		};
+
+		let bleState!: BleState;
+		const cleanup = $effect.root(() => {
+			bleState = useBleDeviceSelect(
+				() => 'ble_battery',
+				() => '',
+				() => {},
+				{
+					bleStore
+				}
+			);
+		});
+
+		await Promise.resolve();
+
+		expect(bleState.options).toEqual([
+			{ value: '', label: 'Select BLE device' },
+			{ value: 'aa:bb:cc:dd:ee:ff', label: 'Desk sensor (90%) ★' }
+		]);
+
+		runDestroy();
+		cleanup();
+	});
+
+	it('shows RSSI in the device label when the alarm source is BLE RSSI', async () => {
+		const { useBleDeviceSelect } = await import('./useBleDeviceSelect.svelte');
+		const bleStore = {
+			devices: {
+				'aa:bb:cc:dd:ee:ff': {
+					mac: 'aa:bb:cc:dd:ee:ff',
+					temp: 21.5,
+					humid: 50,
+					batt: 90,
+					rssi: -55,
+					lastSeen: 1000,
+					saved: true
+				}
+			},
+			status: { enabled: true, running: true },
+			settings: { sensors: [{ mac: 'aa:bb:cc:dd:ee:ff', alias: 'Desk sensor' }] },
+			settingsLoading: false,
+			settingsError: null,
+			start: vi.fn(),
+			stop: vi.fn(),
+			refresh: vi.fn()
+		};
+
+		let bleState!: BleState;
+		const cleanup = $effect.root(() => {
+			bleState = useBleDeviceSelect(
+				() => 'ble_rssi',
+				() => '',
+				() => {},
+				{
+					bleStore
+				}
+			);
+		});
+
+		await Promise.resolve();
+
+		expect(bleState.options).toEqual([
+			{ value: '', label: 'Select BLE device' },
+			{ value: 'aa:bb:cc:dd:ee:ff', label: 'Desk sensor (-55 dBm) ★' }
+		]);
+
+		runDestroy();
+		cleanup();
+	});
 });

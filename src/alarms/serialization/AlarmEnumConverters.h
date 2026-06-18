@@ -22,6 +22,8 @@ inline const char* sourceToString(AlarmSource source) {
         case AlarmSource::WifiMotion: return "wifi_motion";
         case AlarmSource::BleTemperature: return "ble_temperature";
         case AlarmSource::BleHumidity: return "ble_humidity";
+        case AlarmSource::BleBattery: return "ble_battery";
+        case AlarmSource::BleRssi: return "ble_rssi";
         default: return "unknown";
     }
 }
@@ -34,6 +36,8 @@ inline AlarmSource stringToSource(const char* str) {
     if (strcmp(str, "wifi_motion") == 0) return AlarmSource::WifiMotion;
     if (strcmp(str, "ble_temperature") == 0) return AlarmSource::BleTemperature;
     if (strcmp(str, "ble_humidity") == 0) return AlarmSource::BleHumidity;
+    if (strcmp(str, "ble_battery") == 0) return AlarmSource::BleBattery;
+    if (strcmp(str, "ble_rssi") == 0) return AlarmSource::BleRssi;
     return AlarmSource::Temperature; // Default
 }
 

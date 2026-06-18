@@ -59,6 +59,10 @@ function getSourceShortName(source: AlarmSource): string {
 			return 'BLE Temp';
 		case 'ble_humidity':
 			return 'BLE RH';
+		case 'ble_battery':
+			return 'BLE Batt';
+		case 'ble_rssi':
+			return 'BLE RSSI';
 		default:
 			return source;
 	}
@@ -95,7 +99,16 @@ function generateAutoName(draft: AlarmRuleDraft): string {
 }
 
 function isBleSource(source: AlarmSource): boolean {
-	return source === 'ble_temperature' || source === 'ble_humidity';
+	return (
+		source === 'ble_temperature' ||
+		source === 'ble_humidity' ||
+		source === 'ble_battery' ||
+		source === 'ble_rssi'
+	);
+}
+
+function getDefaultOperator(source: AlarmSource): AlarmOperator {
+	return source === 'ble_battery' || source === 'ble_rssi' ? 'below' : 'above';
 }
 
 function hasAnyActions(draft: AlarmRuleDraft): boolean {
@@ -151,6 +164,7 @@ export function useAlarmRuleForm(
 		formData.source = nextSource;
 		if (nextSource !== previousSource) {
 			formData.threshold = getThresholdConfig(nextSource).default;
+			formData.operator = getDefaultOperator(nextSource);
 			previousSource = nextSource;
 		}
 		updateAutoName();

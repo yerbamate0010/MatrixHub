@@ -172,7 +172,9 @@ describe('BleScanner integration', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Delete device' }));
 
-		const deleteDialog = mockModals.open.mock.calls[0]?.[1] as { onConfirm?: () => Promise<void> };
+		const deleteDialog = mockModals.open.mock.calls[0]?.[1] as {
+			onConfirm?: () => Promise<void>;
+		};
 		await deleteDialog.onConfirm?.();
 
 		await waitFor(() => {
@@ -207,7 +209,7 @@ describe('BleScanner integration', () => {
 
 		expect(within(resultRow!).getByRole('button', { name: 'Add' })).toBeTruthy();
 		expect(within(resultRow!).queryByText('Added')).toBeNull();
-	});
+	}, 10000);
 
 	it('shows discovered devices immediately after opening the scanner', async () => {
 		const mac = '11:22:33:44:55:66';

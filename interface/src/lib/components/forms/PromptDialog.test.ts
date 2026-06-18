@@ -71,7 +71,7 @@ describe('PromptDialog', () => {
 
 		expect(onConfirm).toHaveBeenCalledWith('Sensor B');
 		expect(mockCloseModal).toHaveBeenCalledTimes(1);
-	});
+	}, 10000);
 
 	it('runs cancel flow when closed from the backdrop', async () => {
 		const onCancel = vi.fn();

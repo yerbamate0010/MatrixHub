@@ -122,6 +122,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	alarms_error_load_fallback: () => 'load failed',
 	alarms_error_save_timeout: () => 'save timeout',
 	alarms_error_save_fallback: () => 'save failed',
+	alarms_error_duplicate_name: () => 'duplicate name',
 	alarms_error_update: () => 'update failed',
 	alarms_max_rules_reached: ({ max }: { max: number }) => `max ${max} rules reached`,
 	alarms_save_success: () => 'saved',
@@ -302,6 +303,41 @@ describe('useAlarmsManagement', () => {
 						expect(alarms.maxRulesReached).toBe(true);
 						expect(alarms.error).toBe('max 8 rules reached');
 						expect(mockNotifications.error).toHaveBeenCalledWith('max 8 rules reached', 4000);
+						resolve();
+					});
+			});
+		});
+
+		cleanup?.();
+	});
+
+	it('rejects duplicate rule names before saving', async () => {
+		const { useAlarmsManagement } = await import('./useAlarmsManagement.svelte');
+		const existingRule = createRule({ id: 'alarm-1', name: 'High temp' });
+		const api = {
+			getRules: vi.fn().mockResolvedValue({ schema_version: 1, rules: [existingRule] }),
+			saveRules: vi.fn()
+		};
+
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const alarms = useAlarmsManagement({
+					access: createAccess(true, true),
+					createApi: () => api as never
+				});
+
+				void vi
+					.waitFor(() => {
+						expect(alarms.rules).toHaveLength(1);
+					})
+					.then(async () => {
+						await alarms.submitRule(createRule({ id: 'alarm-2', name: ' high temp ' }));
+
+						expect(api.saveRules).not.toHaveBeenCalled();
+						expect(alarms.error).toBe('duplicate name');
+						expect(mockNotifications.error).toHaveBeenCalledWith('duplicate name', 4000);
 						resolve();
 					});
 			});

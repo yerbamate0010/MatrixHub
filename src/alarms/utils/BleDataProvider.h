@@ -18,7 +18,7 @@ namespace ALARMS {
 /**
  * Get BLE sensor value for a specific source and device MAC.
  * 
- * @param source AlarmSource (must be BleTemperature or BleHumidity)
+ * @param source AlarmSource (must be a BLE-backed source)
  * @param bleMac Device MAC address (e.g., "A4:C1:38:XX:XX:XX")
  * @param nowMs Current time in milliseconds (from millis())
  * @param staleTimeoutMs Maximum age of reading before considered stale
@@ -31,8 +31,13 @@ inline float getBleValue(
     BLE::BleService* bleService,
     uint32_t staleTimeoutMs = kBleStaleTimeoutMs
 ) {
-    // Validate source is BLE type
-    if (source != AlarmSource::BleTemperature && source != AlarmSource::BleHumidity) {
+    const bool isSupportedSource =
+        source == AlarmSource::BleTemperature ||
+        source == AlarmSource::BleHumidity ||
+        source == AlarmSource::BleBattery ||
+        source == AlarmSource::BleRssi;
+
+    if (!isSupportedSource) {
         return NAN;
     }
     
@@ -65,12 +70,23 @@ inline float getBleValue(
         return NAN;
     }
     
-    return (source == AlarmSource::BleTemperature) ? temp : humid;
+    switch (source) {
+        case AlarmSource::BleTemperature:
+            return temp;
+        case AlarmSource::BleHumidity:
+            return humid;
+        case AlarmSource::BleBattery:
+            return static_cast<float>(batt);
+        case AlarmSource::BleRssi:
+            return static_cast<float>(rssi);
+        default:
+            return NAN;
+    }
 }
 
 /**
  * Populate BLE sensor values in AlarmInputData for a specific rule.
- * Sets bleTemp and bleHumid fields based on the rule's source and bleDeviceMac.
+ * Sets BLE fields based on the rule's source and bleDeviceMac.
  * 
  * @param isBleSource Whether the rule uses a BLE source
  * @param source The alarm source (only relevant if isBleSource is true)
@@ -79,6 +95,8 @@ inline float getBleValue(
  * @param bleService Pointer to BleService instance
  * @param outBleTemp Output: temperature value (set to NAN if not applicable)
  * @param outBleHumid Output: humidity value (set to NAN if not applicable)
+ * @param outBleBattery Output: battery value (set to NAN if not applicable)
+ * @param outBleRssi Output: RSSI value (set to NAN if not applicable)
  */
 inline void populateBleValues(
     bool isBleSource,
@@ -87,17 +105,25 @@ inline void populateBleValues(
     uint32_t nowMs,
     BLE::BleService* bleService,
     float& outBleTemp,
-    float& outBleHumid
+    float& outBleHumid,
+    float& outBleBattery,
+    float& outBleRssi
 ) {
+    (void)source;
+
     if (!isBleSource || !bleMac || bleMac[0] == '\0') {
         outBleTemp = NAN;
         outBleHumid = NAN;
+        outBleBattery = NAN;
+        outBleRssi = NAN;
         return;
     }
     
     if (!bleService || !bleService->isRunning()) {
         outBleTemp = NAN;
         outBleHumid = NAN;
+        outBleBattery = NAN;
+        outBleRssi = NAN;
         return;
     }
     
@@ -109,6 +135,8 @@ inline void populateBleValues(
     if (!bleService->getCachedDeviceData(bleMac, temp, humid, batt, rssi, lastSeen)) {
         outBleTemp = NAN;
         outBleHumid = NAN;
+        outBleBattery = NAN;
+        outBleRssi = NAN;
         return;
     }
     
@@ -120,11 +148,15 @@ inline void populateBleValues(
     if (age > kBleStaleTimeoutMs) {
         outBleTemp = NAN;
         outBleHumid = NAN;
+        outBleBattery = NAN;
+        outBleRssi = NAN;
         return;
     }
     
     outBleTemp = temp;
     outBleHumid = humid;
+    outBleBattery = static_cast<float>(batt);
+    outBleRssi = static_cast<float>(rssi);
 }
 
 }  // namespace ALARMS

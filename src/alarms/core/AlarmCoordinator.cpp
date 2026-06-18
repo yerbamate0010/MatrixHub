@@ -71,6 +71,8 @@ float AlarmCoordinator::getValueForLogging(const AlarmRule& rule, const AlarmInp
     if (rule.source == AlarmSource::WifiMotion) return input.wifiVariance;
     if (rule.source == AlarmSource::BleTemperature) return input.bleTemp;
     if (rule.source == AlarmSource::BleHumidity) return input.bleHumid;
+    if (rule.source == AlarmSource::BleBattery) return input.bleBattery;
+    if (rule.source == AlarmSource::BleRssi) return input.bleRssi;
     return NAN;
 }
 
@@ -117,7 +119,9 @@ AlarmCoordinator::EvaluationPassResult AlarmCoordinator::collectPendingEvents(co
             now,
             _bleService,
             currentInput.bleTemp,
-            currentInput.bleHumid
+            currentInput.bleHumid,
+            currentInput.bleBattery,
+            currentInput.bleRssi
         );
 
         EvaluationResult result = AlarmEvaluator::evaluate(rule, currentInput, state, now);

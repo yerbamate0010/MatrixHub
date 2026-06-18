@@ -66,8 +66,9 @@ public:
         float value = getSensorValue(sensors, rule.source);
         result.currentValue = value;
         
-        // Skip if sensor value not available
-        if (std::isnan(value)) {
+        // Skip if sensor value is unavailable or non-finite. Infinite values
+        // are sensor/runtime faults, not valid "extreme" readings to alarm on.
+        if (!std::isfinite(value)) {
             return result;
         }
         
@@ -124,6 +125,10 @@ public:
                 return sensors.bleTemp;
             case AlarmSource::BleHumidity:
                 return sensors.bleHumid;
+            case AlarmSource::BleBattery:
+                return sensors.bleBattery;
+            case AlarmSource::BleRssi:
+                return sensors.bleRssi;
             default:
                 return NAN;
         }

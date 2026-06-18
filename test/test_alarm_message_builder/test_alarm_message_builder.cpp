@@ -135,6 +135,16 @@ void test_sourceName_ble_humidity() {
     // Should return something meaningful, not "Unknown"
 }
 
+void test_sourceName_ble_battery() {
+    const char* name = AlarmMessageBuilder::sourceName(AlarmSource::BleBattery);
+    TEST_ASSERT_EQUAL_STRING("BLE Battery", name);
+}
+
+void test_sourceName_ble_rssi() {
+    const char* name = AlarmMessageBuilder::sourceName(AlarmSource::BleRssi);
+    TEST_ASSERT_EQUAL_STRING("BLE RSSI", name);
+}
+
 void test_sourceName_unknown() {
     AlarmSource invalid = static_cast<AlarmSource>(255);
     const char* name = AlarmMessageBuilder::sourceName(invalid);
@@ -177,6 +187,16 @@ void test_sourceUnit_ble_humidity() {
     const char* unit = AlarmMessageBuilder::sourceUnit(AlarmSource::BleHumidity);
     TEST_ASSERT_NOT_NULL(unit);
     // Should return same unit as Humidity (%)
+}
+
+void test_sourceUnit_ble_battery() {
+    const char* unit = AlarmMessageBuilder::sourceUnit(AlarmSource::BleBattery);
+    TEST_ASSERT_EQUAL_STRING("%", unit);
+}
+
+void test_sourceUnit_ble_rssi() {
+    const char* unit = AlarmMessageBuilder::sourceUnit(AlarmSource::BleRssi);
+    TEST_ASSERT_EQUAL_STRING(" dBm", unit);
 }
 
 // ============================================================================
@@ -271,6 +291,18 @@ void test_build_trigger_humidity() {
     TEST_ASSERT_TRUE(len > 0);
     // Should contain % unit
     TEST_ASSERT_TRUE(strstr(buffer, "%") != nullptr);
+}
+
+void test_build_trigger_ble_rssi() {
+    AlarmRule rule = createTestRule("Weak BLE", AlarmSource::BleRssi, AlarmOperator::Below, -90.0f, AlarmSeverity::Warning);
+    EvaluationResult eval = createTestEval(&rule, -95.0f, true);
+
+    char buffer[256];
+    size_t len = AlarmMessageBuilder::build(eval, buffer, sizeof(buffer), false);
+
+    TEST_ASSERT_TRUE(len > 0);
+    TEST_ASSERT_TRUE(strstr(buffer, "BLE RSSI") != nullptr);
+    TEST_ASSERT_TRUE(strstr(buffer, "dBm") != nullptr);
 }
 
 // ============================================================================
@@ -371,6 +403,8 @@ void run_all_tests() {
     RUN_TEST(test_sourceName_wifi_motion);
     RUN_TEST(test_sourceName_ble_temperature);
     RUN_TEST(test_sourceName_ble_humidity);
+    RUN_TEST(test_sourceName_ble_battery);
+    RUN_TEST(test_sourceName_ble_rssi);
     RUN_TEST(test_sourceName_unknown);
     
     // sourceUnit tests
@@ -380,6 +414,8 @@ void run_all_tests() {
     RUN_TEST(test_sourceUnit_wifi_motion);
     RUN_TEST(test_sourceUnit_ble_temperature);
     RUN_TEST(test_sourceUnit_ble_humidity);
+    RUN_TEST(test_sourceUnit_ble_battery);
+    RUN_TEST(test_sourceUnit_ble_rssi);
     
     // build() edge cases
     RUN_TEST(test_build_null_rule);
@@ -391,6 +427,7 @@ void run_all_tests() {
     RUN_TEST(test_build_trigger_temperature_below);
     RUN_TEST(test_build_trigger_co2);
     RUN_TEST(test_build_trigger_humidity);
+    RUN_TEST(test_build_trigger_ble_rssi);
     
     // build() cleared messages
     RUN_TEST(test_build_cleared_message);

@@ -64,9 +64,9 @@ void test_infinity_positive() {
     // Input: INFINITY
     EvaluationResult res = AlarmEvaluator::evaluate(rule, createData(INFINITY), state, 1000);
     
-    // Expect: Triggered (INF > 30 is true)
-    TEST_ASSERT_TRUE(res.triggered);
-    TEST_ASSERT_TRUE(res.shouldNotify);
+    TEST_ASSERT_FALSE(res.triggered);
+    TEST_ASSERT_FALSE(res.shouldNotify);
+    TEST_ASSERT_FALSE(state.previouslyTriggered);
 }
 
 void test_infinity_negative() {
@@ -77,9 +77,9 @@ void test_infinity_negative() {
     // Input: -INFINITY
     EvaluationResult res = AlarmEvaluator::evaluate(rule, createData(-INFINITY), state, 1000);
     
-    // Expect: Triggered (-INF < 10 is true)
-    TEST_ASSERT_TRUE(res.triggered);
-    TEST_ASSERT_TRUE(res.shouldNotify);
+    TEST_ASSERT_FALSE(res.triggered);
+    TEST_ASSERT_FALSE(res.shouldNotify);
+    TEST_ASSERT_FALSE(state.previouslyTriggered);
 }
 
 // ----------------------------------------------------------------------------

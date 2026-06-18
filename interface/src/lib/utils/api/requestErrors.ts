@@ -43,7 +43,11 @@ function resolveKnownBackendErrorCode(message: string): string | null {
 		case 'input/alarm_rules_missing_rules':
 		case 'input/alarm_rules_invalid_rule':
 		case 'input/alarm_rules_duplicate_id':
-			return m.alarms_error_save_fallback({ locale: i18n.languageTag });
+			return m.alarms_error_invalid_rules({ locale: i18n.languageTag });
+		case 'input/alarm_rules_duplicate_name':
+			return m.alarms_error_duplicate_name({ locale: i18n.languageTag });
+		case 'input/alarm_rules_too_many':
+			return m.alarms_error_too_many_rules({ locale: i18n.languageTag });
 		case 'input/boot_script_not_found':
 			return m.macros_error_boot_script_not_found({ locale: i18n.languageTag });
 		case 'fs/invalid_path':

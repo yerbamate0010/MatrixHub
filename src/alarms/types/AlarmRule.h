@@ -30,7 +30,7 @@ struct __attribute__((packed)) AlarmRule {
     uint32_t createdAt;           // Unix timestamp
     uint32_t updatedAt;           // Unix timestamp
     
-    // BLE device MAC for BleTemperature/BleHumidity sources
+    // BLE device MAC for all BLE-backed alarm sources
     char bleDeviceMac[kBleMacLen];  // "XX:XX:XX:XX:XX:XX\0", empty if not BLE source
     
     // Shelly device IDs to control when alarm triggers
@@ -76,7 +76,9 @@ struct __attribute__((packed)) AlarmRule {
     /** Check if this rule uses a BLE source */
     bool isBleSource() const {
         return source == AlarmSource::BleTemperature ||
-               source == AlarmSource::BleHumidity;
+               source == AlarmSource::BleHumidity ||
+               source == AlarmSource::BleBattery ||
+               source == AlarmSource::BleRssi;
     }
     
     /** Check if rule has any Shelly devices configured */

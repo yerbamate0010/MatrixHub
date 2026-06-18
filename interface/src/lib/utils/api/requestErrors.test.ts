@@ -95,7 +95,13 @@ describe('requestErrors', () => {
 			'The device could not apply the settings.'
 		);
 		expect(toUserRequestErrorMessage(new Error('input/alarm_rules_duplicate_id'))).toBe(
-			'Failed to save alarm rules.'
+			'Alarm rules contain invalid or incomplete data.'
+		);
+		expect(toUserRequestErrorMessage(new Error('input/alarm_rules_duplicate_name'))).toBe(
+			'Alarm rule names must be unique.'
+		);
+		expect(toUserRequestErrorMessage(new Error('input/alarm_rules_too_many'))).toBe(
+			'Too many alarm rules. Remove a rule before saving.'
 		);
 		expect(toUserRequestErrorMessage(new Error('input/boot_script_not_found'))).toBe(
 			'The selected boot script does not exist.'

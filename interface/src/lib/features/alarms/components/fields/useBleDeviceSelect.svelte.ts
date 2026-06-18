@@ -52,14 +52,18 @@ export function useBleDeviceSelect(
 	function formatDeviceLabel(device: LocalBleDevice): string {
 		const suffix = device.mac.slice(-5);
 		const name = device.alias ? device.alias : `Sensor ${suffix}`;
-		const reading =
-			displaySource === 'ble_humidity'
-				? Number.isFinite(device.humid)
-					? ` (${device.humid.toFixed(0)}%)`
-					: ''
-				: Number.isFinite(device.temp)
-					? ` (${device.temp.toFixed(1)}°C)`
-					: '';
+		const reading = (() => {
+			if (displaySource === 'ble_humidity') {
+				return Number.isFinite(device.humid) ? ` (${device.humid.toFixed(0)}%)` : '';
+			}
+			if (displaySource === 'ble_battery') {
+				return Number.isFinite(device.batt) ? ` (${device.batt.toFixed(0)}%)` : '';
+			}
+			if (displaySource === 'ble_rssi') {
+				return Number.isFinite(device.rssi) ? ` (${device.rssi.toFixed(0)} dBm)` : '';
+			}
+			return Number.isFinite(device.temp) ? ` (${device.temp.toFixed(1)}°C)` : '';
+		})();
 		const saved = device.saved ? ' ★' : '';
 		return `${name}${reading}${saved}`;
 	}
