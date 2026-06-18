@@ -73,7 +73,7 @@ export const DEFAULT_SYSTEM_STATUS: SystemStatus = {
   isConnected: false,
   isStaConnected: false,
   isApMode: false,
-  coreTemp: 0
+  coreTemp: 0,
 };
 
 export interface SystemStatusWifiDiagnostics {
@@ -385,6 +385,12 @@ export interface SystemNetworkInfo {
     closes: number;
     last_open_ms: number;
     last_close_ms: number;
+    ws_active_clients: number;
+    ws_peak_clients: number;
+    ws_opens: number;
+    ws_closes: number;
+    last_ws_open_ms: number;
+    last_ws_close_ms: number;
     ws_forced_removals: number;
     ws_queue_drops: number;
     last_ws_queue_drop_ms: number;
@@ -405,17 +411,19 @@ export interface SystemNetworkInfo {
 
 export interface WifiStatus {
   status: number;
-  local_ip: string;
-  mac_address: string;
-  rssi: number;
-  ssid: string;
-  bssid: string;
-  channel: number;
-  subnet_mask: string;
-  gateway_ip: string;
-  dns_ip_1: string;
+  local_ip?: string;
+  mac_address?: string;
+  rssi?: number;
+  ssid?: string;
+  bssid?: string;
+  channel?: number;
+  subnet_mask?: string;
+  gateway_ip?: string;
+  dns_ip_1?: string;
   dns_ip_2?: string;
 }
+
+export type WifiMode = "off" | "ap" | "sta";
 
 export interface KnownNetworkItem {
   ssid: string;
@@ -430,8 +438,41 @@ export interface KnownNetworkItem {
 
 export interface WifiSettings {
   hostname: string;
-  connection_mode: number;
+  mode: WifiMode;
+  /** Legacy websocket snapshot field; REST settings use `mode`. */
+  connection_mode?: number;
   wifi_networks: KnownNetworkItem[];
+}
+
+export type NetworkScanState = "idle" | "running" | "ready";
+
+export interface NetworkItem {
+  rssi: number;
+  ssid: string;
+  bssid: string;
+  channel: number;
+  encryption_type: number;
+}
+
+export interface NetworkListResponse {
+  networks: NetworkItem[];
+  scan_state?: NetworkScanState;
+}
+
+export interface NtpSettings {
+  enabled: boolean;
+  server: string;
+  tz_label: string;
+  tz_format: string;
+}
+
+export interface NtpStatus {
+  status: number;
+  time_valid?: boolean;
+  utc_time: string;
+  local_time: string;
+  server: string;
+  uptime: number;
 }
 
 export interface ApStatus {

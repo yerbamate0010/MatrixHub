@@ -126,6 +126,7 @@ describe('useWifiSensingManagement', () => {
 			variance_threshold: 6
 		});
 		mockApi.getWifiStatus.mockResolvedValue({
+			status: 3,
 			ssid: 'Office WiFi',
 			channel: 11,
 			rssi: -54
@@ -155,6 +156,38 @@ describe('useWifiSensingManagement', () => {
 
 		cleanup?.();
 		expect(mockSystemEventsUnsubscribe).toHaveBeenCalledOnce();
+	});
+
+	it('ignores partial WiFi status when sensing context is offline', async () => {
+		mockApi.getWifiStatus.mockResolvedValue({ status: 0 });
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				mockUser.admin = true;
+				const sensing = useWifiSensingManagement();
+
+				void vi
+					.waitFor(() => {
+						expect(sensing.savedSettings?.enabled).toBe(true);
+					})
+					.then(async () => {
+						setEventCallback({
+							type: 'sensing',
+							data: { timestamp: 100, rssi: -60, variance: 1.25, motion: false }
+						});
+
+						await vi.waitFor(() => {
+							expect(mockApi.getWifiStatus).toHaveBeenCalled();
+							expect(sensing.sensingData?.connectedSSID).toBe('');
+							expect(sensing.sensingData?.connectedChannel).toBe(0);
+						});
+						resolve();
+					});
+			});
+		});
+
+		cleanup?.();
 	});
 
 	it('updates live sensing stats from incoming events', async () => {

@@ -129,6 +129,14 @@ export function useWifiSensingStatus(
 			const wifiStatus = await getApi().getWifiStatus();
 
 			if (requestId !== connectionInfoRequestId || !isStarted || !options.isEnabled()) return;
+			if (
+				wifiStatus.status !== 3 ||
+				!wifiStatus.ssid ||
+				wifiStatus.channel === undefined ||
+				wifiStatus.rssi === undefined
+			) {
+				return;
+			}
 
 			applyConnectionInfo(wifiStatus.ssid, wifiStatus.channel, wifiStatus.rssi);
 		} catch (nextError) {
