@@ -61,7 +61,7 @@ void test_update_from_storage_hashes_legacy_password_and_marks_pending_migration
     TEST_ASSERT_TRUE(PasswordHasher::matchesStoredCredential("plain-secret", settings.users.front().password));
 }
 
-void test_read_for_api_hides_passwords_from_http_payload() {
+void test_read_for_api_hides_passwords_and_jwt_secret_from_http_payload() {
     SecuritySettings settings;
     settings.jwtSecret = "secret";
     settings.users.push_back(User("alice", PasswordHasher::hashPassword("top-secret"), true));
@@ -70,7 +70,8 @@ void test_read_for_api_hides_passwords_from_http_payload() {
     JsonObject root = doc.to<JsonObject>();
     SecuritySettings::readForApi(settings, root);
 
-    TEST_ASSERT_EQUAL_STRING("secret", root["jwt_secret"] | "");
+    TEST_ASSERT_EQUAL_STRING("", root["jwt_secret"] | "");
+    TEST_ASSERT_TRUE(root["jwt_secret_configured"].as<bool>());
     TEST_ASSERT_TRUE(root["users"].is<JsonArray>());
     TEST_ASSERT_EQUAL(1, root["users"].as<JsonArray>().size());
     TEST_ASSERT_EQUAL_STRING("alice", root["users"][0]["username"] | "");
@@ -155,7 +156,7 @@ int main(int argc, char **argv) {
 
     UNITY_BEGIN();
     RUN_TEST(test_update_from_storage_hashes_legacy_password_and_marks_pending_migration);
-    RUN_TEST(test_read_for_api_hides_passwords_from_http_payload);
+    RUN_TEST(test_read_for_api_hides_passwords_and_jwt_secret_from_http_payload);
     RUN_TEST(test_read_for_storage_preserves_hashed_credential);
     RUN_TEST(test_update_from_http_keeps_existing_hash_when_password_is_blank);
     RUN_TEST(test_update_generates_persistent_jwt_secret_when_missing);

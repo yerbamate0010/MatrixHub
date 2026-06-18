@@ -102,6 +102,30 @@ void test_access_policy_blocks_config_after_backend_translation() {
 	);
 }
 
+void test_access_policy_blocks_uploads_to_log_storage() {
+	TEST_ASSERT_TRUE(
+		FileManagerPathUtils::isAccessAllowed("/data-backup", FileManagerPathUtils::FileManagerPathAccess::Upload)
+	);
+	TEST_ASSERT_FALSE(
+		FileManagerPathUtils::isAccessAllowed("/data", FileManagerPathUtils::FileManagerPathAccess::Upload)
+	);
+	TEST_ASSERT_FALSE(
+		FileManagerPathUtils::isAccessAllowed("/data/2026-06", FileManagerPathUtils::FileManagerPathAccess::Upload)
+	);
+	TEST_ASSERT_FALSE(
+		FileManagerPathUtils::isAccessAllowed(
+			"/data/2026-06/2026-06-18.bin",
+			FileManagerPathUtils::FileManagerPathAccess::Upload
+		)
+	);
+	TEST_ASSERT_TRUE(
+		FileManagerPathUtils::isAccessAllowed(
+			"/data/2026-06/2026-06-18.bin",
+			FileManagerPathUtils::FileManagerPathAccess::Download
+		)
+	);
+}
+
 void test_storage_service_psram_translation_matches_registry() {
 	StorageService storage(&LittleFS);
 	const SYSTEM::PsramString nativePath =
@@ -133,6 +157,7 @@ void setup() {
 	RUN_TEST(test_registry_psram_overloads_match_string_contract);
 	RUN_TEST(test_registry_rejects_sdcard_backend_without_backend_support);
 	RUN_TEST(test_access_policy_blocks_config_after_backend_translation);
+	RUN_TEST(test_access_policy_blocks_uploads_to_log_storage);
 	RUN_TEST(test_storage_service_psram_translation_matches_registry);
 	RUN_TEST(test_resolver_rejects_invalid_upload_directory_after_normalization);
 	UNITY_END();
@@ -153,6 +178,7 @@ int main(int argc, char** argv) {
 	RUN_TEST(test_registry_psram_overloads_match_string_contract);
 	RUN_TEST(test_registry_rejects_sdcard_backend_without_backend_support);
 	RUN_TEST(test_access_policy_blocks_config_after_backend_translation);
+	RUN_TEST(test_access_policy_blocks_uploads_to_log_storage);
 	RUN_TEST(test_storage_service_psram_translation_matches_registry);
 	RUN_TEST(test_resolver_rejects_invalid_upload_directory_after_normalization);
 	return UNITY_END();

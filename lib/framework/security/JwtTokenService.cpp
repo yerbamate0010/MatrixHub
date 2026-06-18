@@ -10,6 +10,8 @@
 #define LOG_TAG "Security"
 
 namespace {
+constexpr const char* kRevocationClaim = "rev";
+
 String toHexString(const uint8_t *data, size_t len)
 {
     char hexBuffer[65] = {0};
@@ -47,6 +49,7 @@ void populateJWTPayload(JsonObject &payload, const User *user)
     // only stable claims we need on-device.
     payload["username"] = user->username;
     payload["admin"] = user->admin;
+    payload[kRevocationClaim] = static_cast<long>(user->validAfter);
 }
 } // namespace
 
@@ -135,6 +138,19 @@ boolean JwtTokenService::validatePayload(JsonObject &parsedPayload, const User *
     if (parsedPayload["admin"] != user->admin)
     {
         return false;
+    }
+
+    if (parsedPayload[kRevocationClaim].is<long>())
+    {
+        const long tokenRevocationStamp = parsedPayload[kRevocationClaim];
+        const long currentRevocationStamp = static_cast<long>(user->validAfter);
+        if (tokenRevocationStamp != currentRevocationStamp)
+        {
+            LOGW("Token rejected: revocation stamp mismatch (token: %ld, current: %ld)",
+                 tokenRevocationStamp,
+                 currentRevocationStamp);
+            return false;
+        }
     }
 
     if (parsedPayload["iat"].is<time_t>())

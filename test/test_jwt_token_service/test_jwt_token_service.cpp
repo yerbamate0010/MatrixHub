@@ -151,6 +151,28 @@ void test_token_is_rejected_when_issued_before_valid_after() {
     TEST_ASSERT_FALSE(auth.authenticated);
 }
 
+void test_token_is_rejected_after_revocation_stamp_changes_in_same_second() {
+    TEST_TIME::now = 5000;
+    setMockYear(2026);
+
+    JwtTokenService service("secret");
+    service.configureSecret("secret");
+    auto users = makeUsers();
+    auto user = users.begin();
+
+    const String oldToken = service.generateJWT(&(*user));
+    user->validAfter = 5000;
+
+    const Authentication oldAuth = service.authenticateJWT(oldToken.c_str(), users);
+    TEST_ASSERT_FALSE(oldAuth.authenticated);
+
+    const String newToken = service.generateJWT(&(*user));
+    const Authentication newAuth = service.authenticateJWT(newToken.c_str(), users);
+    TEST_ASSERT_TRUE(newAuth.authenticated);
+    TEST_ASSERT_NOT_NULL(newAuth.user.get());
+    TEST_ASSERT_EQUAL_STRING("admin", newAuth.user->username.c_str());
+}
+
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
@@ -160,5 +182,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_legacy_token_without_session_id_is_accepted_when_time_is_invalid);
     RUN_TEST(test_legacy_token_exp_is_ignored_when_time_is_valid);
     RUN_TEST(test_token_is_rejected_when_issued_before_valid_after);
+    RUN_TEST(test_token_is_rejected_after_revocation_stamp_changes_in_same_second);
     return UNITY_END();
 }

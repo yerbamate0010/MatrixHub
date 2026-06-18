@@ -16,6 +16,7 @@ constexpr char kPathSeparator = '/';
 constexpr char kWindowsSeparator = '\\';
 constexpr const char* kRootPath = "/";
 constexpr const char* kProtectedConfigRoot = "/config";
+constexpr const char* kProtectedLogRoot = "/data";
 const char kFallbackUploadName[] PROGMEM = "upload.bin";
 
 PathView makeView(const char* text) {
@@ -207,11 +208,13 @@ bool isAccessAllowedImpl(PathView canonicalNativePath, const FileManagerPathAcce
   }
 
   const bool isProtectedConfigPath = startsWithPathPrefix(canonicalNativePath, kProtectedConfigRoot);
+  const bool isProtectedLogPath = startsWithPathPrefix(canonicalNativePath, kProtectedLogRoot);
   switch (access) {
     case FileManagerPathAccess::List:
     case FileManagerPathAccess::Download:
       return true;
     case FileManagerPathAccess::Upload:
+      return !isProtectedConfigPath && !isProtectedLogPath;
     case FileManagerPathAccess::Remove:
       return !isProtectedConfigPath;
   }

@@ -129,7 +129,8 @@ describe('useUserManagement', () => {
 				const management = useUserManagement({} as never, {
 					createSecurityApi: () => ({
 						getSecuritySettings: vi.fn().mockResolvedValue({
-							jwt_secret: 'secret',
+							jwt_secret: '',
+							jwt_secret_configured: true,
 							users: [{ username: 'alice', password: 'pwd', admin: true }]
 						}),
 						saveSecuritySettings
@@ -145,7 +146,8 @@ describe('useUserManagement', () => {
 					await flushPromises();
 
 					expect(saveSecuritySettings).toHaveBeenCalledWith({
-						jwt_secret: 'secret',
+						jwt_secret: '',
+						jwt_secret_configured: true,
 						users: []
 					});
 					expect(management.state.securitySettings.users).toEqual([
@@ -172,11 +174,13 @@ describe('useUserManagement', () => {
 			management = useUserManagement({} as never, {
 				createSecurityApi: () => ({
 					getSecuritySettings: vi.fn().mockResolvedValue({
-						jwt_secret: 'old-secret',
+						jwt_secret: '',
+						jwt_secret_configured: true,
 						users: [{ username: 'store-user', password: '', admin: true }]
 					}),
 					saveSecuritySettings: vi.fn().mockResolvedValue({
-						jwt_secret: 'new-secret',
+						jwt_secret: '',
+						jwt_secret_configured: true,
 						users: [{ username: 'store-user', password: '', admin: true }]
 					})
 				}),
@@ -213,6 +217,7 @@ describe('useUserManagement', () => {
 			management.generateJwtSecret();
 
 			expect(management.state.securitySettings.jwt_secret).toBe('secret-123');
+			expect(management.state.securitySettings.jwt_secret_configured).toBe(true);
 			expect(management.isDirty).toBe(true);
 		});
 
@@ -222,7 +227,8 @@ describe('useUserManagement', () => {
 	it('auto-loads security settings once per shouldLoad cycle', async () => {
 		const { useUserManagement } = await import('./useUserManagement.svelte');
 		const getSecuritySettings = vi.fn().mockResolvedValue({
-			jwt_secret: 'secret',
+			jwt_secret: '',
+			jwt_secret_configured: true,
 			users: [{ username: 'alice', password: 'pwd', admin: true }]
 		});
 

@@ -17,6 +17,7 @@ export interface UserSetting {
 
 export interface SecuritySettings {
 	jwt_secret: string;
+	jwt_secret_configured?: boolean;
 	users: UserSetting[];
 }
 
@@ -50,8 +51,8 @@ export class SecurityApiService {
 	}
 
 	/**
-	 * Retrieves current security settings from the device
-	 * @returns Promise resolving to security settings including users and JWT config
+	 * Retrieves current security settings from the device.
+	 * The JWT secret is write-only; a blank value means "keep existing secret".
 	 * @throws ApiError if request fails or times out
 	 */
 	async getSecuritySettings(): Promise<SecuritySettings> {

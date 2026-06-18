@@ -52,13 +52,15 @@ interface UserManagementDeps {
 function createEmptySecuritySettings(): SecuritySettings {
 	return {
 		jwt_secret: '',
+		jwt_secret_configured: false,
 		users: []
 	};
 }
 
 function cloneSecuritySettings(settings: SecuritySettings): SecuritySettings {
 	return {
-		jwt_secret: settings.jwt_secret,
+		jwt_secret: typeof settings.jwt_secret === 'string' ? settings.jwt_secret : '',
+		jwt_secret_configured: !!settings.jwt_secret_configured,
 		users: settings.users.map((entry) => ({ ...entry }))
 	};
 }
@@ -72,6 +74,7 @@ function parseStoredSecuritySettings(serialized: string): SecuritySettings {
 
 		return {
 			jwt_secret: typeof parsed.jwt_secret === 'string' ? parsed.jwt_secret : '',
+			jwt_secret_configured: !!parsed.jwt_secret_configured,
 			users: Array.isArray(parsed.users)
 				? parsed.users.map((entry) => ({
 						username: typeof entry?.username === 'string' ? entry.username : '',
@@ -184,15 +187,21 @@ export function useUserManagement(
 		state.isSaving = true;
 		try {
 			const previousSettings = parseStoredSecuritySettings(originalSettingsStr);
-			const updatedSettings = await getSecurityApiService().saveSecuritySettings(
-				cloneSecuritySettings(data)
-			);
-			const invalidateCurrentSession = shouldInvalidateCurrentSession(
-				previousSettings,
-				updatedSettings,
-				session.username,
-				!!session.bearerToken
-			);
+			const requestedSettings = cloneSecuritySettings(data);
+			const updatedSettings = await getSecurityApiService().saveSecuritySettings(requestedSettings);
+			const invalidateCurrentSession =
+				shouldInvalidateCurrentSession(
+					previousSettings,
+					requestedSettings,
+					session.username,
+					!!session.bearerToken
+				) ||
+				shouldInvalidateCurrentSession(
+					previousSettings,
+					updatedSettings,
+					session.username,
+					!!session.bearerToken
+				);
 			setSavedSettings(updatedSettings);
 
 			if (invalidateCurrentSession) {
@@ -290,7 +299,8 @@ export function useUserManagement(
 		const nextSecret = deps.generateSecret?.() ?? crypto.randomUUID();
 		state.securitySettings = {
 			...state.securitySettings,
-			jwt_secret: nextSecret
+			jwt_secret: nextSecret,
+			jwt_secret_configured: true
 		};
 	}
 

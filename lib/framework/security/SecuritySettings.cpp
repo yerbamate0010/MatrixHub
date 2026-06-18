@@ -132,7 +132,11 @@ String resolveStoredCredential(const String &incomingPassword,
 
 void SecuritySettings::readForApi(SecuritySettings &settings, JsonObject &root)
 {
-    root["jwt_secret"] = settings.jwtSecret;
+    // The signing secret is write-only through the HTTP API. Exposing it in
+    // the admin UI response turns every browser/session dump into a bearer
+    // token minting capability.
+    root["jwt_secret"] = "";
+    root["jwt_secret_configured"] = !settings.jwtSecret.isEmpty();
 
     JsonArray usersArray = root["users"].to<JsonArray>();
     for (const User &user : settings.users)
