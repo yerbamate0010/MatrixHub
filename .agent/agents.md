@@ -28,8 +28,20 @@ description: ESP32 firmware & UI specialist for this repository (PsychicHttp + S
 | Device monitor | `pio device monitor` | Use after flashing to inspect logs. |
 | Backend Build | `SKIP_UI=1 pio run -e waveshare_esp32s3_matrix` | For fast backend iteration without rebuilding the Svelte UI. |
 | Backend Upload | `SKIP_UI=1 pio run -e waveshare_esp32s3_matrix -t upload` | For fast backend iteration with direct flash to device. |
+| Fast Dev Build | `./scripts/build-fast.sh` | Preferred firmware iteration path. Uses `waveshare_esp32s3_matrix_dev`, skips UI, and defaults to `-j4`. |
+| Clean Build Dir | `./scripts/build-clean.sh` | Cleans the main env only. The next build should restore from `.pio/cache` when possible. |
+| Rebuild Diagnosis | `./scripts/build-explain.sh` | Writes `build-explain.log`; use when PlatformIO rebuilds more than expected. |
 | Backend Tests | `pio test -e native` | Run Unity unit tests (host machine). |
 | Full Build | `pio run -e waveshare_esp32s3_matrix` | Builds UI + Firmware. |
+
+## Build Speed Workflow
+
+- Prefer `./scripts/build-fast.sh` for normal firmware iteration on Raspberry Pi 5.
+- A cold full build can take about 15 minutes; do not run repeated clean cold builds unless the task specifically requires timing or cache invalidation checks.
+- With `.pio/cache` warmed, a clean build directory can usually be restored in about 50 seconds instead of recompiling everything.
+- The main env uses `lib_ldf_mode = chain`; do not switch to `deep` or `deep+` unless includes and explicit `lib_deps` were checked first.
+- `src/native/**` is excluded from the ESP32 env on purpose; keep host-only code in the native env.
+- For details and portable guidance, read `BUILD_SPEED_OPTIMIZATION.md` and `docs/main_docs/BUILD_SPEED_OPTIMIZATION.md`.
 
 ## Architectural Guidelines (The "Law")
 
