@@ -30,6 +30,23 @@ except ImportError:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)))
     from prebuild_utils import is_build_task
 
+Import("env")
+
+
+def option_enabled(option_name):
+    try:
+        value = env.GetProjectOption(option_name, "0")
+    except TypeError:
+        try:
+            value = env.GetProjectOption(option_name)
+        except Exception:
+            value = "0"
+    except Exception:
+        value = "0"
+
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
 # Build-time optimization summary:
 # - skip the frontend pipeline unless real UI inputs changed,
 # - skip dependency installation unless lockfiles/setup changed,
@@ -40,14 +57,12 @@ except ImportError:
 
 # Check if this script should run
 # SKIP_UI=1 env var allows skipping the heavy Svelte build for faster backend-only iteration
-if os.environ.get('SKIP_UI') == '1':
-    print("Skipping interface build (SKIP_UI=1).")
+if os.environ.get('SKIP_UI') == '1' or option_enabled("custom_skip_ui"):
+    print("Skipping interface build (SKIP_UI/custom_skip_ui).")
 elif not is_build_task(['build', 'upload', 'buildfs', 'erase_upload']):
     # Skip script execution for all other tasks
     print("Skipping interface build for non-build task.")
 else:
-    Import("env")
-
     project_dir = env["PROJECT_DIR"]
     buildFlags = env.ParseFlags(env["BUILD_FLAGS"])
     script_file = os.path.join(project_dir, "scripts/build/build_interface.py")
