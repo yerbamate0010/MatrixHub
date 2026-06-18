@@ -25,6 +25,7 @@ inline TaskHandle_t currentTaskHandle = reinterpret_cast<TaskHandle_t>(2);
 inline BaseType_t schedulerState = 1;
 inline std::atomic<eTaskState> taskState{eRunning};
 inline TaskFunction_t lastTaskFunction = nullptr;
+inline void* lastTaskParameter = nullptr;
 inline const char* lastTaskName = nullptr;
 inline uint32_t lastTaskStackDepth = 0;
 inline UBaseType_t lastTaskPriority = 0;
@@ -39,6 +40,7 @@ inline void resetTaskCreateStub() {
     schedulerState = 1;
     taskState.store(eRunning, std::memory_order_relaxed);
     lastTaskFunction = nullptr;
+    lastTaskParameter = nullptr;
     lastTaskName = nullptr;
     lastTaskStackDepth = 0;
     lastTaskPriority = 0;
@@ -63,6 +65,7 @@ inline BaseType_t xTaskCreate( TaskFunction_t pxTaskCode,
                             UBaseType_t uxPriority,
                             TaskHandle_t * const pxCreatedTask ) {
     TEST_STUBS::FREERTOS::lastTaskFunction = pxTaskCode;
+    TEST_STUBS::FREERTOS::lastTaskParameter = pvParameters;
     TEST_STUBS::FREERTOS::lastTaskName = pcName;
     TEST_STUBS::FREERTOS::lastTaskStackDepth = usStackDepth;
     TEST_STUBS::FREERTOS::lastTaskPriority = uxPriority;
@@ -100,6 +103,7 @@ inline TaskHandle_t xTaskCreateStaticPinnedToCore(
     (void)pxTaskBuffer;
     TEST_STUBS::FREERTOS::lastTaskCore = xCoreID;
     TEST_STUBS::FREERTOS::lastTaskFunction = pxTaskCode;
+    TEST_STUBS::FREERTOS::lastTaskParameter = pvParameters;
     TEST_STUBS::FREERTOS::lastTaskName = pcName;
     TEST_STUBS::FREERTOS::lastTaskStackDepth = ulStackDepth;
     TEST_STUBS::FREERTOS::lastTaskPriority = uxPriority;

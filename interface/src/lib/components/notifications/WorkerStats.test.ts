@@ -99,4 +99,78 @@ describe('WorkerStats', () => {
 		view.unmount();
 		expect(destroyMock).toHaveBeenCalledTimes(1);
 	});
+
+	it('renders telegram worker status and counters', async () => {
+		const view = render(WorkerStats, { type: 'telegram' });
+
+		emitEvent({
+			type: 'notif_stats',
+			data: {
+				webhook: { sent: 0, failed: 0, lastMs: 0, httpCode: 0 },
+				pushover: { sent: 0, failed: 0, lastMs: 0, httpCode: 0 },
+				udp: { sent: 0, failed: 0, lastMs: 0 },
+				heartbeat: [],
+				telegram: {
+					enabled: true,
+					running: true,
+					lastActivityMs: 2500,
+					messagesProcessed: 6,
+					messagesSent: 7,
+					commandsExecuted: 3,
+					lastHttpCode: 200
+				},
+				uptimeMs: 5500
+			}
+		});
+
+		await waitFor(() => {
+			expect(screen.getByText('Worker: Telegram')).toBeTruthy();
+			expect(screen.getByText('Running')).toBeTruthy();
+			expect(screen.getByText('3s')).toBeTruthy();
+			expect(screen.getByText('6/7')).toBeTruthy();
+			expect(screen.getByText('3')).toBeTruthy();
+			expect(screen.getByText('200')).toBeTruthy();
+		});
+
+		view.unmount();
+	});
+
+	it('renders heartbeat slot statistics only for active slots', async () => {
+		const view = render(WorkerStats, { type: 'heartbeat' });
+
+		emitEvent({
+			type: 'notif_stats',
+			data: {
+				webhook: { sent: 0, failed: 0, lastMs: 0, httpCode: 0 },
+				pushover: { sent: 0, failed: 0, lastMs: 0, httpCode: 0 },
+				udp: { sent: 0, failed: 0, lastMs: 0 },
+				heartbeat: [
+					{ lastPingMs: 1000, successCount: 2, failCount: 1 },
+					{ lastPingMs: 0, successCount: 0, failCount: 0 },
+					{ lastPingMs: 0, successCount: 1, failCount: 0 }
+				],
+				telegram: {
+					enabled: false,
+					running: false,
+					lastActivityMs: 0,
+					messagesProcessed: 0,
+					messagesSent: 0,
+					commandsExecuted: 0,
+					lastHttpCode: 0
+				},
+				uptimeMs: 4000
+			}
+		});
+
+		await waitFor(() => {
+			expect(screen.getByText('Worker: Heartbeat')).toBeTruthy();
+			expect(screen.getByText('Slot 1')).toBeTruthy();
+			expect(screen.queryByText('Slot 2')).toBeNull();
+			expect(screen.getByText('Slot 3')).toBeTruthy();
+			expect(screen.getByText('2 OK')).toBeTruthy();
+			expect(screen.getByText('1 ERR')).toBeTruthy();
+		});
+
+		view.unmount();
+	});
 });
