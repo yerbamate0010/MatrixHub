@@ -44,6 +44,9 @@ export const MATRIX_EFFECT_SPEED_SCALE_CONFIG = {
 >;
 
 export const MATRIX_EFFECT_SPEED_SCALES: MatrixEffectSpeedScale[] = ['ms', 's', 'm', 'h'];
+export const MATRIX_COLOR_MAX = 0xffffff;
+export const MATRIX_CUSTOM_ICON_SLOTS = 3;
+export const MATRIX_CUSTOM_ICON_PIXELS = 64;
 
 // Keep this aligned with the backend validator. Matrix effects use one compact
 // 0..69 range end-to-end, with no hidden holes or excluded vendor IDs.
@@ -175,16 +178,31 @@ export function normalizeMatrixEffectSpeedForScale(
 	);
 }
 
-export function toMatrixHexColor(value: number): string {
+export function normalizeMatrixColor(value: number): number {
 	const normalized = Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
-	return `#${normalized.toString(16).padStart(6, '0').slice(-6)}`;
+	return normalized & MATRIX_COLOR_MAX;
+}
+
+export function toMatrixHexColor(value: number): string {
+	return `#${normalizeMatrixColor(value).toString(16).padStart(6, '0')}`;
 }
 
 export function fromMatrixHexColor(value: string): number {
 	const parsed = Number.parseInt(value.replace(/^#/, ''), 16);
-	return Number.isFinite(parsed) ? parsed : 0;
+	return Number.isFinite(parsed) ? normalizeMatrixColor(parsed) : 0;
+}
+
+export function normalizeMatrixCustomIcons(value?: number[][]): number[][] {
+	return Array.from({ length: MATRIX_CUSTOM_ICON_SLOTS }, (_, slot) => {
+		const pixels = value?.[slot];
+		if (!Array.isArray(pixels) || pixels.length !== MATRIX_CUSTOM_ICON_PIXELS) {
+			return [];
+		}
+
+		return pixels.map(normalizeMatrixColor);
+	});
 }
 
 export function getMatrixCustomIcons(value?: number[][]): number[][] {
-	return value && value.length > 0 ? value : [[], [], []];
+	return normalizeMatrixCustomIcons(value);
 }

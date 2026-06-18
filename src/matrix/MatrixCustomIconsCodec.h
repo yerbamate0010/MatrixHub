@@ -87,7 +87,7 @@ public:
             }
 
             for (size_t pixel = 0; pixel < kMatrixCustomIconPixels; pixel++) {
-                state.icons[i][pixel] = iconData[pixel].as<uint32_t>();
+                state.icons[i][pixel] = normalizeMatrixColor(iconData[pixel].as<uint32_t>());
             }
             state.has[i] = true;
         }

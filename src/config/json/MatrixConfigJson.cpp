@@ -22,7 +22,7 @@ bool loadIconFromJson(uint8_t iconIndex, JsonVariant value) {
     if (iconData.size() == MATRIX::kMatrixCustomIconPixels) {
         uint32_t bitmap[MATRIX::kMatrixCustomIconPixels];
         for (size_t pixel = 0; pixel < MATRIX::kMatrixCustomIconPixels; pixel++) {
-            bitmap[pixel] = iconData[pixel].as<uint32_t>();
+            bitmap[pixel] = MATRIX::normalizeMatrixColor(iconData[pixel].as<uint32_t>());
         }
         MATRIX::setCustomIcon(iconIndex, bitmap);
         return true;
@@ -83,18 +83,18 @@ void deserializeMatrix(JsonObject& obj, RTC::MatrixData& data) {
             UI::MATRIX::MAX_EFFECT_SPEED);
     }
     if (obj[Keys::kEffectColor].is<uint32_t>()) {
-        data.effectColor = obj[Keys::kEffectColor].as<uint32_t>();
+        data.effectColor = MATRIX::normalizeMatrixColor(obj[Keys::kEffectColor].as<uint32_t>());
     }
     if (obj[Keys::kEffectColor2].is<uint32_t>()) {
-        data.effectColor2 = obj[Keys::kEffectColor2].as<uint32_t>();
+        data.effectColor2 = MATRIX::normalizeMatrixColor(obj[Keys::kEffectColor2].as<uint32_t>());
     }
     if (obj[Keys::kEffectColor3].is<uint32_t>()) {
-        data.effectColor3 = obj[Keys::kEffectColor3].as<uint32_t>();
+        data.effectColor3 = MATRIX::normalizeMatrixColor(obj[Keys::kEffectColor3].as<uint32_t>());
     }
 
     // Menu settings
     if (obj[Keys::kMenuTextColor].is<uint32_t>()) {
-        data.menu.textColor = obj[Keys::kMenuTextColor].as<uint32_t>();
+        data.menu.textColor = MATRIX::normalizeMatrixColor(obj[Keys::kMenuTextColor].as<uint32_t>());
     }
     if (obj[Keys::kMenuScrollSpeed].is<uint16_t>()) {
         uint16_t v = obj[Keys::kMenuScrollSpeed].as<uint16_t>();
@@ -161,7 +161,7 @@ bool matrixCustomIconsChanged(JsonObject& obj) {
 
         uint32_t bitmap[MATRIX::kMatrixCustomIconPixels];
         for (size_t pixel = 0; pixel < MATRIX::kMatrixCustomIconPixels; pixel++) {
-            bitmap[pixel] = iconData[pixel].as<uint32_t>();
+            bitmap[pixel] = MATRIX::normalizeMatrixColor(iconData[pixel].as<uint32_t>());
         }
 
         if (!MATRIX::hasCustomIcon(i) || !MATRIX::customIconEquals(i, bitmap)) {

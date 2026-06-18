@@ -7,6 +7,11 @@ namespace MATRIX {
 
 constexpr size_t kMatrixCustomIconCount = 3;
 constexpr size_t kMatrixCustomIconPixels = 64;
+constexpr uint32_t kMatrixRgbColorMask = 0x00FFFFFF;
+
+constexpr uint32_t normalizeMatrixColor(uint32_t color) {
+    return color & kMatrixRgbColorMask;
+}
 
 bool hasCustomIcon(size_t index);
 bool copyCustomIcon(size_t index, uint32_t* outBuffer, size_t pixelCount = kMatrixCustomIconPixels);

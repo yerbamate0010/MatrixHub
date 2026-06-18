@@ -78,7 +78,9 @@ bool setCustomIcon(size_t index, const uint32_t* bitmap, size_t pixelCount) {
 
     return withIconStoreLock([&]() {
         if (bitmap) {
-            memcpy(s_iconCache.icons[index], bitmap, sizeof(s_iconCache.icons[index]));
+            for (size_t pixel = 0; pixel < kMatrixCustomIconPixels; ++pixel) {
+                s_iconCache.icons[index][pixel] = normalizeMatrixColor(bitmap[pixel]);
+            }
             s_iconCache.has[index] = true;
         } else {
             memset(s_iconCache.icons[index], 0, sizeof(s_iconCache.icons[index]));

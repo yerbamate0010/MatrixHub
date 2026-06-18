@@ -9,7 +9,12 @@
 	import IconGridDots from '~icons/tabler/grid-dots';
 	import IconEditorModal from '$lib/components/matrix/IconEditorModal.svelte';
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
-	import { fromMatrixHexColor, getMatrixCustomIcons, toMatrixHexColor } from './matrixModel';
+	import {
+		fromMatrixHexColor,
+		getMatrixCustomIcons,
+		normalizeMatrixCustomIcons,
+		toMatrixHexColor
+	} from './matrixModel';
 
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -55,7 +60,7 @@
 
 	async function handleIconsSave(newIcons: number[][]) {
 		if (!canManage) return false;
-		store.settings = { ...store.settings, custom_icons: newIcons };
+		store.settings = { ...store.settings, custom_icons: normalizeMatrixCustomIcons(newIcons) };
 		return true;
 	}
 </script>

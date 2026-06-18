@@ -3,6 +3,7 @@ import {
 	MATRIX_EFFECT_SPEED_SCALE_CONFIG,
 	MATRIX_EFFECT_SPEED_SCALES,
 	MATRIX_COLOR_PRESETS,
+	MATRIX_CUSTOM_ICON_PIXELS,
 	MATRIX_EFFECT_CATEGORIES,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
@@ -14,6 +15,8 @@ import {
 	getPreferredMatrixEffectSpeedScale,
 	getMatrixCustomIcons,
 	matrixEffectCategoryContainsEffect,
+	normalizeMatrixColor,
+	normalizeMatrixCustomIcons,
 	normalizeMatrixEffectSpeedForScale,
 	toMatrixEffectSpeedScaleValue,
 	toMatrixHexColor
@@ -23,8 +26,11 @@ describe('matrixModel', () => {
 	it('converts matrix colors between numeric and hex formats', () => {
 		expect(toMatrixHexColor(0x00ff00)).toBe('#00ff00');
 		expect(toMatrixHexColor(255)).toBe('#0000ff');
+		expect(toMatrixHexColor(0x1abcdef)).toBe('#abcdef');
 		expect(fromMatrixHexColor('#00FF00')).toBe(0x00ff00);
+		expect(fromMatrixHexColor('#1ABCDEF')).toBe(0xabcdef);
 		expect(fromMatrixHexColor('invalid')).toBe(0);
+		expect(normalizeMatrixColor(0x1abcdef)).toBe(0xabcdef);
 	});
 
 	it('contains one compact matrix effect range', () => {
@@ -66,7 +72,19 @@ describe('matrixModel', () => {
 
 	it('normalizes missing custom icon slots', () => {
 		expect(getMatrixCustomIcons()).toEqual([[], [], []]);
-		expect(getMatrixCustomIcons([[1], [2], [3]])).toEqual([[1], [2], [3]]);
+		expect(getMatrixCustomIcons([[1], [2], [3]])).toEqual([[], [], []]);
+	});
+
+	it('normalizes custom icons to three RGB888 slots', () => {
+		const validIcon = Array.from({ length: MATRIX_CUSTOM_ICON_PIXELS }, (_, index) =>
+			index === 0 ? 0x1abcdef : index
+		);
+
+		expect(normalizeMatrixCustomIcons([validIcon, [1], validIcon, validIcon])).toEqual([
+			[0xabcdef, ...Array.from({ length: MATRIX_CUSTOM_ICON_PIXELS - 1 }, (_, index) => index + 1)],
+			[],
+			[0xabcdef, ...Array.from({ length: MATRIX_CUSTOM_ICON_PIXELS - 1 }, (_, index) => index + 1)]
+		]);
 	});
 
 	it('maps effect speed values across all UI scales', () => {

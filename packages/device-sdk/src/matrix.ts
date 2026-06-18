@@ -20,6 +20,13 @@ export interface MatrixSettings {
   menu_scroll_speed: number;
 }
 
+const MATRIX_COLOR_MASK = 0xffffff;
+const MATRIX_CUSTOM_ICON_SLOTS = 3;
+const MATRIX_CUSTOM_ICON_PIXELS = 64;
+const MATRIX_EFFECT_MODE_MAX = 69;
+const MATRIX_EFFECT_SPEED_MIN = 50;
+const MATRIX_EFFECT_SPEED_MAX = 24 * 60 * 60 * 1000;
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object";
 }
@@ -38,27 +45,45 @@ function clampInteger(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
-function sanitizeCustomIcons(value: unknown) {
+function normalizeColor(value: number) {
+  return Math.max(0, Math.round(value)) & MATRIX_COLOR_MASK;
+}
+
+function sanitizeCustomIcons(value: unknown): number[][] | null | undefined {
   if (!Array.isArray(value)) {
     return undefined;
   }
 
-  const icons = value
-    .map((entry) => {
-      if (!Array.isArray(entry)) {
+  if (value.length !== MATRIX_CUSTOM_ICON_SLOTS) {
+    return null;
+  }
+
+  const icons: number[][] = [];
+  for (const entry of value) {
+    if (!Array.isArray(entry)) {
+      return null;
+    }
+
+    if (entry.length === 0) {
+      icons.push([]);
+      continue;
+    }
+
+    if (entry.length !== MATRIX_CUSTOM_ICON_PIXELS) {
+      return null;
+    }
+
+    const pixels: number[] = [];
+    for (const pixel of entry) {
+      if (typeof pixel !== "number" || !Number.isFinite(pixel)) {
         return null;
       }
+      pixels.push(normalizeColor(pixel));
+    }
+    icons.push(pixels);
+  }
 
-      const pixels = entry.filter(
-        (pixel): pixel is number =>
-          typeof pixel === "number" && Number.isFinite(pixel),
-      );
-
-      return pixels.length === entry.length ? pixels : null;
-    })
-    .filter((entry): entry is number[] => entry !== null);
-
-  return icons.length > 0 ? icons : undefined;
+  return icons;
 }
 
 export function parseMatrixSettings(value: unknown): MatrixSettings | null {
@@ -104,17 +129,24 @@ export function parseMatrixSettings(value: unknown): MatrixSettings | null {
     rotation: clampInteger(rotation, 0, 3),
     auto_rotate: autoRotate,
     effect_enabled: effectEnabled,
-    effect_mode: clampInteger(effectMode, 0, 255),
-    effect_speed: Math.max(0, Math.round(effectSpeed)),
-    effect_color: Math.max(0, Math.round(effectColor)),
-    effect_color_2: Math.max(0, Math.round(effectColor2)),
-    effect_color_3: Math.max(0, Math.round(effectColor3)),
+    effect_mode: clampInteger(effectMode, 0, MATRIX_EFFECT_MODE_MAX),
+    effect_speed: clampInteger(
+      effectSpeed,
+      MATRIX_EFFECT_SPEED_MIN,
+      MATRIX_EFFECT_SPEED_MAX,
+    ),
+    effect_color: normalizeColor(effectColor),
+    effect_color_2: normalizeColor(effectColor2),
+    effect_color_3: normalizeColor(effectColor3),
     menu_enabled: menuEnabled,
-    menu_text_color: Math.max(0, Math.round(menuTextColor)),
+    menu_text_color: normalizeColor(menuTextColor),
     menu_scroll_speed: clampInteger(menuScrollSpeed, 20, 120),
   };
 
   const customIcons = sanitizeCustomIcons(value.custom_icons);
+  if (customIcons === null) {
+    return null;
+  }
   if (customIcons) {
     settings.custom_icons = customIcons;
   }
