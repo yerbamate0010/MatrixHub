@@ -147,6 +147,42 @@ python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --usernam
 python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --restart
 ```
 
+## Live Device Stress And Soak Tests
+
+Use the stress suite after smoke passes to exercise authenticated API endpoints,
+invalid payload handling, WebSocket reconnects, optional BLE/CSI loops, safe file
+round-trips, WiFi recovery probes, and runtime diagnostics drift checks:
+
+```bash
+python scripts/tests/stress_test.py --device-url https://192.168.0.30 --username admin --password admin --cycles 100 --delay 0.01
+```
+
+The suite writes JSON/Markdown reports under `artifacts/stress/`. It enforces
+HTTPS, logs in through JWT, retries login rate limiting, captures before/after
+heap/task/mutex/log snapshots, and fails on unexpected restarts, WebSocket queue
+drops, growing lock timeout counters, or panic/watchdog/brownout markers in the
+device log tail.
+
+Live Telegram delivery is intentionally excluded from the stress path. The
+suite may read notification settings, but it must not call delivery/test-send
+endpoints against shared devices. Macro execution is also opt-in because USB HID
+activity can affect the host:
+
+```bash
+python scripts/tests/stress_test.py --device-url https://192.168.0.30 --username admin --password admin --cycles 100 --delay 0.01 --macro-loop
+```
+
+Use the soak suite to measure longer runtime stability, heap/fragmentation drift,
+task stack watermarks, lock counters, WebSocket drops, and restart counters:
+
+```bash
+python scripts/tests/soak_test.py --device-url https://192.168.0.30 --username admin --password admin --duration 1h --interval 10s --plot
+```
+
+The soak suite writes CSV, JSON, and Markdown reports under `artifacts/soak/`.
+For release evidence, keep the generated Markdown report together with the
+firmware build hash and the smoke/stress reports from the same run.
+
 ## Test Layout
 
 Native tests live under `test/test_<module>/`.
