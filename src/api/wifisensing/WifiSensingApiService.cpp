@@ -26,6 +26,7 @@
 namespace API {
 namespace {
 constexpr const char* kWifiSensingConfigPath = "/api/wifisensing/config";
+constexpr const char* kCsiCalibratePath = "/api/wifisensing/csi/calibrate";
 constexpr size_t kCsiWsQueueDepth = 4;
 constexpr uint32_t kCsiWsQueueStackBytes = 4096;
 } // namespace
@@ -108,6 +109,10 @@ void WifiSensingApiService::begin() {
     _server->on("/api/wifisensing/status", HTTP_GET,
                 wrapAuth([this](PsychicRequest* request) {
                     return handleGetStatus(request);
+                }));
+    _server->on(kCsiCalibratePath, HTTP_POST,
+                wrapAdmin([this](PsychicRequest* request) {
+                    return handlePostCsiCalibrate(request);
                 }));
 
     if (_configEndpoint) {
@@ -257,6 +262,21 @@ esp_err_t WifiSensingApiService::handleGetStatus(PsychicRequest* request) {
     writer.key("calibration_count"); writer.value(csi.calibrationCount); writer.raw(",");
     writer.key("calibration_target"); writer.value(csi.calibrationTarget); writer.raw(",");
     writer.key("calibration_state"); writer.string(csi.calibrationState); writer.raw(",");
+    writer.key("motion"); writer.raw("{");
+    writer.key("enabled"); writer.value(config.csiAlarmEnabled); writer.raw(",");
+    writer.key("state"); writer.string(WIFISENSING::CSI::toString(csi.motion.state)); writer.raw(",");
+    writer.key("baseline_ready"); writer.value(csi.motion.baselineReady); writer.raw(",");
+    writer.key("detected"); writer.value(csi.motion.motion); writer.raw(",");
+    writer.key("noisy"); writer.value(csi.motion.noisy); writer.raw(",");
+    writer.key("needs_calibration"); writer.value(csi.motion.needsCalibration); writer.raw(",");
+    writer.key("score"); writer.value(csi.motion.score, 2); writer.raw(",");
+    writer.key("confidence"); writer.value(csi.motion.confidence, 2); writer.raw(",");
+    writer.key("frames_seen"); writer.value(static_cast<unsigned long>(csi.motion.framesSeen)); writer.raw(",");
+    writer.key("width"); writer.value(static_cast<unsigned int>(csi.motion.width)); writer.raw(",");
+    writer.key("band_count"); writer.value(static_cast<unsigned int>(csi.motion.bandCount)); writer.raw(",");
+    writer.key("selected_carriers"); writer.value(static_cast<unsigned int>(csi.motion.selectedCarrierCount)); writer.raw(",");
+    writer.key("valid_carriers"); writer.value(static_cast<unsigned int>(csi.motion.validCarrierCount));
+    writer.raw("},");
     writer.key("ws_client_count"); writer.value(static_cast<unsigned long>(_csiEndpoint.broadcaster().getClientCount())); writer.raw(",");
     writer.key("ws_queue_enabled"); writer.value(_csiEndpoint.broadcaster().isQueueEnabled());
     writer.raw("}");
@@ -264,6 +284,21 @@ esp_err_t WifiSensingApiService::handleGetStatus(PsychicRequest* request) {
     writer.raw("}");
     writer.finish();
     return ESP_OK;
+}
+
+esp_err_t WifiSensingApiService::handlePostCsiCalibrate(PsychicRequest* request) {
+    if (!_csiService) {
+        return Response::success(request, [](JsonVariant& root) {
+            root["ok"] = false;
+            root["error"] = "csi_service_unavailable";
+        });
+    }
+
+    _csiService->requestMotionCalibration();
+    return Response::success(request, [](JsonVariant& root) {
+        root["ok"] = true;
+        root["state"] = "calibrating";
+    });
 }
 
 }  // namespace API

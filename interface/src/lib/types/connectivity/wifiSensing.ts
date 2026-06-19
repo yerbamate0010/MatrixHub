@@ -29,6 +29,44 @@ export interface WifiSensingSettings {
 	enabled: boolean;
 	sample_interval_ms: number;
 	variance_threshold: number;
+	csi_alarm: CsiAlarmSettings;
+}
+
+export interface CsiAlarmBand {
+	start: number;
+	end: number;
+}
+
+export interface CsiAlarmSettings {
+	enabled: boolean;
+	bands: CsiAlarmBand[];
+	baseline_frames: number;
+	top_k: number;
+	enter_threshold: number;
+	clear_threshold: number;
+	hold_ms: number;
+	clear_hold_ms: number;
+	min_noise: number;
+	min_energy: number;
+	noisy_threshold: number;
+	auto_recalibration: boolean;
+	sensitivity: 0 | 1 | 2;
+}
+
+export interface CsiMotionStatus {
+	enabled: boolean;
+	state: string;
+	baseline_ready: boolean;
+	detected: boolean;
+	noisy: boolean;
+	needs_calibration: boolean;
+	score: number;
+	confidence: number;
+	frames_seen: number;
+	width: number;
+	band_count: number;
+	selected_carriers: number;
+	valid_carriers: number;
 }
 
 export interface CsiRuntimeMetrics {
@@ -58,6 +96,7 @@ export interface CsiRuntimeMetrics {
 	calibration_count: number;
 	calibration_target: number;
 	calibration_state: string;
+	motion: CsiMotionStatus;
 	ws_client_count: number;
 	ws_queue_enabled: boolean;
 }

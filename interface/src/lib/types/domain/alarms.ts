@@ -15,7 +15,8 @@ export type AlarmSource =
 	| 'ble_temperature'
 	| 'ble_humidity'
 	| 'ble_battery'
-	| 'ble_rssi';
+	| 'ble_rssi'
+	| 'wifi_csi_motion';
 
 /** Comparison operator */
 export type AlarmOperator = 'above' | 'below';
@@ -54,7 +55,10 @@ export interface AlarmRulesConfig {
 }
 
 /** Display metadata for signal sources */
-export const ALARM_SOURCES: Record<AlarmSource, { unit: string; icon: string }> = {
+export const ALARM_SOURCES: Record<
+	AlarmSource,
+	{ unit: string; icon: string; booleanLike?: boolean }
+> = {
 	co2: { unit: 'ppm', icon: 'cloud' },
 	temperature: { unit: '°C', icon: 'thermometer' },
 	humidity: { unit: '%', icon: 'droplet' },
@@ -62,7 +66,8 @@ export const ALARM_SOURCES: Record<AlarmSource, { unit: string; icon: string }> 
 	ble_temperature: { unit: '°C', icon: 'bluetooth' },
 	ble_humidity: { unit: '%', icon: 'bluetooth' },
 	ble_battery: { unit: '%', icon: 'bluetooth' },
-	ble_rssi: { unit: 'dBm', icon: 'bluetooth' }
+	ble_rssi: { unit: 'dBm', icon: 'bluetooth' },
+	wifi_csi_motion: { unit: '', icon: 'wifi', booleanLike: true }
 };
 
 /** Display metadata for severity levels */

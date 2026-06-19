@@ -31,23 +31,29 @@
 	<span class="text-xs font-bold block opacity-70 uppercase tracking-wide">
 		{m.alarms_field_threshold({ locale: i18n.languageTag })}
 	</span>
-	<div class="flex items-center gap-2">
-		<input
-			id="alarm-threshold"
-			type="range"
-			class="range range-primary range-sm flex-1 w-full"
-			value={threshold}
-			oninput={handleChange}
-			{min}
-			{max}
-			{step}
-		/>
-		<span class="text-sm w-16 text-right font-mono">
-			{threshold}{ALARM_SOURCES[source].unit}
-		</span>
-	</div>
-	<div class="flex justify-between text-[10px] opacity-50 px-1">
-		<span>{min}{ALARM_SOURCES[source].unit}</span>
-		<span>{max}{ALARM_SOURCES[source].unit}</span>
-	</div>
+	{#if ALARM_SOURCES[source].booleanLike}
+		<div class="rounded-md border border-base-300/60 bg-base-100/40 px-3 py-2 text-sm font-medium">
+			{m.alarm_boolean_csi_motion_detected({ locale: i18n.languageTag })}
+		</div>
+	{:else}
+		<div class="flex items-center gap-2">
+			<input
+				id="alarm-threshold"
+				type="range"
+				class="range range-primary range-sm flex-1 w-full"
+				value={threshold}
+				oninput={handleChange}
+				{min}
+				{max}
+				{step}
+			/>
+			<span class="text-sm w-16 text-right font-mono">
+				{threshold}{ALARM_SOURCES[source].unit}
+			</span>
+		</div>
+		<div class="flex justify-between text-[10px] opacity-50 px-1">
+			<span>{min}{ALARM_SOURCES[source].unit}</span>
+			<span>{max}{ALARM_SOURCES[source].unit}</span>
+		</div>
+	{/if}
 </div>

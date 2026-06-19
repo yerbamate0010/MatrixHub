@@ -158,7 +158,8 @@ std::unique_ptr<SYSTEM::HeartbeatSettingsService> createHeartbeatSettings(
     std::function<void()> onConfigApplied);
 std::unique_ptr<WIFISENSING::WifiSensingSettings> createWifiSensingSettings(
     FS* fs,
-    WIFISENSING::WifiSensingService* service);
+    WIFISENSING::WifiSensingService* service,
+    WIFISENSING::CSI::CsiService* csiService);
 void beginWifiSensingSettings(WIFISENSING::WifiSensingSettings* settings);
 std::unique_ptr<NotificationSettingsService> createNotificationSettings(
     PsychicHttpServer* server,

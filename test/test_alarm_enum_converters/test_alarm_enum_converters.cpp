@@ -60,6 +60,10 @@ void test_sourceToString_ble_rssi() {
     TEST_ASSERT_EQUAL_STRING("ble_rssi", sourceToString(AlarmSource::BleRssi));
 }
 
+void test_sourceToString_wifi_csi_motion() {
+    TEST_ASSERT_EQUAL_STRING("wifi_csi_motion", sourceToString(AlarmSource::WifiCsiMotion));
+}
+
 void test_sourceToString_unknown() {
     // Cast invalid value to test unknown case
     AlarmSource invalid = static_cast<AlarmSource>(255);
@@ -100,6 +104,10 @@ void test_stringToSource_ble_battery() {
 
 void test_stringToSource_ble_rssi() {
     TEST_ASSERT_EQUAL(AlarmSource::BleRssi, stringToSource("ble_rssi"));
+}
+
+void test_stringToSource_wifi_csi_motion() {
+    TEST_ASSERT_EQUAL(AlarmSource::WifiCsiMotion, stringToSource("wifi_csi_motion"));
 }
 
 void test_stringToSource_null() {
@@ -321,6 +329,7 @@ void run_all_tests() {
     RUN_TEST(test_sourceToString_ble_humidity);
     RUN_TEST(test_sourceToString_ble_battery);
     RUN_TEST(test_sourceToString_ble_rssi);
+    RUN_TEST(test_sourceToString_wifi_csi_motion);
     RUN_TEST(test_sourceToString_unknown);
     
     // stringToSource tests
@@ -332,6 +341,7 @@ void run_all_tests() {
     RUN_TEST(test_stringToSource_ble_humidity);
     RUN_TEST(test_stringToSource_ble_battery);
     RUN_TEST(test_stringToSource_ble_rssi);
+    RUN_TEST(test_stringToSource_wifi_csi_motion);
     RUN_TEST(test_stringToSource_null);
     RUN_TEST(test_stringToSource_empty);
     RUN_TEST(test_stringToSource_invalid);

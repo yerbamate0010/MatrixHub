@@ -55,6 +55,8 @@ function getSourceShortName(source: AlarmSource): string {
 			return 'RH';
 		case 'wifi_motion':
 			return 'Motion';
+		case 'wifi_csi_motion':
+			return 'CSI Motion';
 		case 'ble_temperature':
 			return 'BLE Temp';
 		case 'ble_humidity':
@@ -87,7 +89,9 @@ function generateAutoName(draft: AlarmRuleDraft): string {
 	const op = draft.operator === 'above' ? '>' : '<';
 	const actions = getActionTokens(draft.notify_channels, draft.shelly_device_ids ?? []);
 	const actionSuffix = actions.length > 0 ? ` (${actions.join(', ')})` : '';
-	const baseName = `${getSourceShortName(draft.source)} ${op} ${draft.threshold}${unit}`;
+	const baseName = isBooleanLikeSource(draft.source)
+		? 'CSI motion detected'
+		: `${getSourceShortName(draft.source)} ${op} ${draft.threshold}${unit}`;
 	const fullName = `${baseName}${actionSuffix}`;
 
 	if (fullName.length <= MAX_ALARM_NAME_LENGTH) {
@@ -108,7 +112,12 @@ function isBleSource(source: AlarmSource): boolean {
 }
 
 function getDefaultOperator(source: AlarmSource): AlarmOperator {
+	if (source === 'wifi_csi_motion') return 'above';
 	return source === 'ble_battery' || source === 'ble_rssi' ? 'below' : 'above';
+}
+
+function isBooleanLikeSource(source: AlarmSource): boolean {
+	return source === 'wifi_csi_motion';
 }
 
 function hasAnyActions(draft: AlarmRuleDraft): boolean {
@@ -133,6 +142,10 @@ export function useAlarmRuleForm(
 		const nextDraft = currentRule ? createDraftFromRule(currentRule) : createNewDraft();
 
 		formData = nextDraft;
+		if (isBooleanLikeSource(formData.source)) {
+			formData.operator = 'above';
+			formData.threshold = 0.5;
+		}
 		previousSource = nextDraft.source;
 
 		if (!currentRule && nextDraft.name === '') {
@@ -171,11 +184,23 @@ export function useAlarmRuleForm(
 	}
 
 	function handleOperatorChange(nextOperator: AlarmOperator) {
+		if (isBooleanLikeSource(formData.source)) {
+			formData.operator = 'above';
+			formData.threshold = 0.5;
+			updateAutoName();
+			return;
+		}
 		formData.operator = nextOperator;
 		updateAutoName();
 	}
 
 	function handleThresholdChange(nextThreshold: number) {
+		if (isBooleanLikeSource(formData.source)) {
+			formData.operator = 'above';
+			formData.threshold = 0.5;
+			updateAutoName();
+			return;
+		}
 		formData.threshold = nextThreshold;
 		updateAutoName();
 	}
@@ -193,6 +218,7 @@ export function useAlarmRuleForm(
 	let thresholdConfig = $derived(getThresholdConfig(formData.source));
 	let isEditing = $derived(getRule() !== null);
 	let currentBleSource = $derived(isBleSource(formData.source));
+	let currentBooleanLikeSource = $derived(isBooleanLikeSource(formData.source));
 	let bleValid = $derived(!currentBleSource || (formData.ble_device_mac?.length ?? 0) > 0);
 	// LED-only rules stay local and do not need remote-channel cooldown UX.
 	// If LED should start using cooldown-specific UI later, revisit this derived
@@ -230,6 +256,9 @@ export function useAlarmRuleForm(
 		},
 		get isBleSource() {
 			return currentBleSource;
+		},
+		get isBooleanLikeSource() {
+			return currentBooleanLikeSource;
 		},
 		get needsCooldown() {
 			return needsCooldown;

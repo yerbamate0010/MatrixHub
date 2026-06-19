@@ -1,6 +1,8 @@
 #include "ServiceRegistry.h"
 
 #include "ServiceRegistryApi.h"
+#include "../../alarms/AlarmService.h"
+#include "../../alarms/types/AlarmInputData.h"
 #include "../../ble/settings/BleSettingsService.h"
 #include "../../notifications/runtime/NotificationRuntimeReconciler.h"
 #include "../../notifications/runtime/NotificationWorker.h"
@@ -47,6 +49,7 @@ void ServiceRegistry::detachRuntimeCallbacks() {
 
     if (_csiService) {
         _csiService->setCsiCallback(nullptr);
+        _csiService->setMotionCallback(nullptr);
     }
 }
 
@@ -120,6 +123,17 @@ void ServiceRegistry::wireRuntimeCallbacks() {
                 return;
             }
             _api->systemApi->sendShellyEvent(&dev);
+        });
+    }
+
+    if (_csiService && _alarmService) {
+        _csiService->setMotionCallback([this](bool motion) {
+            if (_isDying.load(std::memory_order_acquire) || !_alarmService) {
+                return;
+            }
+            ALARMS::AlarmInputData input;
+            input.wifiCsiMotion = motion ? 1.0f : 0.0f;
+            _alarmService->submitInput(input);
         });
     }
 

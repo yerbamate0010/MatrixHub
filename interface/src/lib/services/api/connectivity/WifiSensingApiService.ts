@@ -32,6 +32,12 @@ export class WifiSensingApiService {
 		});
 	}
 
+	async calibrateCsiAlarm(): Promise<{ ok: boolean; state?: string; error?: string }> {
+		return this.client.post('/api/wifisensing/csi/calibrate', {}, {
+			signal: AbortSignal.timeout(WifiSensingApiService.SAVE_TIMEOUT_MS)
+		});
+	}
+
 	async getWifiStatus(): Promise<WifiStatus> {
 		// Reusing the core WiFi status endpoint to get channel/SSID info
 		return this.client.get<WifiStatus>('/rest/wifiStatus', {

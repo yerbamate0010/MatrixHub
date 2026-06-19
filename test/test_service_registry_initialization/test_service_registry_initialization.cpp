@@ -66,6 +66,7 @@ inline int createWifiSensingSettingsCalls = 0;
 inline int beginWifiSensingSettingsCalls = 0;
 inline FS* lastWifiSensingFs = nullptr;
 inline WIFISENSING::WifiSensingService* lastWifiSensingService = nullptr;
+inline WIFISENSING::CSI::CsiService* lastWifiSensingCsiService = nullptr;
 
 inline int createNotificationSettingsCalls = 0;
 inline int beginNotificationSettingsCalls = 0;
@@ -217,6 +218,7 @@ void reset() {
     beginWifiSensingSettingsCalls = 0;
     lastWifiSensingFs = nullptr;
     lastWifiSensingService = nullptr;
+    lastWifiSensingCsiService = nullptr;
 
     createNotificationSettingsCalls = 0;
     beginNotificationSettingsCalls = 0;
@@ -400,10 +402,12 @@ std::unique_ptr<SYSTEM::HeartbeatSettingsService> createHeartbeatSettings(
 
 std::unique_ptr<WIFISENSING::WifiSensingSettings> createWifiSensingSettings(
     FS* fs,
-    WIFISENSING::WifiSensingService* service) {
+    WIFISENSING::WifiSensingService* service,
+    WIFISENSING::CSI::CsiService* csiService) {
     TEST_SERVICE_REGISTRY_INIT::createWifiSensingSettingsCalls++;
     TEST_SERVICE_REGISTRY_INIT::lastWifiSensingFs = fs;
     TEST_SERVICE_REGISTRY_INIT::lastWifiSensingService = service;
+    TEST_SERVICE_REGISTRY_INIT::lastWifiSensingCsiService = csiService;
     return std::unique_ptr<WIFISENSING::WifiSensingSettings>(
         TEST_SERVICE_REGISTRY_INIT::fakeObjectPtr<WIFISENSING::WifiSensingSettings>());
 }
@@ -796,6 +800,8 @@ void test_initializeBusinessServices_creates_owned_services_and_starts_shelly_wh
     TEST_ASSERT_EQUAL_PTR(framework.getFS(), TEST_SERVICE_REGISTRY_INIT::lastWifiSensingFs);
     TEST_ASSERT_EQUAL_PTR(registry._wifiSensingService.get(),
                           TEST_SERVICE_REGISTRY_INIT::lastWifiSensingService);
+    TEST_ASSERT_EQUAL_PTR(registry._csiService.get(),
+                          TEST_SERVICE_REGISTRY_INIT::lastWifiSensingCsiService);
     TEST_ASSERT_EQUAL_PTR(&server, TEST_SERVICE_REGISTRY_INIT::lastNotificationServer);
     TEST_ASSERT_EQUAL_PTR(framework.getFS(), TEST_SERVICE_REGISTRY_INIT::lastNotificationFs);
     TEST_ASSERT_EQUAL_PTR(framework.getSecurityManager(),

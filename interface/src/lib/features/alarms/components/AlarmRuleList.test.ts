@@ -34,7 +34,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	source_ble_temperature: () => 'BLE Temperature',
 	source_ble_humidity: () => 'BLE Humidity',
 	source_ble_battery: () => 'BLE Battery',
-	source_ble_rssi: () => 'BLE RSSI'
+	source_ble_rssi: () => 'BLE RSSI',
+	source_wifi_csi_motion: () => 'CSI Motion',
+	alarm_boolean_csi_motion_detected: () => 'CSI motion detected'
 }));
 
 function createRule(id: string): AlarmRule {
@@ -144,5 +146,29 @@ describe('AlarmRuleList', () => {
 		expect(screen.getByText(/20%/)).toBeTruthy();
 		expect(screen.getByText(/BLE RSSI/)).toBeTruthy();
 		expect(screen.getByText(/-90dBm/)).toBeTruthy();
+	});
+
+	it('renders CSI motion as boolean text instead of a numeric threshold', () => {
+		render(AlarmRuleList, {
+			props: {
+				rules: [
+					{
+						...createRule('csi'),
+						source: 'wifi_csi_motion',
+						operator: 'above',
+						threshold: 0.5
+					}
+				],
+				canManage: true,
+				onEdit: vi.fn(),
+				onDelete: vi.fn(),
+				onToggle: vi.fn(),
+				onAdd: vi.fn(),
+				onInfo: vi.fn()
+			}
+		});
+
+		expect(screen.getByText('CSI motion detected')).toBeTruthy();
+		expect(screen.queryByText(/0\.5/)).toBeNull();
 	});
 });

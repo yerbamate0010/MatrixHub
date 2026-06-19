@@ -80,8 +80,9 @@ constexpr uint32_t kMagicValid = 0xC0FFEE42;
  *  40 - Added KeyboardData for direct keyboard UI/API feature gating (March 2026)
  *  41 - Removed BLE peripheral/passkey retained settings; BLE is scanner-only (March 2026)
  *  42 - Expanded Matrix effectSpeed to uint32_t for long-duration animations (April 2026)
+ *  43 - Added WiFi CSI motion alarm retained settings (June 2026)
  */
-constexpr uint32_t kSchemaVersion = 42;
+constexpr uint32_t kSchemaVersion = 43;
 
 // Shelly Constants moved to types/RtcShellyTypes.h
 

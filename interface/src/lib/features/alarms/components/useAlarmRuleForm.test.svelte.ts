@@ -241,4 +241,47 @@ describe('useAlarmRuleForm', () => {
 
 		cleanup();
 	});
+
+	it('treats CSI motion as boolean-like above 0.5', async () => {
+		const { useAlarmRuleForm } = await import('./useAlarmRuleForm.svelte');
+
+		let form!: AlarmFormState;
+		let control!: {
+			open: () => void;
+		};
+
+		const cleanup = $effect.root(() => {
+			let isOpen = $state(false);
+			let currentRule = $state<AlarmRule | null>(null);
+
+			form = useAlarmRuleForm(
+				() => currentRule,
+				() => isOpen
+			);
+
+			control = {
+				open: () => {
+					isOpen = true;
+				}
+			};
+		});
+
+		control.open();
+		await flushPromises();
+
+		form.handleSourceChange('wifi_csi_motion');
+		expect(form.isBooleanLikeSource).toBe(true);
+		expect(form.isBleSource).toBe(false);
+		expect(form.thresholdConfig).toEqual({ min: 0, max: 1, step: 0.5, default: 0.5 });
+		expect(form.formData.operator).toBe('above');
+		expect(form.formData.threshold).toBe(0.5);
+		expect(form.formData.name).toBe('CSI motion detected (LED)');
+
+		form.handleOperatorChange('below');
+		form.handleThresholdChange(0);
+		expect(form.formData.operator).toBe('above');
+		expect(form.formData.threshold).toBe(0.5);
+
+		cleanup();
+	});
 });

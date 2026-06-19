@@ -28,6 +28,8 @@
 				return m.source_humidity({ locale: i18n.languageTag });
 			case 'wifi_motion':
 				return m.source_wifi_motion({ locale: i18n.languageTag });
+			case 'wifi_csi_motion':
+				return m.source_wifi_csi_motion({ locale: i18n.languageTag });
 			case 'ble_temperature':
 				return m.source_ble_temperature({ locale: i18n.languageTag });
 			case 'ble_humidity':
@@ -52,6 +54,7 @@
 		{ value: 'above', label: m.alarms_operator_above({ locale: i18n.languageTag }) },
 		{ value: 'below', label: m.alarms_operator_below({ locale: i18n.languageTag }) }
 	]);
+	let booleanLikeSource = $derived(source === 'wifi_csi_motion');
 
 	function handleSourceSelect(newSource: AlarmSource) {
 		source = newSource;
@@ -59,8 +62,8 @@
 	}
 
 	function handleOperatorSelect(newOperator: AlarmOperator) {
-		operator = newOperator;
-		onOperatorChange?.(newOperator);
+		operator = booleanLikeSource ? 'above' : newOperator;
+		onOperatorChange?.(operator);
 	}
 </script>
 
@@ -76,6 +79,7 @@
 		<FormSelect
 			value={operator}
 			options={operatorOptions}
+			disabled={booleanLikeSource}
 			onchange={(e) => handleOperatorSelect((e.target as HTMLSelectElement).value as AlarmOperator)}
 		/>
 	</div>

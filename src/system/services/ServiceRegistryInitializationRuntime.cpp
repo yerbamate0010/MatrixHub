@@ -32,8 +32,9 @@ std::unique_ptr<SYSTEM::HeartbeatSettingsService> createHeartbeatSettings(
 
 std::unique_ptr<WIFISENSING::WifiSensingSettings> createWifiSensingSettings(
     FS* fs,
-    WIFISENSING::WifiSensingService* service) {
-    return std::make_unique<WIFISENSING::WifiSensingSettings>(fs, service);
+    WIFISENSING::WifiSensingService* service,
+    WIFISENSING::CSI::CsiService* csiService) {
+    return std::make_unique<WIFISENSING::WifiSensingSettings>(fs, service, csiService);
 }
 
 void beginWifiSensingSettings(WIFISENSING::WifiSensingSettings* settings) {

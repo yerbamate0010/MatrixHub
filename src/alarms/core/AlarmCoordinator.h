@@ -5,6 +5,7 @@
 #include "../notifier/AlarmNotifier.h"
 #include "../../sensors/model/SensorTypes.h" // For SensorSnapshot
 #include "../types/AlarmConstants.h"
+#include <cmath>
 #include <functional>
 #include <utility>
 
@@ -43,7 +44,7 @@ public:
      * @brief Main evaluation loop.
      * @return Number of notifications sent/pending
      */
-    uint8_t process(const SensorSnapshot& sensors, float wifiVariance);
+    uint8_t process(const SensorSnapshot& sensors, float wifiVariance, float wifiCsiMotion = NAN);
     
     // LED Latching logic helpers (exposed if needed by Service to clear LED on reload)
     void clearLatchedLed();
@@ -89,7 +90,7 @@ private:
     SemaphoreHandle_t _processMutex = nullptr;
     StaticSemaphore_t _processMutexStorage;
 
-    AlarmInputData buildInputData(const SensorSnapshot& sensors, float wifiVariance) const;
+    AlarmInputData buildInputData(const SensorSnapshot& sensors, float wifiVariance, float wifiCsiMotion) const;
     EvaluationPassResult collectPendingEvents(const AlarmInputData& input, uint32_t now);
     uint8_t executePendingEvents(uint8_t pendingCount, const AlarmAggregateState& ledState);
     uint8_t executeShellyAction(const AlarmRule& rule, bool turnOn) const;

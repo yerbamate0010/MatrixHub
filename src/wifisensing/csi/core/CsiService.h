@@ -16,6 +16,7 @@
 #include "../data/CsiDataQueue.h"
 #include "CsiPingSession.h"
 #include "../algo/CsiGainController.h"
+#include "../algo/CsiBandMotionDetector.h"
 
 #include <functional>
 
@@ -57,6 +58,7 @@ struct CsiMetricsSnapshot {
     int calibrationCount = 0;
     int calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
     const char* calibrationState = "unknown";
+    CsiMotionSnapshot motion;
 };
 
 class CsiService {
@@ -74,6 +76,10 @@ public:
 
     // Register a callback to receive processed CSI packets (for API streaming)
     void setCsiCallback(CsiCallback cb);
+    void setMotionCallback(MotionCallback cb);
+    void setMotionConfig(const CsiMotionConfig& config);
+    void requestMotionCalibration();
+    CsiMotionSnapshot getMotionSnapshot() const;
 
     // Components
     CsiPingSession _ping;
@@ -85,6 +91,7 @@ public:
     uint32_t _lastPingTime = 0;
 
     CsiCallback _csiCallback = nullptr;
+    MotionCallback _motionCallback = nullptr;
 
     // Processing Task
     bool startProcessingTask();
@@ -113,6 +120,12 @@ public:
     bool waitForRxCallbacksToDrain(uint32_t timeoutMs);
     void rollbackFailedEnable(bool csiConfigured);
     CsiCallback getCsiCallbackSnapshot();
+    MotionCallback getMotionCallbackSnapshot();
+    void applyPendingMotionCommandsNonBlocking();
+    CsiMotionSnapshot processMotionPacket(CsiPacket& packet, uint32_t nowMs);
+    void publishMotionSnapshot(const CsiMotionSnapshot& snapshot);
+    void maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs);
+    void publishMotionBoolean(bool motion, uint32_t nowMs);
     bool reapStoppedProcessingTask(TickType_t waitTicks);
     void destroyProcessingTaskResources();
     void resetRuntimeMetrics();
@@ -122,6 +135,8 @@ public:
     SemaphoreHandle_t _cleanupSem = nullptr; // Sync for safe shutdown
     SemaphoreHandle_t _stateMutex = nullptr;
     SemaphoreHandle_t _callbackMutex = nullptr;
+    SemaphoreHandle_t _motionCallbackMutex = nullptr;
+    SemaphoreHandle_t _motionConfigMutex = nullptr;
 
     std::atomic<uint32_t> _activeConsumers{0};
 
@@ -148,6 +163,16 @@ public:
     std::atomic<uint32_t> _lastBatchMs{0};
     uint32_t _lastPacketsRateTotal = 0;
     uint32_t _lastBatchesRateTotal = 0;
+
+    CsiBandMotionDetector _motionDetector;
+    CsiMotionConfig _pendingMotionConfig;
+    std::atomic<bool> _motionConfigDirty{false};
+    std::atomic<bool> _motionCalibrationRequested{false};
+    mutable portMUX_TYPE _motionSnapshotMux = portMUX_INITIALIZER_UNLOCKED;
+    CsiMotionSnapshot _lastMotionSnapshot;
+    uint32_t _lastMotionCallbackMs = 0;
+    bool _lastPublishedMotion = false;
+    static constexpr uint32_t MOTION_KEEPALIVE_MS = 3000;
     
     CsiPacket* _batchBuffer = nullptr;
     static constexpr size_t BATCH_CAPACITY = MAX_CSI_BATCH_PACKETS;

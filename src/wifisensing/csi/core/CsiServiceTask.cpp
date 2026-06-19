@@ -193,17 +193,17 @@ void CsiService::processingTask(void* param) {
 
     while (!self->_shouldExit.load(std::memory_order_acquire)) {
         uint32_t now = millis();
+        self->applyPendingMotionCommandsNonBlocking();
 
         // Wait briefly for the first packet so the idle path is cheap.
         if (self->_queue && self->_queue->pop(packet, pdMS_TO_TICKS(10))) {
             self->_dequeuedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
             self->_lastPacketMs.store(now, std::memory_order_relaxed);
+            self->applyPendingMotionCommandsNonBlocking();
             packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
-            // Wire format already reserves motion fields, but CSI-side motion
-            // detection is not active yet. Keep them explicit to avoid silent
-            // semantic drift between transport and runtime behavior.
-            packet.isMotionDetected = false;
-            packet.motionScore = 0.0f;
+            const auto motion = self->processMotionPacket(packet, now);
+            self->publishMotionSnapshot(motion);
+            self->maybePublishMotion(motion, now);
             self->_batchBuffer[batchCount++] = packet;
 
             // Once awake, drain the rest of the burst without blocking so multiple
@@ -211,9 +211,11 @@ void CsiService::processingTask(void* param) {
             while (batchCount < BATCH_CAPACITY && self->_queue->pop(packet, 0)) {
                 self->_dequeuedPacketsTotal.fetch_add(1, std::memory_order_relaxed);
                 self->_lastPacketMs.store(now, std::memory_order_relaxed);
+                self->applyPendingMotionCommandsNonBlocking();
                 packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
-                packet.isMotionDetected = false;
-                packet.motionScore = 0.0f;
+                const auto motion = self->processMotionPacket(packet, now);
+                self->publishMotionSnapshot(motion);
+                self->maybePublishMotion(motion, now);
                 self->_batchBuffer[batchCount++] = packet;
             }
         }

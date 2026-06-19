@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import type { CsiAlarmBand } from '$lib/types/connectivity/wifiSensing';
 	import * as m from '$lib/paraglide/messages.js';
 	import { formatCsiTimestamp } from './csiWaterfallRaster';
 	import { useCsiWaterfallChart } from './useCsiWaterfallChart.svelte';
@@ -10,9 +11,10 @@
 		subcarriers: number;
 		timestamp: number;
 		fps: number;
+		bands?: CsiAlarmBand[];
 	}
 
-	let { amplitudes, subcarriers, timestamp, fps }: Props = $props();
+	let { amplitudes, subcarriers, timestamp, fps, bands = [] }: Props = $props();
 
 	let canvasWater: HTMLCanvasElement;
 	const chart = useCsiWaterfallChart(() => amplitudes, { getCanvas: () => canvasWater });
@@ -26,6 +28,15 @@
 
 		return ticks;
 	});
+	const carrierCount = $derived(Math.max(subcarriers || amplitudes.length, 1));
+
+	function bandStyle(band: CsiAlarmBand) {
+		const start = Math.max(0, Math.min(carrierCount - 1, band.start));
+		const end = Math.max(0, Math.min(carrierCount - 1, band.end));
+		const left = (Math.min(start, end) / carrierCount) * 100;
+		const width = ((Math.abs(end - start) + 1) / carrierCount) * 100;
+		return `left:${left}%;width:${width}%`;
+	}
 
 	$effect(() => {
 		if (amplitudes.length > 0 && canvasWater) {
@@ -59,6 +70,12 @@
 			<div
 				class="absolute top-0 bottom-0 w-[1px] bg-[#333] pointer-events-none"
 				style="left: {((tick + 0.5) / Math.max(subcarriers || amplitudes.length, 1)) * 100}%"
+			></div>
+		{/each}
+		{#each bands as band}
+			<div
+				class="pointer-events-none absolute top-0 bottom-0 border-x border-info/70 bg-info/10"
+				style={bandStyle(band)}
 			></div>
 		{/each}
 	</div>

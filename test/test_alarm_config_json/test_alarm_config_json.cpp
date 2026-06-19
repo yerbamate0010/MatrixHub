@@ -111,11 +111,37 @@ void test_deserialize_source_int_ble_rssi() {
     TEST_ASSERT_EQUAL(ALARMS::AlarmSource::BleRssi, rule.source);
 }
 
-void test_deserialize_source_int_after_ble_rssi_fails() {
+void test_deserialize_source_string_wifi_csi_motion() {
     JsonDocument doc;
     doc["id"] = "test";
     doc["name"] = "test";
-    doc["source"] = static_cast<int>(ALARMS::AlarmSource::BleRssi) + 1;
+    doc["source"] = "wifi_csi_motion";
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::WifiCsiMotion, rule.source);
+}
+
+void test_deserialize_source_int_wifi_csi_motion() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = static_cast<int>(ALARMS::AlarmSource::WifiCsiMotion);
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::WifiCsiMotion, rule.source);
+}
+
+void test_deserialize_source_int_after_wifi_csi_motion_fails() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = static_cast<int>(ALARMS::AlarmSource::WifiCsiMotion) + 1;
 
     JsonObject obj = doc.as<JsonObject>();
     ALARMS::AlarmRule rule;
@@ -240,7 +266,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_deserialize_source_string_ble_battery);
     RUN_TEST(test_deserialize_source_string_ble_rssi);
     RUN_TEST(test_deserialize_source_int_ble_rssi);
-    RUN_TEST(test_deserialize_source_int_after_ble_rssi_fails);
+    RUN_TEST(test_deserialize_source_string_wifi_csi_motion);
+    RUN_TEST(test_deserialize_source_int_wifi_csi_motion);
+    RUN_TEST(test_deserialize_source_int_after_wifi_csi_motion_fails);
     RUN_TEST(test_deserialize_operator_string_below);
     RUN_TEST(test_deserialize_severity_string_critical);
     RUN_TEST(test_deserialize_notify_channels_unknown_string_fails);

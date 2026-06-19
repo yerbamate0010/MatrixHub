@@ -18,6 +18,7 @@ struct AlarmInputData {
     float temperature = NAN;
     float humidity = NAN;
     float wifiVariance = NAN;
+    float wifiCsiMotion = NAN;
     // Optional BLE fields for rule evaluation
     float bleTemp = NAN;
     float bleHumid = NAN;

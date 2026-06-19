@@ -28,6 +28,8 @@ uint8_t countActiveConsumers(uint32_t mask) {
 CsiService::CsiService() {
     _stateMutex = xSemaphoreCreateMutex();
     _callbackMutex = xSemaphoreCreateMutex();
+    _motionCallbackMutex = xSemaphoreCreateMutex();
+    _motionConfigMutex = xSemaphoreCreateMutex();
 }
 
 CsiService::~CsiService() {
@@ -64,13 +66,26 @@ CsiService::~CsiService() {
         vSemaphoreDelete(_callbackMutex);
         _callbackMutex = nullptr;
     }
+    if (_motionCallbackMutex) {
+        vSemaphoreDelete(_motionCallbackMutex);
+        _motionCallbackMutex = nullptr;
+    }
+    if (_motionConfigMutex) {
+        vSemaphoreDelete(_motionConfigMutex);
+        _motionConfigMutex = nullptr;
+    }
     if (_stateMutex) {
         vSemaphoreDelete(_stateMutex);
         _stateMutex = nullptr;
     }
+    _motionDetector.end();
 }
 
 void CsiService::begin() {
+    if (!_motionDetector.begin()) {
+        LOGE("Failed to allocate CSI motion detector buffers in PSRAM");
+    }
+    publishMotionSnapshot(_motionDetector.snapshot());
     LOGI("Service initialized (Disabled by default)");
     // Queue is now allocated lazily when the first consumer becomes active.
 }
@@ -88,6 +103,57 @@ void CsiService::setCsiCallback(CsiCallback cb) {
     }
 
     _csiCallback = std::move(cb);
+}
+
+void CsiService::setMotionCallback(MotionCallback cb) {
+    if (!_motionCallbackMutex) {
+        _motionCallback = std::move(cb);
+        return;
+    }
+
+    SYSTEM::ScopeLock lock(_motionCallbackMutex, pdMS_TO_TICKS(200));
+    if (!lock.isLocked()) {
+        LOGW("Failed to update CSI motion callback");
+        return;
+    }
+
+    _motionCallback = std::move(cb);
+}
+
+void CsiService::setMotionConfig(const CsiMotionConfig& config) {
+    if (_motionConfigMutex) {
+        SYSTEM::ScopeLock lock(_motionConfigMutex, pdMS_TO_TICKS(200));
+        if (!lock.isLocked()) {
+            LOGW("Failed to update CSI motion config");
+            return;
+        }
+        _pendingMotionConfig = config;
+        _motionConfigDirty.store(true, std::memory_order_release);
+    } else {
+        _pendingMotionConfig = config;
+        _motionConfigDirty.store(true, std::memory_order_release);
+    }
+
+    if (!config.enabled) {
+        CsiMotionSnapshot disabled;
+        disabled.state = CsiMotionState::Disabled;
+        publishMotionSnapshot(disabled);
+        publishMotionBoolean(false, millis());
+        _motionCalibrationRequested.store(false, std::memory_order_release);
+    }
+
+    setConsumerActive(CsiConsumer::AlarmSystem, config.enabled);
+}
+
+void CsiService::requestMotionCalibration() {
+    _motionCalibrationRequested.store(true, std::memory_order_release);
+}
+
+CsiMotionSnapshot CsiService::getMotionSnapshot() const {
+    portENTER_CRITICAL(&_motionSnapshotMux);
+    const CsiMotionSnapshot copy = _lastMotionSnapshot;
+    portEXIT_CRITICAL(&_motionSnapshotMux);
+    return copy;
 }
 
 void CsiService::resetRuntimeMetrics() {
@@ -138,6 +204,7 @@ CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
     snapshot.calibrationCount = _gainCtrl.calibrationCount();
     snapshot.calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
     snapshot.calibrationState = _gainCtrl.stateName();
+    snapshot.motion = getMotionSnapshot();
 
     if (!_stateMutex) {
         return snapshot;
@@ -156,6 +223,64 @@ CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
     }
 
     return snapshot;
+}
+
+void CsiService::applyPendingMotionCommandsNonBlocking() {
+    if (_motionConfigDirty.load(std::memory_order_acquire)) {
+        if (_motionConfigMutex && xSemaphoreTake(_motionConfigMutex, 0) == pdTRUE) {
+            const CsiMotionConfig config = _pendingMotionConfig;
+            _motionConfigDirty.store(false, std::memory_order_release);
+            xSemaphoreGive(_motionConfigMutex);
+            _motionDetector.configure(config);
+            publishMotionSnapshot(_motionDetector.snapshot());
+            if (!config.enabled) {
+                publishMotionBoolean(false, millis());
+            }
+        }
+    }
+
+    if (_motionCalibrationRequested.exchange(false, std::memory_order_acq_rel)) {
+        _motionDetector.resetBaseline();
+        publishMotionSnapshot(_motionDetector.snapshot());
+    }
+}
+
+CsiMotionSnapshot CsiService::processMotionPacket(CsiPacket& packet, uint32_t nowMs) {
+    CsiMotionSnapshot snapshot = _motionDetector.process(packet, nowMs);
+    packet.motionScore = snapshot.score;
+    packet.isMotionDetected = snapshot.motion;
+    return snapshot;
+}
+
+void CsiService::publishMotionSnapshot(const CsiMotionSnapshot& snapshot) {
+    portENTER_CRITICAL(&_motionSnapshotMux);
+    _lastMotionSnapshot = snapshot;
+    portEXIT_CRITICAL(&_motionSnapshotMux);
+}
+
+void CsiService::maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs) {
+    const bool changed = snapshot.motion != _lastPublishedMotion;
+    const bool keepalive =
+        snapshot.motion && (nowMs - _lastMotionCallbackMs >= MOTION_KEEPALIVE_MS);
+
+    if (changed || keepalive) {
+        publishMotionBoolean(snapshot.motion, nowMs);
+    }
+}
+
+void CsiService::publishMotionBoolean(bool motion, uint32_t nowMs) {
+    const bool changed = motion != _lastPublishedMotion;
+    const bool keepalive = motion && (nowMs - _lastMotionCallbackMs >= MOTION_KEEPALIVE_MS);
+    if (!changed && !keepalive) {
+        return;
+    }
+
+    MotionCallback callback = getMotionCallbackSnapshot();
+    _lastPublishedMotion = motion;
+    _lastMotionCallbackMs = nowMs;
+    if (callback) {
+        callback(motion);
+    }
 }
 
 void CsiService::recordBatchDelivery(size_t packetCount, bool accepted) {

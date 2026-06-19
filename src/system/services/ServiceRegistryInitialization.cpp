@@ -82,7 +82,7 @@ void ServiceRegistry::initializeBusinessServices(SemaphoreHandle_t networkMutex)
     // as the rest of the long-lived config services.
     if (!_wifiSensingSettings) {
         _wifiSensingSettings = SERVICE_REGISTRY_INIT_RUNTIME::createWifiSensingSettings(
-            _framework->getFS(), _wifiSensingService.get());
+            _framework->getFS(), _wifiSensingService.get(), _csiService.get());
     }
     SERVICE_REGISTRY_INIT_RUNTIME::beginWifiSensingSettings(_wifiSensingSettings.get());
 

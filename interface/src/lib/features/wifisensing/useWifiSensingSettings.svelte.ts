@@ -11,7 +11,22 @@ import { useSettings } from '$lib/utils/api/useSettings.svelte';
 const DEFAULT_SETTINGS: WifiSensingSettings = {
 	enabled: false,
 	sample_interval_ms: 250,
-	variance_threshold: 4
+	variance_threshold: 4,
+	csi_alarm: {
+		enabled: false,
+		bands: [],
+		baseline_frames: 150,
+		top_k: 8,
+		enter_threshold: 6,
+		clear_threshold: 3,
+		hold_ms: 1200,
+		clear_hold_ms: 2500,
+		min_noise: 4,
+		min_energy: 4,
+		noisy_threshold: 80,
+		auto_recalibration: true,
+		sensitivity: 1
+	}
 };
 
 type WifiSensingSettingsErrors = Record<string, never>;

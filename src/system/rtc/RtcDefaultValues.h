@@ -37,6 +37,18 @@ namespace WifiSensing {
 constexpr bool Enabled = FACTORY_WIFI_SENSING_ENABLED;
 constexpr uint16_t SampleIntervalMs = FACTORY_WIFI_SENSING_SAMPLE_INTERVAL_MS;
 constexpr float VarianceThreshold = FACTORY_WIFI_SENSING_VARIANCE_THRESHOLD;
+constexpr bool CsiAlarmEnabled = false;
+constexpr uint16_t CsiBaselineFrames = 150;
+constexpr uint8_t CsiTopK = 8;
+constexpr float CsiEnterThreshold = 6.0f;
+constexpr float CsiClearThreshold = 3.0f;
+constexpr uint16_t CsiHoldMs = 1200;
+constexpr uint16_t CsiClearHoldMs = 2500;
+constexpr float CsiMinNoise = 4.0f;
+constexpr float CsiMinEnergy = 4.0f;
+constexpr float CsiNoisyThreshold = 80.0f;
+constexpr bool CsiAutoRecalibration = true;
+constexpr uint8_t CsiSensitivity = 1;
 }  // namespace WifiSensing
 
 namespace Ble {

@@ -20,6 +20,7 @@ static const char* sourceToStr(ALARMS::AlarmSource src) {
         case ALARMS::AlarmSource::Temperature: return "Temp";
         case ALARMS::AlarmSource::Humidity:    return "Hum";
         case ALARMS::AlarmSource::WifiMotion:  return "Motion";
+        case ALARMS::AlarmSource::WifiCsiMotion: return "CSI Motion";
         case ALARMS::AlarmSource::BleTemperature: return "BLE Temp";
         case ALARMS::AlarmSource::BleHumidity: return "BLE Hum";
         case ALARMS::AlarmSource::BleBattery:  return "BLE Batt";

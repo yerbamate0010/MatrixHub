@@ -99,6 +99,7 @@ public:
             case AlarmSource::Temperature:    return "Temperature";
             case AlarmSource::Humidity:       return "Humidity";
             case AlarmSource::WifiMotion:     return "WiFi Motion";
+            case AlarmSource::WifiCsiMotion:  return "CSI Motion";
             case AlarmSource::BleTemperature: return "BLE Temperature";
             case AlarmSource::BleHumidity:    return "BLE Humidity";
             case AlarmSource::BleBattery:     return "BLE Battery";
@@ -114,6 +115,7 @@ public:
             case AlarmSource::Temperature:    return "°C";
             case AlarmSource::Humidity:       return "%";
             case AlarmSource::WifiMotion:     return "";
+            case AlarmSource::WifiCsiMotion:  return "";
             case AlarmSource::BleTemperature: return "°C";
             case AlarmSource::BleHumidity:    return "%";
             case AlarmSource::BleBattery:     return "%";

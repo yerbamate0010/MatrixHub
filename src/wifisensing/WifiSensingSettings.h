@@ -15,10 +15,15 @@
 namespace WIFISENSING {
 
 class WifiSensingService;
+namespace CSI {
+class CsiService;
+}
 
 class WifiSensingSettings : public RtcStatefulService<RTC::WifiSensingData> {
 public:
-    WifiSensingSettings(FS* fs, WIFISENSING::WifiSensingService* service);
+    WifiSensingSettings(FS* fs,
+                        WIFISENSING::WifiSensingService* service,
+                        WIFISENSING::CSI::CsiService* csiService);
 
     void begin();
     static void readState(RTC::WifiSensingData& settings, JsonObject& root);
@@ -33,6 +38,7 @@ private:
     
     FS* _fs;
     WIFISENSING::WifiSensingService* _service; // Injected
+    WIFISENSING::CSI::CsiService* _csiService; // Injected
     RTC::WifiSensingData _lastPersistedState{};
 };
 

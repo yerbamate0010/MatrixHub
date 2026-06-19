@@ -199,6 +199,16 @@ export function useCsiAmplitudeChart(
 		resizeObserver.observe(elements.mount);
 	}
 
+	function getPlotBounds() {
+		if (!chart || chart.bbox.width <= 0) return undefined;
+
+		const rootBounds = chart.root.getBoundingClientRect();
+		return {
+			left: rootBounds.left + chart.bbox.left,
+			width: chart.bbox.width
+		};
+	}
+
 	function destroy() {
 		chart?.destroy();
 		chart = undefined;
@@ -216,6 +226,7 @@ export function useCsiAmplitudeChart(
 		render,
 		update,
 		setupResizeObserver,
+		getPlotBounds,
 		destroy
 	};
 }

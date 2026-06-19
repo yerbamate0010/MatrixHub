@@ -116,6 +116,34 @@ void test_ble_rssi_source_value() {
     TEST_ASSERT_FLOAT_WITHIN(0.001f, -95.0f, res.currentValue);
 }
 
+void test_wifi_csi_motion_triggers_above_half_when_detected() {
+    AlarmRule rule = createRule(AlarmSource::WifiCsiMotion, AlarmOperator::Above, 0.5f);
+    AlarmInputData data;
+    data.wifiCsiMotion = 1.0f;
+    AlarmRuntimeState state;
+    memset(&state, 0, sizeof(state));
+
+    EvaluationResult res = AlarmEvaluator::evaluate(rule, data, state, 1000);
+
+    TEST_ASSERT_TRUE(res.triggered);
+    TEST_ASSERT_TRUE(res.shouldNotify);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, res.currentValue);
+}
+
+void test_wifi_csi_motion_does_not_trigger_when_clear() {
+    AlarmRule rule = createRule(AlarmSource::WifiCsiMotion, AlarmOperator::Above, 0.5f);
+    AlarmInputData data;
+    data.wifiCsiMotion = 0.0f;
+    AlarmRuntimeState state;
+    memset(&state, 0, sizeof(state));
+
+    EvaluationResult res = AlarmEvaluator::evaluate(rule, data, state, 1000);
+
+    TEST_ASSERT_FALSE(res.triggered);
+    TEST_ASSERT_FALSE(res.shouldNotify);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, res.currentValue);
+}
+
 void test_state_change_detection() {
     AlarmRule rule = createRule(AlarmSource::Temperature, AlarmOperator::Above, 30.0f);
     AlarmRuntimeState state;
@@ -221,6 +249,8 @@ int main(int argc, char **argv) {
     RUN_TEST(test_nan_handling);
     RUN_TEST(test_ble_battery_source_value);
     RUN_TEST(test_ble_rssi_source_value);
+    RUN_TEST(test_wifi_csi_motion_triggers_above_half_when_detected);
+    RUN_TEST(test_wifi_csi_motion_does_not_trigger_when_clear);
     RUN_TEST(test_state_change_detection);
     RUN_TEST(test_cooldown_logic);
     RUN_TEST(test_cooldown_reset_on_clear);

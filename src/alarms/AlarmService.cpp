@@ -15,6 +15,7 @@ AlarmService::AlarmService(MATRIX_MANAGER::MatrixManagerService* matrixManager, 
     : _manager(),
       _coordinator(_manager),
       _lastWifiVariance(NAN),
+      _lastWifiCsiMotion(NAN),
       _snapshotLock(portMUX_INITIALIZER_UNLOCKED) {
     _lastSnapshot.temp = NAN;
     _lastSnapshot.humid = NAN;
@@ -118,6 +119,10 @@ bool AlarmService::submitInput(const AlarmInputData& inputData) {
         _lastWifiVariance = inputData.wifiVariance;
         hasUpdates = true;
     }
+    if (!std::isnan(inputData.wifiCsiMotion)) {
+        _lastWifiCsiMotion = inputData.wifiCsiMotion;
+        hasUpdates = true;
+    }
 
     if (hasUpdates) {
         _lastSnapshot.timestamp_ms = millis();
@@ -140,6 +145,7 @@ uint8_t AlarmService::processPending() {
     if (_pendingEvaluation) {
         input.sensors = _lastSnapshot;
         input.wifiVariance = _lastWifiVariance;
+        input.wifiCsiMotion = _lastWifiCsiMotion;
         _pendingEvaluation = false;
         hasPending = true;
     }
@@ -152,7 +158,7 @@ uint8_t AlarmService::processPending() {
     // All rule evaluation and side effects are centralized here on purpose.
     // This keeps producers lightweight and makes the execution model easier to
     // reason about than scattered synchronous alarm runs from multiple tasks.
-    return _coordinator.process(input.sensors, input.wifiVariance);
+    return _coordinator.process(input.sensors, input.wifiVariance, input.wifiCsiMotion);
 }
 
 } // namespace ALARMS

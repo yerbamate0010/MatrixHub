@@ -90,6 +90,7 @@ private:
     struct AggregatedAlarmInput {
         SensorSnapshot sensors;
         float wifiVariance = NAN;
+        float wifiCsiMotion = NAN;
     };
 
     AlarmRuleManager _manager;
@@ -101,6 +102,7 @@ private:
     // snapshot and evaluate alarms against that coherent state later.
     SensorSnapshot _lastSnapshot;
     float _lastWifiVariance = NAN;
+    float _lastWifiCsiMotion = NAN;
     // Dirty flag for the coalesced "latest state available" mailbox model.
     bool _pendingEvaluation = false;
 

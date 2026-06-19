@@ -145,6 +145,11 @@ void test_sourceName_ble_rssi() {
     TEST_ASSERT_EQUAL_STRING("BLE RSSI", name);
 }
 
+void test_sourceName_wifi_csi_motion() {
+    const char* name = AlarmMessageBuilder::sourceName(AlarmSource::WifiCsiMotion);
+    TEST_ASSERT_EQUAL_STRING("CSI Motion", name);
+}
+
 void test_sourceName_unknown() {
     AlarmSource invalid = static_cast<AlarmSource>(255);
     const char* name = AlarmMessageBuilder::sourceName(invalid);
@@ -197,6 +202,11 @@ void test_sourceUnit_ble_battery() {
 void test_sourceUnit_ble_rssi() {
     const char* unit = AlarmMessageBuilder::sourceUnit(AlarmSource::BleRssi);
     TEST_ASSERT_EQUAL_STRING(" dBm", unit);
+}
+
+void test_sourceUnit_wifi_csi_motion() {
+    const char* unit = AlarmMessageBuilder::sourceUnit(AlarmSource::WifiCsiMotion);
+    TEST_ASSERT_EQUAL_STRING("", unit);
 }
 
 // ============================================================================
@@ -405,6 +415,7 @@ void run_all_tests() {
     RUN_TEST(test_sourceName_ble_humidity);
     RUN_TEST(test_sourceName_ble_battery);
     RUN_TEST(test_sourceName_ble_rssi);
+    RUN_TEST(test_sourceName_wifi_csi_motion);
     RUN_TEST(test_sourceName_unknown);
     
     // sourceUnit tests
@@ -416,6 +427,7 @@ void run_all_tests() {
     RUN_TEST(test_sourceUnit_ble_humidity);
     RUN_TEST(test_sourceUnit_ble_battery);
     RUN_TEST(test_sourceUnit_ble_rssi);
+    RUN_TEST(test_sourceUnit_wifi_csi_motion);
     
     // build() edge cases
     RUN_TEST(test_build_null_rule);

@@ -77,6 +77,20 @@ CsiCallback CsiService::getCsiCallbackSnapshot() {
     return _csiCallback;
 }
 
+MotionCallback CsiService::getMotionCallbackSnapshot() {
+    if (!_motionCallbackMutex) {
+        return nullptr;
+    }
+
+    if (xSemaphoreTake(_motionCallbackMutex, 0) != pdTRUE) {
+        return nullptr;
+    }
+
+    MotionCallback callback = _motionCallback;
+    xSemaphoreGive(_motionCallbackMutex);
+    return callback;
+}
+
 bool CsiService::waitForRxCallbacksToDrain(uint32_t timeoutMs) {
     const uint32_t startMs = millis();
     // Called only after callback registration has been removed, so the counter

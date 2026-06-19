@@ -53,7 +53,7 @@ bool tryParseSource(JsonVariantConst value, ALARMS::AlarmSource& out) {
     if (value.is<int>()) {
         const int srcInt = value.as<int>();
         if (srcInt < static_cast<int>(ALARMS::AlarmSource::CO2) ||
-            srcInt > static_cast<int>(ALARMS::AlarmSource::BleRssi)) {
+            srcInt > static_cast<int>(ALARMS::AlarmSource::WifiCsiMotion)) {
             return false;
         }
         out = static_cast<ALARMS::AlarmSource>(srcInt);
@@ -95,6 +95,10 @@ bool tryParseSource(JsonVariantConst value, ALARMS::AlarmSource& out) {
     }
     if (strcmp(srcStr, "ble_rssi") == 0) {
         out = ALARMS::AlarmSource::BleRssi;
+        return true;
+    }
+    if (strcmp(srcStr, "wifi_csi_motion") == 0) {
+        out = ALARMS::AlarmSource::WifiCsiMotion;
         return true;
     }
 

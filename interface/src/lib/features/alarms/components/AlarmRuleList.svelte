@@ -44,6 +44,8 @@
 				return m.source_humidity({ locale: i18n.languageTag });
 			case 'wifi_motion':
 				return m.source_wifi_motion({ locale: i18n.languageTag });
+			case 'wifi_csi_motion':
+				return m.source_wifi_csi_motion({ locale: i18n.languageTag });
 			case 'ble_temperature':
 				return m.source_ble_temperature({ locale: i18n.languageTag });
 			case 'ble_humidity':
@@ -143,11 +145,15 @@
 								{getSeverityLabel(rule.severity)}
 							</span>
 							<span class="opacity-50">•</span>
-							<span
-								>{getSourceLabel(rule.source)}
-								{rule.operator === 'above' ? '>' : '<'}
-								{rule.threshold}{sourceInfo.unit}</span
-							>
+							{#if sourceInfo.booleanLike}
+								<span>{m.alarm_boolean_csi_motion_detected({ locale: i18n.languageTag })}</span>
+							{:else}
+								<span
+									>{getSourceLabel(rule.source)}
+									{rule.operator === 'above' ? '>' : '<'}
+									{rule.threshold}{sourceInfo.unit}</span
+								>
+							{/if}
 							<span class="opacity-50 hidden sm:inline">•</span>
 							<span class="hidden sm:inline">{rule.notify_channels.join(', ')}</span>
 						</div>
