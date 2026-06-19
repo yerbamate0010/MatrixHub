@@ -17,6 +17,22 @@ export interface UdpSettings {
 	interval_ms: number;
 }
 
+export type UdpTestStatus =
+	| 'queued'
+	| 'sent'
+	| 'not_configured'
+	| 'worker_stopping'
+	| 'wifi_disconnected'
+	| 'send_failed'
+	| 'unavailable';
+
+export interface UdpTestResult {
+	success: boolean;
+	message: string;
+	status?: UdpTestStatus;
+	retry_after_ms?: number;
+}
+
 export class UdpApiService {
 	private client;
 	static readonly GET_TIMEOUT_MS = 5000;
@@ -38,8 +54,8 @@ export class UdpApiService {
 		});
 	}
 
-	async testSend(): Promise<{ success: boolean; message: string }> {
-		return this.client.post<{ success: boolean; message: string }>('/api/udp/test', undefined, {
+	async testSend(): Promise<UdpTestResult> {
+		return this.client.post<UdpTestResult>('/api/udp/test', undefined, {
 			signal: AbortSignal.timeout(10000)
 		});
 	}

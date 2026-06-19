@@ -19,6 +19,18 @@ export interface HeartbeatSettings {
 	slots: HeartbeatSlot[];
 }
 
+export type HeartbeatTestStatus = 'queued' | 'no_enabled_slots' | 'ping_failed';
+
+export interface HeartbeatTestResult {
+	success: boolean;
+	message: string;
+	status?: HeartbeatTestStatus;
+	active_slots?: number;
+	retry_count?: number;
+	timeout_ms?: number;
+	retry_after_ms?: number;
+}
+
 export class HeartbeatApiService {
 	private client;
 	public static readonly GET_TIMEOUT_MS = 15000;
@@ -40,13 +52,9 @@ export class HeartbeatApiService {
 		});
 	}
 
-	async testPing(): Promise<{ success: boolean; message: string }> {
-		return this.client.post<{ success: boolean; message: string }>(
-			'/api/heartbeat/test',
-			undefined,
-			{
-				signal: AbortSignal.timeout(10000)
-			}
-		);
+	async testPing(): Promise<HeartbeatTestResult> {
+		return this.client.post<HeartbeatTestResult>('/api/heartbeat/test', undefined, {
+			signal: AbortSignal.timeout(10000)
+		});
 	}
 }

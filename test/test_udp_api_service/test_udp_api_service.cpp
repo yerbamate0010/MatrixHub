@@ -288,6 +288,74 @@ void test_udp_test_endpoint_returns_send_failed_when_end_packet_fails() {
     TEST_ASSERT_TRUE(request.lastResponseBody.find("\"status\":\"send_failed\"") != std::string::npos);
 }
 
+void test_udp_config_rejects_enabled_empty_host() {
+    PsychicHttpServer server;
+    SecurityManager securityManager;
+    UDPPUSH::UdpSettingsService settings(&LittleFS);
+    UDPPUSH::UdpPusher pusher;
+    API::UdpApiService api(&server, &securityManager, nullptr, &pusher, &settings);
+    api.begin();
+    PsychicRequest request = makeJsonRequest(
+        "{\"enabled\":true,\"host\":\"\",\"port\":8094,\"format\":\"json\",\"interval_ms\":60000}");
+
+    const esp_err_t err = server.invoke("/api/udp", HTTP_POST, &request);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(400, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find("input/invalid_host") != std::string::npos);
+}
+
+void test_udp_config_rejects_enabled_host_with_whitespace() {
+    PsychicHttpServer server;
+    SecurityManager securityManager;
+    UDPPUSH::UdpSettingsService settings(&LittleFS);
+    UDPPUSH::UdpPusher pusher;
+    API::UdpApiService api(&server, &securityManager, nullptr, &pusher, &settings);
+    api.begin();
+    PsychicRequest request = makeJsonRequest(
+        "{\"enabled\":true,\"host\":\"bad host.local\",\"port\":8094,\"format\":\"json\",\"interval_ms\":60000}");
+
+    const esp_err_t err = server.invoke("/api/udp", HTTP_POST, &request);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(400, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find("input/invalid_host") != std::string::npos);
+}
+
+void test_udp_config_rejects_port_zero_before_clamp() {
+    PsychicHttpServer server;
+    SecurityManager securityManager;
+    UDPPUSH::UdpSettingsService settings(&LittleFS);
+    UDPPUSH::UdpPusher pusher;
+    API::UdpApiService api(&server, &securityManager, nullptr, &pusher, &settings);
+    api.begin();
+    PsychicRequest request = makeJsonRequest(
+        "{\"enabled\":true,\"host\":\"telegraf.local\",\"port\":0,\"format\":\"json\",\"interval_ms\":60000}");
+
+    const esp_err_t err = server.invoke("/api/udp", HTTP_POST, &request);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(400, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find("input/invalid_port") != std::string::npos);
+}
+
+void test_udp_config_allows_disabled_empty_host() {
+    PsychicHttpServer server;
+    SecurityManager securityManager;
+    UDPPUSH::UdpSettingsService settings(&LittleFS);
+    UDPPUSH::UdpPusher pusher;
+    API::UdpApiService api(&server, &securityManager, nullptr, &pusher, &settings);
+    api.begin();
+    PsychicRequest request = makeJsonRequest(
+        "{\"enabled\":false,\"host\":\"\",\"port\":8094,\"format\":\"json\",\"interval_ms\":60000}");
+
+    const esp_err_t err = server.invoke("/api/udp", HTTP_POST, &request);
+
+    TEST_ASSERT_EQUAL(ESP_OK, err);
+    TEST_ASSERT_EQUAL(200, request.lastStatusCode);
+    TEST_ASSERT_TRUE(request.lastResponseBody.find("\"enabled\":false") != std::string::npos);
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -298,5 +366,9 @@ int main(int argc, char** argv) {
     RUN_TEST(test_udp_test_endpoint_returns_wifi_disconnected_when_wifi_is_down);
     RUN_TEST(test_udp_test_endpoint_returns_send_failed_when_begin_packet_fails);
     RUN_TEST(test_udp_test_endpoint_returns_send_failed_when_end_packet_fails);
+    RUN_TEST(test_udp_config_rejects_enabled_empty_host);
+    RUN_TEST(test_udp_config_rejects_enabled_host_with_whitespace);
+    RUN_TEST(test_udp_config_rejects_port_zero_before_clamp);
+    RUN_TEST(test_udp_config_allows_disabled_empty_host);
     return UNITY_END();
 }

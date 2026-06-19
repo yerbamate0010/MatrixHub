@@ -864,12 +864,12 @@
       "path": "/api/heartbeat/test",
       "auth": "admin, test-rate-limited",
       "request": "none",
-      "response": "Ping queued/sent/error result JSON",
+      "response": "Heartbeat test result JSON with success, status, active_slots, retry_count, and timeout_ms",
       "restartRequired": false,
       "firmware": ["src/api/heartbeat/HeartbeatApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/HeartbeatApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_heartbeat.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "udp.config",
@@ -890,12 +890,12 @@
       "path": "/api/udp/test",
       "auth": "admin, test-rate-limited",
       "request": "none",
-      "response": "UDP test send result JSON",
+      "response": "UDP test send result JSON with success/status/message and rate-limit retry_after_ms when busy",
       "restartRequired": false,
       "firmware": ["src/api/udp/UdpApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/UdpApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_udp.py", "scripts/diagnostics/udp_listener.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "compensation.config",

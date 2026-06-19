@@ -45,6 +45,8 @@ private:
     // Borrowed RTC-backed config service owned by ServiceRegistry.
     UDPPUSH::UdpSettingsService* _settings;
     std::unique_ptr<HttpEndpoint<RTC::UdpPusherData>> _configEndpoint;
+
+    StateHandlerResult validateConfigUpdate(PsychicRequest* request, JsonObject& jsonObject);
 };
 
 }  // namespace API

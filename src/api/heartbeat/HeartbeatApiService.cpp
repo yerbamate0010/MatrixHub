@@ -1,12 +1,35 @@
 #include "HeartbeatApiService.h"
 
+#include "../../config/System.h"
 #include "../../system/health/heartbeat/Heartbeat.h"
-#include "../../system/utils/json/JsonResponseWriter.h"
 #include "../common/TestRequestRateLimiter.h"
 #include <PsychicJson.h>
 #include <utils/ResponseUtils.h>
 
 namespace API {
+
+namespace {
+
+uint8_t countEnabledHeartbeatSlots(const RTC::HeartbeatData& cfg) {
+    uint8_t count = 0;
+    for (uint8_t i = 0; i < RTC::kMaxHeartbeatSlots; i++) {
+        if (cfg.slots[i].enabled && cfg.slots[i].url[0] != '\0') {
+            count++;
+        }
+    }
+    return count;
+}
+
+void writeHeartbeatTestDiagnostics(JsonVariant& root, bool success, const char* status, uint8_t activeSlots) {
+    root["success"] = success;
+    root["status"] = status;
+    root["message"] = status;
+    root["active_slots"] = activeSlots;
+    root["retry_count"] = HEARTBEAT::HTTP_RETRIES;
+    root["timeout_ms"] = HEARTBEAT::HTTP_TIMEOUT_MS;
+}
+
+}  // namespace
 
 HeartbeatApiService::HeartbeatApiService(PsychicHttpServer* server,
                                          SecurityManager* securityManager,
@@ -44,16 +67,12 @@ void HeartbeatApiService::begin() {
     _server->on("/api/heartbeat/test", HTTP_POST,
         wrapAdmin([this](PsychicRequest* request) -> esp_err_t {
             RTC::HeartbeatData cfg = SYSTEM::HEARTBEAT_CONFIG::copy();
-            bool anyEnabled = false;
-            for (uint8_t i = 0; i < RTC::kMaxHeartbeatSlots; i++) {
-                if (cfg.slots[i].enabled && cfg.slots[i].url[0] != '\0') {
-                    anyEnabled = true;
-                    break;
-                }
-            }
+            const uint8_t activeSlots = countEnabledHeartbeatSlots(cfg);
             
-            if (!anyEnabled) {
-                return Response::error(request, 400, "heartbeat/no_enabled_slots");
+            if (activeSlots == 0) {
+                return Response::error(request, 400, "heartbeat/no_enabled_slots", [](JsonVariant& root) {
+                    writeHeartbeatTestDiagnostics(root, false, "no_enabled_slots", 0);
+                });
             }
 
             if (!TESTS::testRequestRateLimiter().tryAcquire()) {
@@ -66,16 +85,14 @@ void HeartbeatApiService::begin() {
             }
             
             if (SYSTEM::Heartbeat::pingNow()) {
-                Utils::JsonResponseWriter w(request->request());
-                if (!w.beginResponse()) return ESP_FAIL;
-                w.raw("{");
-                w.key("success"); w.value(true);
-                w.raw(","); w.key("message"); w.string("ping_triggered");
-                w.raw("}");
-                w.finish();
-                return ESP_OK;
+                return Response::success(request, [activeSlots](JsonVariant& root) {
+                    writeHeartbeatTestDiagnostics(root, true, "queued", activeSlots);
+                    root["message"] = "ping_triggered";
+                });
             } else {
-                return Response::error(request, 400, "heartbeat/ping_failed");
+                return Response::error(request, 400, "heartbeat/ping_failed", [activeSlots](JsonVariant& root) {
+                    writeHeartbeatTestDiagnostics(root, false, "ping_failed", activeSlots);
+                });
             }
         })
     );

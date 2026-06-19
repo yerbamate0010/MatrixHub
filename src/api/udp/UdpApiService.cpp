@@ -5,6 +5,7 @@
 
 #include "UdpApiService.h"
 
+#include "../../config/json/SystemConfigJson.h"
 #include "../../udp/UdpPusher.h"
 #include "../../udp/UdpSettingsService.h"
 #include "../common/TestRequestRateLimiter.h"
@@ -12,11 +13,41 @@
 #include <LittleFS.h>
 #include <PsychicJson.h>
 #include <utils/ResponseUtils.h>
+#include <cstring>
 
 namespace API {
 
 namespace {
 constexpr const char* kUdpConfigPath = "/api/udp";
+
+bool isPrintableHost(const char* host) {
+    if (!host || host[0] == '\0') {
+        return false;
+    }
+    const size_t len = strlen(host);
+    if (len >= sizeof(RTC::UdpPusherData::host)) {
+        return false;
+    }
+    for (size_t i = 0; i < len; i++) {
+        const unsigned char c = static_cast<unsigned char>(host[i]);
+        if (c <= 32 || c == 127) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool jsonPortOutOfRange(JsonObject& root) {
+    JsonVariant portValue = root[CONFIG::Keys::kPort];
+    if (portValue.isNull()) {
+        return false;
+    }
+    if (!portValue.is<uint32_t>()) {
+        return true;
+    }
+    const uint32_t port = portValue.as<uint32_t>();
+    return port < LIMITS::UDP_PUSHER::MIN_PORT || port > LIMITS::UDP_PUSHER::MAX_PORT;
+}
 
 esp_err_t sendUdpTestResult(PsychicRequest* request, UDPPUSH::UdpPusher::PushNowResult result) {
     switch (result) {
@@ -80,7 +111,9 @@ UdpApiService::UdpApiService(PsychicHttpServer* server,
             kUdpConfigPath,
             _securityManager,
             AuthenticationPredicates::IS_ADMIN,
-            nullptr,
+            [this](PsychicRequest* request, JsonObject& jsonObject) {
+                return validateConfigUpdate(request, jsonObject);
+            },
             [this]() {
                 if (_powerManager) {
                     _powerManager->notifyActivity(_activityTag);
@@ -126,6 +159,30 @@ void UdpApiService::begin() {
             return sendUdpTestResult(request, _udpPusher->pushNow());
         })
     );
+}
+
+StateHandlerResult UdpApiService::validateConfigUpdate(PsychicRequest* request, JsonObject& jsonObject) {
+    (void)request;
+
+    if (jsonPortOutOfRange(jsonObject)) {
+        return StateHandlerResult::failure("input/invalid_port", 400);
+    }
+
+    RTC::UdpPusherData nextState = RTC::copyConfigSection(&RTC::ConfigStore::udpPusher);
+    CONFIG::JSON::deserializeUdpPusher(jsonObject, nextState);
+
+    if (!nextState.enabled) {
+        return StateHandlerResult::success();
+    }
+
+    if (!isPrintableHost(nextState.host)) {
+        return StateHandlerResult::failure("input/invalid_host", 400);
+    }
+    if (nextState.port < LIMITS::UDP_PUSHER::MIN_PORT || nextState.port > LIMITS::UDP_PUSHER::MAX_PORT) {
+        return StateHandlerResult::failure("input/invalid_port", 400);
+    }
+
+    return StateHandlerResult::success();
 }
 
 }  // namespace API
