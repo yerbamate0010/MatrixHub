@@ -8,12 +8,9 @@ test.describe('Dashboard', () => {
 		await page.goto('/');
 		await waitForAuthenticatedShell(page);
 
-		// Wait for page to load
-		await page.waitForLoadState('networkidle');
-
-		// Check for main dashboard elements - be more flexible
-		const mainContent = page.locator('body, main, .container');
-		await expect(mainContent.first()).toBeVisible();
+		await expect(
+			page.getByRole('heading', { name: /CO₂|Temperature|Humidity|Temperatura|Wilgotność/ }).first()
+		).toBeVisible({ timeout: 15_000 });
 	});
 
 	test('should restore authenticated session when security is enabled', async ({ page }) => {

@@ -760,10 +760,10 @@ async function expectInteractiveControlsHaveNames(page: Page) {
 
 async function expectRouteRendered(page: Page) {
 	const content = page.locator('.drawer-content').first();
-	await expect(content).toBeVisible({ timeout: 60_000 });
+	await expect(content).toBeVisible({ timeout: 20_000 });
 	await expect(
 		content.locator('.card, form, canvas, .alert, button, input, select, textarea').first()
-	).toBeVisible({ timeout: 60_000 });
+	).toBeVisible({ timeout: 20_000 });
 
 	const bodyText = (await content.innerText()).trim();
 	expect(bodyText.length).toBeGreaterThan(0);
@@ -771,8 +771,6 @@ async function expectRouteRendered(page: Page) {
 }
 
 test.describe('frontend a11y and responsive smoke', () => {
-	test.setTimeout(900_000);
-
 	test.beforeEach(async ({ page }) => {
 		await installAuthenticatedSession(page);
 		await installDeviceApiMocks(page);
@@ -806,29 +804,27 @@ test.describe('frontend a11y and responsive smoke', () => {
 		'/user'
 	];
 
-	test('core feature routes have named controls and no mobile overflow', async ({ page }) => {
-		const pageErrors: string[] = [];
-		page.on('pageerror', (error) => pageErrors.push(error.message));
+	for (const routePath of routes) {
+		test(`route ${routePath} has named controls and no mobile overflow`, async ({ page }) => {
+			const pageErrors: string[] = [];
+			page.on('pageerror', (error) => pageErrors.push(error.message));
 
-		for (const routePath of routes) {
-			await test.step(routePath, async () => {
-				await page.setViewportSize({ width: 1366, height: 900 });
-				await page.goto(routePath, { waitUntil: 'domcontentloaded' });
+			await page.setViewportSize({ width: 1366, height: 900 });
+			await page.goto(routePath, { waitUntil: 'domcontentloaded' });
+			expect(new URL(page.url()).pathname).toBe(routePath);
+
+			for (const viewport of [
+				{ width: 1366, height: 900 },
+				{ width: 360, height: 740 }
+			]) {
+				await page.setViewportSize(viewport);
 				expect(new URL(page.url()).pathname).toBe(routePath);
+				await expectRouteRendered(page);
+				await expectInteractiveControlsHaveNames(page);
+				await expectNoHorizontalOverflow(page);
+			}
 
-				for (const viewport of [
-					{ width: 1366, height: 900 },
-					{ width: 360, height: 740 }
-				]) {
-					await page.setViewportSize(viewport);
-					expect(new URL(page.url()).pathname).toBe(routePath);
-					await expectRouteRendered(page);
-					await expectInteractiveControlsHaveNames(page);
-					await expectNoHorizontalOverflow(page);
-				}
-			});
-		}
-
-		expect(pageErrors).toEqual([]);
-	});
+			expect(pageErrors).toEqual([]);
+		});
+	}
 });
