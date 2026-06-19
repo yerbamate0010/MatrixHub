@@ -1,175 +1,401 @@
-# MatrixHub CSI Alarm — plan implementacyjny dla Codex Goal Mode
+# MatrixHub CSI Alarm — implementation plan for Codex Goal Mode
 
-Ten plik jest kontraktem implementacyjnym. Agent ma prowadzić zmiany krok po kroku, bez mieszania CSI z istniejącym RSSI `wifi_motion` i bez ruszania vendor/framework.
+Ten plik jest kontraktem implementacyjnym dla agenta. Celem jest dodanie osobnego alarmu WiFi CSI motion, bez mieszania go z istniejącym RSSI `wifi_motion`, z optymalizacją pod ESP32-S3 + PSRAM i bez blokowania ścieżki CSI.
 
-## 0. Zasady nie do negocjacji
+## 0. Najważniejsza decyzja architektoniczna
 
-1. **Nie zmieniaj semantyki istniejącego `wifi_motion`.** To zostaje RSSI variance.
-2. **Dodaj nowe źródło alarmu:** `wifi_csi_motion` / `AlarmSource::WifiCsiMotion`.
-3. **Alarmy nie znają CSI.** Do `AlarmService` trafia tylko `wifiCsiMotion = 0.0f | 1.0f`.
-4. **Nie zmieniaj CSI wire format.** `CsiWireFormat.cpp` i frontend parser mają już `motionScore` oraz `isMotionDetected`; rozmiar nagłówka `13` zostaje bez zmian.
-5. **CSI alarm ma działać headless.** Otwarta strona `/wifisensing/csi` nie może być wymagana do działania alarmów.
-6. **Nie dodawaj ciężkiej logiki do ISR callback.** `wifi_csi_rx_cb` ma dalej tylko kopiować dane do kolejki.
-7. **Nie ruszaj:** `lib/framework/**`, `src/wifisensing/csi/vendor/**`.
-8. **Nie wysyłaj notyfikacji bezpośrednio z CSI.** CSI publikuje stan do `AlarmService::submitInput()`, a alarmy robią resztę.
-9. **Kod, komentarze, logi i identyfikatory po angielsku.** Komunikacja z użytkownikiem po polsku.
-10. **Po zmianie layoutu RTC increment:** `src/system/rtc/RtcConfig.h`, `RTC::kSchemaVersion` z `42` na `43`.
+Implementacja MVP **nie dodaje drugiego taska tylko dla detektora CSI motion**. W repo jest już osobny statyczny task `CsiService::processingTask()` / `"CsiProcess"`, który pracuje poza Wi-Fi CSI RX callbackiem. Detektor ma działać właśnie tam.
 
-## 1. Architektura docelowa
+Docelowy przepływ:
 
 ```text
-CSI RX callback
-    ↓
+Wi-Fi CSI RX callback
+    ↓ copy-only, ISR-safe
 CsiDataQueue
-    ↓
-CsiService::processingTask()
-    ↓
-CsiBandMotionDetector
-    ↓
-CsiMotionSnapshot { state, score, motion, noisy, baselineReady }
-    ↓
-CsiService::MotionCallback(bool motion)
-    ↓
-ServiceRegistryCallbacks
-    ↓
+    ↓ packet storage in PSRAM
+CsiProcess task
+    ↓ gain compensation + CSI motion detector
+CsiMotionSnapshot
+    ↓ state-change/keepalive only
 AlarmService::submitInput({ wifiCsiMotion = 0.0f/1.0f })
     ↓
-AlarmEvaluator / cooldown / notifications / LED / Telegram
+normalny alarm pipeline / cooldown / notifications
 ```
 
-Najważniejszy podział odpowiedzialności:
+Drugi task `CsiMotionTask` wolno rozważyć dopiero po pomiarach pokazujących realny problem z CPU/latencją w `CsiProcess`. W MVP drugi task byłby gorszy: dodatkowy stack w internal RAM, dodatkowa kolejka, context switch i opóźnienie.
 
-| Warstwa | Odpowiedzialność | Nie robi |
+## 1. Zasady nie do negocjacji
+
+1. Nie zmieniaj semantyki istniejącego `wifi_motion`. To zostaje RSSI variance.
+2. Dodaj nowe źródło alarmu: `wifi_csi_motion` / `AlarmSource::WifiCsiMotion`.
+3. Alarmy nie znają CSI. Do alarmów trafia tylko `wifiCsiMotion = 0.0f | 1.0f`.
+4. `motionScore` może iść diagnostycznie przez istniejący CSI wire format, ale alarmy nie używają surowych CSI danych.
+5. Nie zmieniaj CSI wire format ani `CSI_HEADER_BYTES = 13`.
+6. CSI alarm ma działać headless, bez otwartej strony CSI.
+7. Nie dodawaj ciężkiej logiki do `wifi_csi_rx_cb()`.
+8. Nie ruszaj `lib/framework/**` ani `src/wifisensing/csi/vendor/**`.
+9. Nie wysyłaj notyfikacji bezpośrednio z CSI.
+10. Kod, logi, komentarze i identyfikatory pisz po angielsku.
+11. Po zmianie layoutu RTC zwiększ `RTC::kSchemaVersion` w `src/system/rtc/RtcConfig.h` z `42` na `43`, jeżeli aktualna wersja nadal wynosi `42`.
+
+## 2. ESP32-S3 / PSRAM / non-blocking contract
+
+Ta sekcja ma pierwszeństwo przed szczegółami funkcjonalnymi. Agent ma ją traktować jako twardy kontrakt.
+
+### 2.1. Task model
+
+Użyj istniejącego taska:
+
+```text
+src/wifisensing/csi/core/CsiServiceTask.cpp
+CsiService::processingTask()
+xTaskCreateStaticPinnedToCore(..., "CsiProcess", ...)
+```
+
+Nie hardcoduj priorytetu, rdzenia ani stack size. Używaj istniejących stałych:
+
+```cpp
+CONFIG::TASKS::STACK_WIFI_SENSING_CSI
+CONFIG::TASKS::PRIO_WIFI_SENSING
+CONFIG::TASKS::CORE_WIFI_SENSING
+```
+
+Nie przenoś stacka CSI do PSRAM. Aktualny kod słusznie trzyma task stack i TCB w internal DRAM, bo task dotyka ścieżek Wi-Fi/networking-facing. Oszczędzamy internal DRAM na dużych buforach, nie na FreeRTOS control blocks.
+
+### 2.2. Memory placement
+
+| Obiekt | Miejsce | Wymaganie |
 |---|---|---|
-| `CsiBandMotionDetector` | baseline, score, hysteresis, noisy gate | alarmów, WebSocketów, JSON |
-| `CsiService` | odpalenie detektora na pakietach CSI, runtime status, callback motion | notyfikacji, reguł alarmowych |
-| `WifiSensingSettings` / JSON | trwała konfiguracja `csi_alarm` | obliczeń CSI |
-| `WifiSensingApiService` | status, config endpoint, calibrate endpoint | logiki detekcji |
-| Alarmy | boolean input i reguły | subcarrierów, progów CSI, baseline |
-| Frontend CSI | wybór pasm, kalibracja, diagnostyka | oceny alarmu po stronie przeglądarki |
+| CSI queue packet storage | PSRAM | już istnieje, nie zmieniaj na DRAM |
+| CSI queue `StaticQueue_t` | internal DRAM | FreeRTOS/ISR bookkeeping |
+| CSI batch buffer | PSRAM | już istnieje, nie zmieniaj na DRAM |
+| CSI task stack | internal DRAM | zostaje internal |
+| CSI task TCB | internal DRAM | zostaje internal |
+| detector `energy/mean/m2/noise/valid/top` | PSRAM | alokacja raz, poza hot path |
+| detector config/snapshot/counters | internal/default | małe struktury |
+| alarm callback data | stack / mała struktura | bez heapu |
 
-## 2. Algorytm CSI motion detection
+Duże tablice detektora nie mogą być bezpośrednimi polami `CsiService`, bo `CsiService` jest tworzony przez `std::make_unique` i kilka KB może trafić do domyślnego heapu. Zrób osobny storage alokowany przez `heap_caps_calloc(..., MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)`.
 
-### 2.1. Założenie
+Preferowany storage:
 
-Nie używamy średniej z całego wykresu. Ruch ma być wykrywany na wybranych pasmach subcarrierów, bo interesujące zmiany są lokalne, a globalna średnia je rozmywa.
+```cpp
+struct CsiMotionStorage {
+    float energy[MAX_CSI_SUBCARRIERS];
+    float mean[MAX_CSI_SUBCARRIERS];
+    float m2[MAX_CSI_SUBCARRIERS];
+    float noise[MAX_CSI_SUBCARRIERS];
+    uint8_t valid[MAX_CSI_SUBCARRIERS];
+    float topScores[32];
+};
+```
 
-### 2.2. Sygnał wejściowy
+W detektorze:
+
+```cpp
+CsiMotionStorage* _storage = nullptr;
+```
+
+Na ESP32:
+
+```cpp
+_storage = static_cast<CsiMotionStorage*>(heap_caps_calloc(
+    1,
+    sizeof(CsiMotionStorage),
+    MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+```
+
+Dla native tests dodaj fallback `calloc/free` za małym wrapperem, żeby testy hostowe nie zależały od `heap_caps_*`.
+
+Jeżeli PSRAM allocation failuje na urządzeniu:
+
+```text
+motion state = Unavailable
+motion = false
+publish false once if needed
+CSI streaming still works
+log error once / throttled, not per frame
+```
+
+Nie rób automatycznego dużego fallbacku do internal DRAM dla detector storage w MVP. Lepiej wyłączyć CSI alarm niż zjeść internal RAM.
+
+### 2.3. Zero allocation in hot path
+
+W tych miejscach nie wolno dodawać alokacji ani ciężkich obiektów:
+
+```text
+CsiService::wifi_csi_rx_cb()
+CsiDataQueue::pushFromIsr()
+CsiService::processingTask() per-frame path
+CsiBandMotionDetector::process()
+maybePublishMotion()
+```
+
+Zakazane w hot path:
+
+```text
+heap_caps_malloc / heap_caps_free
+new / delete
+malloc / free
+std::vector / std::map / std::string / Arduino String
+JSON serialization/parsing
+filesystem writes
+network calls
+WebSocket send
+Telegram / notification / LED / Shelly side effects
+logging per frame
+pełne sortowanie carrierów
+blokujące xSemaphoreTake z wait > 0
+```
+
+Dozwolone:
+
+```text
+fixed buffers allocated earlier
+small stack locals
+float math
+atomics
+portENTER_CRITICAL only for tiny snapshot copy
+xSemaphoreTake(..., 0) for non-blocking pending config apply
+```
+
+### 2.4. Non-blocking config and snapshot model
+
+Detektor ma być mutowany tylko przez `CsiProcess`. API/settings nie wywołuje `_motionDetector.configure()` ani `_motionDetector.resetBaseline()` bezpośrednio z taska HTTP/config.
+
+Dodaj do `CsiService` model pending mailbox:
+
+```cpp
+CsiBandMotionDetector _motionDetector;
+MotionCallback _motionCallback = nullptr;
+
+SemaphoreHandle_t _motionConfigMutex = nullptr;
+CsiMotionConfig _pendingMotionConfig;
+std::atomic<bool> _motionConfigDirty{false};
+std::atomic<bool> _motionCalibrationRequested{false};
+
+portMUX_TYPE _motionSnapshotMux = portMUX_INITIALIZER_UNLOCKED;
+CsiMotionSnapshot _lastMotionSnapshot;
+
+uint32_t _lastMotionCallbackMs = 0;
+bool _lastPublishedMotion = false;
+static constexpr uint32_t MOTION_KEEPALIVE_MS = 3000;
+```
+
+`setMotionConfig()`:
+
+```text
+- bierze `_motionConfigMutex` krótko, poza CSI hot path
+- kopiuje config do `_pendingMotionConfig`
+- ustawia `_motionConfigDirty = true`
+- aktywuje/dezaktywuje `CsiConsumer::AlarmSystem`
+- gdy disabled, publikuje false, jeżeli wcześniej było true
+```
+
+`requestMotionCalibration()`:
+
+```cpp
+_motionCalibrationRequested.store(true, std::memory_order_release);
+```
+
+`processingTask()` między pakietami albo przed obróbką pakietu:
+
+```cpp
+void CsiService::applyPendingMotionCommandsNonBlocking() {
+    if (_motionConfigDirty.load(std::memory_order_acquire)) {
+        if (xSemaphoreTake(_motionConfigMutex, 0) == pdTRUE) {
+            const CsiMotionConfig cfg = _pendingMotionConfig;
+            _motionConfigDirty.store(false, std::memory_order_release);
+            xSemaphoreGive(_motionConfigMutex);
+            _motionDetector.configure(cfg);
+        }
+    }
+
+    if (_motionCalibrationRequested.exchange(false, std::memory_order_acq_rel)) {
+        _motionDetector.resetBaseline();
+    }
+}
+```
+
+`getMotionSnapshot()`:
+
+```cpp
+CsiMotionSnapshot CsiService::getMotionSnapshot() const {
+    portENTER_CRITICAL(&_motionSnapshotMux);
+    const auto copy = _lastMotionSnapshot;
+    portEXIT_CRITICAL(&_motionSnapshotMux);
+    return copy;
+}
+```
+
+Po `process(packet)`:
+
+```cpp
+portENTER_CRITICAL(&_motionSnapshotMux);
+_lastMotionSnapshot = snapshot;
+portEXIT_CRITICAL(&_motionSnapshotMux);
+```
+
+Nigdy nie trzymaj mutexa/critical section podczas wywołania callbacka do alarmów.
+
+### 2.5. CPU budget
+
+Dla obecnego `MAX_CSI_DATA_LEN = 512`, `MAX_CSI_SUBCARRIERS = 256`. Per frame target:
+
+```text
+O(width + selectedCarrierCount * topK)
+width <= 256
+topK default 8, clamp max 32
+selectedCarrierCount zwykle 8..64
+```
+
+W `process()`:
+
+```text
+- używaj float, nie double
+- używaj fabsf/isfinite/sqrtf
+- sqrtf tylko przy finalize baseline, nie na każdej ramce
+- nie używaj std::sort na całym spectrum
+- top-K przez fixed buffer max 32
+- brak logów per frame
+```
+
+Dodaj compile-time guard:
+
+```cpp
+static_assert(MAX_CSI_ALARM_BANDS == 4, "CSI alarm UI/config assumes max 4 bands");
+static_assert(MAX_CSI_SUBCARRIERS <= 256, "Review CSI motion storage before increasing CSI width");
+```
+
+### 2.6. Backpressure and degradation
+
+Jeżeli `queueDropsLastSec` rośnie albo stack budget zaczyna ostrzegać:
+
+```text
+- nie zwiększaj od razu priorytetu taska
+- nie zwiększaj bezmyślnie kolejki
+- ogranicz koszt scoringu
+- ewentualnie licz globalHighRatio co N ramek
+- keepalive motion max co `MOTION_KEEPALIVE_MS`
+```
+
+W overload detektor ma preferować `false/noisy/unavailable`, a nie blokować system.
+
+## 3. Algorytm CSI motion detection
+
+### 3.1. Założenie
+
+Nie używamy średniej z całego wykresu. Interesujące zmiany są lokalne, więc score liczymy tylko z wybranych pasm/subcarrierów.
+
+### 3.2. Sygnał wejściowy
 
 Dla każdego subcarriera używaj energii IQ:
 
 ```cpp
-energy[i] = real * real + imag * imag;
+const float re = static_cast<float>(packet.buf[2 * i]);
+const float im = static_cast<float>(packet.buf[2 * i + 1]);
+float energy = re * re + im * im;
 ```
-
-Nie używaj `sqrt()` w detektorze. Jest wolniejsze i nie jest potrzebne do detekcji względnej.
 
 Gain compensation:
 
 ```cpp
 const float gain = clamp(packet.compensate_gain, 0.25f, 4.0f);
-energy[i] *= gain * gain;
+energy *= gain * gain;
 ```
 
-Jeżeli testy pokażą nadwrażliwość na gain, zostaw konfigurację/stałą pozwalającą wyłączyć mnożenie przez `gain * gain`, ale domyślnie trzymaj spójność z aktualnym CSI pipeline.
+Jeżeli testy pokażą nadwrażliwość na gain, zostaw stałą/config pozwalającą wyłączyć compensation, ale domyślnie zachowaj zgodność z aktualnym CSI pipeline.
 
-### 2.3. Baseline
+### 3.3. Baseline
 
-MVP: Welford online mean/stddev per subcarrier.
-
-MAD jest bardziej odporny na outliery, ale wymaga buforowania historii per subcarrier i jest droższy pamięciowo. Dlatego w pierwszej implementacji:
+MVP używa Welford online mean/stddev per subcarrier. MAD jest odporniejszy na outliery, ale wymaga historii i większego RAM. W pierwszej wersji:
 
 ```text
-baselineMean[i]
-baselineM2[i]
-baselineNoise[i] = sqrt(variance)
+mean[i]
+m2[i]
+noise[i] = max(sqrtf(m2[i] / (n - 1)), minNoise)
 ```
 
 Kalibracja:
 
 ```text
-baselineFrames = 150
-stan = Calibrating
+baselineFrames default 150
 motion = false
+state = Calibrating
 score = 0
 ```
 
-Po zebraniu `baselineFrames`:
+Po zebraniu baseline:
 
 ```text
 baselineReady = true
-stan = Monitoring
-noise[i] = max(sqrt(m2 / (n - 1)), minNoise)
-valid[i] = baselineMean[i] >= minEnergy && noise[i] jest finite
+state = Monitoring
+valid[i] = baselineMean[i] >= minEnergy && finite(noise[i])
 ```
 
-W przypadku zmiany liczby subcarrierów (`packet.len / 2`) resetuj baseline.
+Przy zmianie width (`packet.len / 2`) resetuj baseline.
 
-### 2.4. Scoring per frame
+### 3.4. Scoring
 
 Dla zaznaczonych pasm:
 
 ```cpp
-z[i] = abs(energy[i] - baselineMean[i]) / max(baselineNoise[i], minNoise);
+z[i] = fabsf(energy[i] - mean[i]) / max(noise[i], minNoise);
 ```
 
-Bierz tylko indeksy z wybranych pasm. Ignoruj carrier, jeżeli:
+Ignoruj carrier, gdy:
 
 ```text
+index poza width
 valid[i] == false
-energy[i] nie jest finite
-index poza aktualną szerokością CSI
+energy/mean/noise not finite
 ```
 
 Score:
 
 ```text
-score = średnia z top-K największych z-score w wybranych pasmach
+score = average(top-K z-score from selected bands)
 ```
 
-Nie sortuj całej tablicy. Utrzymuj mały bufor `top[32]` i insertuj tylko kandydatów.
+Top-K implementuj przez fixed buffer `topScores[32]`. Nie sortuj całego spectrum.
 
-Domyślne `topK = 8`.
+### 3.5. Noise gate
 
-### 2.5. Noise gate
+Ruch lokalny powinien podbijać część wybranych pasm. Globalny skok wielu carrierów zwykle oznacza artifact/gain/noise.
 
-Ruch lokalny powinien dotyczyć wybranych pasm. Bardzo duży globalny skok wielu carrierów częściej oznacza zakłócenie/gain/packet artifact niż osobę.
-
-Wykryj `noisy` gdy spełnione jest jedno z:
+`noisy = true`, gdy:
 
 ```text
-score >= noisyScoreThreshold                  // default 80.0
-allCarrierHighRatio >= 0.60 przez >= 500 ms   // opcjonalnie w MVP, ale preferowane
+score >= noisyScoreThreshold                default 80.0
 validSelectedCarrierCount < max(4, topK / 2)
+globalHighRatio >= 0.60 for >= 500 ms       optional in MVP, preferred
 ```
 
-W stanie `NoisyEnvironment`:
+W `NoisyEnvironment`:
 
 ```text
 motion = false
-publikuj false do alarmów, jeżeli wcześniej było true
-czekaj aż score < clearThreshold przez clearHoldMs
-potem wróć do Monitoring albo NeedsCalibration
+publish false if previously true
+return to Monitoring only after score < clearThreshold for clearHoldMs
 ```
 
-### 2.6. Hysteresis i hold
-
-Nie triggeruj od pojedynczej ramki.
+### 3.6. Hysteresis and hold
 
 Domyślne wartości:
 
-| Parametr | Default | Uwagi |
-|---|---:|---|
-| `baselineFrames` | `150` | około kilkanaście sekund przy obecnym rate |
-| `enterThreshold` | `6.0` | medium sensitivity |
-| `clearThreshold` | `3.0` | histereza |
-| `holdMs` | `1200` | motion candidate musi trwać |
-| `clearHoldMs` | `2500` | stabilne wyjście z motion |
-| `topK` | `8` | max 32 |
-| `minNoise` | `4.0` | w jednostkach energii, stroić manualnie |
-| `minEnergy` | `4.0` | ignorowanie martwych/null carrierów |
-| `noisyScoreThreshold` | `80.0` | globalny artifact |
-| `motionKeepaliveMs` | `3000` | ponowne `true` do alarmów gdy motion trwa |
+| Parametr | Default | Clamp |
+|---|---:|---:|
+| `baselineFrames` | 150 | 30..1000 |
+| `enterThreshold` | 6.0 | 1.0..100.0 |
+| `clearThreshold` | 3.0 | 0.5..enterThreshold |
+| `holdMs` | 1200 | 100..10000 |
+| `clearHoldMs` | 2500 | 100..30000 |
+| `topK` | 8 | 1..32 |
+| `minNoise` | 4.0 | 0.1..1000.0 |
+| `minEnergy` | 4.0 | 0.0..10000.0 |
+| `noisyScoreThreshold` | 80.0 | enterThreshold..500.0 |
+| `autoRecalibration` | true | bool |
+| `sensitivity` | 1 / Medium | 0..2 |
 
 State machine:
 
@@ -187,102 +413,85 @@ Unavailable
 Pseudokod:
 
 ```cpp
-CsiMotionSnapshot process(packet, nowMs) {
-    if (!config.enabled) return disabled();
+CsiMotionSnapshot CsiBandMotionDetector::process(const CsiPacket& packet, uint32_t nowMs) {
+    if (!_storage) return unavailable();
+    if (!_config.enabled) return disabled();
 
-    width = packet.len / 2;
-    if (width < 8) return unavailable();
-    if (width != _width) resetBaseline(width);
+    const uint16_t width = static_cast<uint16_t>(packet.len / 2);
+    if (width < 8 || width > MAX_CSI_SUBCARRIERS) return unavailable();
+    if (width != _width) resetBaselineForWidth(width);
 
-    if (config.bandCount == 0) return needsConfiguration();
+    if (_config.bandCount == 0) return needsConfiguration();
 
-    computeEnergy(packet, width);
+    computeEnergy(packet, width); // writes _storage->energy
 
     if (!_baselineReady) {
-        accumulateBaseline(_energy, width);
-        if (_baselineFramesSeen >= config.baselineFrames) finalizeBaseline();
-        return calibrating();
+        accumulateWelford(width);
+        if (_baselineFramesSeen >= _config.baselineFrames) finalizeBaseline(width);
+        return calibratingSnapshot();
     }
 
-    score = scoreSelectedBands(_energy, width);
-    globalHighRatio = computeGlobalHighRatioIfCheap(_energy, width);
+    const ScoreResult scored = scoreSelectedBands(width);
+    const bool noisy = isNoisy(scored, nowMs);
 
-    if (isNoisy(score, globalHighRatio)) {
+    if (noisy) {
         _state = CsiMotionState::NoisyEnvironment;
         _motion = false;
         return snapshot();
     }
 
     switch (_state) {
-        case Monitoring:
-            if (score >= enterThreshold) {
+        case CsiMotionState::Monitoring:
+            if (scored.score >= _config.enterThreshold) {
                 _candidateSinceMs = nowMs;
-                _state = MotionCandidate;
+                _state = CsiMotionState::MotionCandidate;
             }
             break;
 
-        case MotionCandidate:
-            if (score < clearThreshold) {
-                _state = Monitoring;
+        case CsiMotionState::MotionCandidate:
+            if (scored.score < _config.clearThreshold) {
+                _state = CsiMotionState::Monitoring;
                 _candidateSinceMs = 0;
-            } else if (nowMs - _candidateSinceMs >= holdMs) {
+            } else if (elapsed(nowMs, _candidateSinceMs) >= _config.holdMs) {
                 _motion = true;
-                _state = MotionConfirmed;
-                _lastMotionChangeMs = nowMs;
+                _state = CsiMotionState::MotionConfirmed;
+                _clearSinceMs = 0;
             }
             break;
 
-        case MotionConfirmed:
-            if (score < clearThreshold) {
+        case CsiMotionState::MotionConfirmed:
+            if (scored.score < _config.clearThreshold) {
                 if (_clearSinceMs == 0) _clearSinceMs = nowMs;
-                if (nowMs - _clearSinceMs >= clearHoldMs) {
+                if (elapsed(nowMs, _clearSinceMs) >= _config.clearHoldMs) {
                     _motion = false;
-                    _state = Monitoring;
+                    _state = CsiMotionState::Monitoring;
                     _clearSinceMs = 0;
-                    _lastMotionChangeMs = nowMs;
                 }
             } else {
                 _clearSinceMs = 0;
             }
             break;
 
-        case NoisyEnvironment:
-            if (score < clearThreshold for clearHoldMs) {
-                _state = Monitoring;
+        case CsiMotionState::NoisyEnvironment:
+            if (scoreLowForClearHold(nowMs)) {
+                _state = CsiMotionState::Monitoring;
             }
+            break;
+
+        default:
+            _state = CsiMotionState::Monitoring;
             break;
     }
 
-    if (!_motion && !isNoisy && score < clearThreshold && config.autoRecalibration) {
-        updateBaselineEwma(_energy, alpha = 0.005f);
+    if (_config.autoRecalibration && !_motion && !noisy && scored.score < _config.clearThreshold) {
+        updateBaselineEwma(width, 0.005f);
     }
 
     return snapshot();
 }
 ```
 
-### 2.7. Auto recalibration
-
-Po kalibracji aktualizuj baseline bardzo wolno tylko gdy:
-
-```text
-motion == false
-noisy == false
-score < clearThreshold
-baselineReady == true
-```
-
-EWMA:
-
-```cpp
-mean[i] = mean[i] * (1 - alpha) + energy[i] * alpha;
-noise[i] = noise[i] * (1 - alpha) + abs(energy[i] - mean[i]) * alpha;
-noise[i] = max(noise[i], minNoise);
-```
-
-Nie adaptuj baseline podczas motion ani noisy, bo „nauczysz” detektor ruchu jako nowego tła.
-
-## 3. Nowe pliki C++
+## 4. Nowe pliki C++
 
 Dodaj:
 
@@ -292,9 +501,7 @@ src/wifisensing/csi/algo/CsiBandMotionDetector.h
 src/wifisensing/csi/algo/CsiBandMotionDetector.cpp
 ```
 
-### 3.1. `CsiMotionTypes.h`
-
-Docelowe typy:
+### 4.1. `CsiMotionTypes.h`
 
 ```cpp
 namespace WIFISENSING::CSI {
@@ -355,37 +562,33 @@ const char* toString(CsiMotionState state);
 } // namespace WIFISENSING::CSI
 ```
 
-### 3.2. `CsiBandMotionDetector`
+### 4.2. `CsiBandMotionDetector`
 
 Public API:
 
 ```cpp
 class CsiBandMotionDetector {
 public:
+    bool begin();
+    void end();
     void configure(const CsiMotionConfig& config);
     void resetBaseline();
     CsiMotionSnapshot process(const CsiPacket& packet, uint32_t nowMs);
     CsiMotionSnapshot snapshot() const;
     bool isEnabled() const;
+    bool storageReady() const;
 
 private:
-    // fixed-size arrays, no heap allocation
+    CsiMotionStorage* _storage = nullptr;
+    CsiMotionConfig _config;
+    CsiMotionSnapshot _snapshot;
+    // counters/timestamps/state only; no big direct arrays
 };
 ```
 
-Wewnętrzne tablice jako pola klasy, nie stack:
+`begin()` alokuje `CsiMotionStorage` raz. `end()` zwalnia w destruktorze. `process()` nigdy nie alokuje pamięci.
 
-```cpp
-float _energy[MAX_CSI_SUBCARRIERS];
-float _mean[MAX_CSI_SUBCARRIERS];
-float _m2[MAX_CSI_SUBCARRIERS];
-float _noise[MAX_CSI_SUBCARRIERS];
-bool _valid[MAX_CSI_SUBCARRIERS];
-```
-
-Uwaga: to jest około kilka KB RAM, akceptowalne. Nie dodawaj dynamicznych `std::vector` w hot path.
-
-## 4. Integracja z `CsiService`
+## 5. Integracja z `CsiService`
 
 Zmodyfikuj:
 
@@ -393,19 +596,12 @@ Zmodyfikuj:
 src/wifisensing/csi/core/CsiService.h
 src/wifisensing/csi/core/CsiService.cpp
 src/wifisensing/csi/core/CsiServiceTask.cpp
+src/wifisensing/csi/core/CsiServiceCallback.cpp
 ```
 
-### 4.1. `CsiService.h`
+### 5.1. Public methods
 
-Dodaj include:
-
-```cpp
-#include "../algo/CsiBandMotionDetector.h"
-```
-
-`MotionCallback` już istnieje w `src/wifisensing/csi/data/CsiTypes.h`. Nie duplikuj typedefu.
-
-Dodaj public methods:
+W `CsiService.h` dodaj:
 
 ```cpp
 void setMotionCallback(MotionCallback cb);
@@ -414,55 +610,31 @@ void requestMotionCalibration();
 CsiMotionSnapshot getMotionSnapshot() const;
 ```
 
-Dodaj private members:
+### 5.2. Lifecycle
+
+Konstruktor:
 
 ```cpp
-CsiBandMotionDetector _motionDetector;
-MotionCallback _motionCallback = nullptr;
-SemaphoreHandle_t _motionMutex = nullptr;
-uint32_t _lastMotionCallbackMs = 0;
-bool _lastPublishedMotion = false;
-static constexpr uint32_t MOTION_KEEPALIVE_MS = 3000;
+_motionConfigMutex = xSemaphoreCreateMutex();
+_motionSnapshotMux = portMUX_INITIALIZER_UNLOCKED;
 ```
 
-Jeżeli chcesz oszczędzić mutex, możesz użyć `_callbackMutex` dla callbacków i `_stateMutex` dla config/snapshot, ale czytelniej dodać `_motionMutex`.
-
-### 4.2. Lifecycle
-
-W konstruktorze:
+`begin()`:
 
 ```cpp
-_motionMutex = xSemaphoreCreateMutex();
+if (!_motionDetector.begin()) {
+    LOGE("Failed to allocate CSI motion detector buffers in PSRAM");
+}
 ```
 
-W destruktorze:
+Destruktor:
 
 ```cpp
-if (_motionMutex) vSemaphoreDelete(_motionMutex);
+_motionDetector.end();
+if (_motionConfigMutex) vSemaphoreDelete(_motionConfigMutex);
 ```
 
-### 4.3. Config i kalibracja
-
-`setMotionConfig()`:
-
-1. lock `_motionMutex`,
-2. `_motionDetector.configure(config)`,
-3. unlock,
-4. `setConsumerActive(CsiConsumer::AlarmSystem, config.enabled)`,
-5. jeśli disabled, opublikuj `false` do alarmów, jeżeli wcześniej było true.
-
-`requestMotionCalibration()`:
-
-1. lock `_motionMutex`,
-2. `_motionDetector.resetBaseline()`,
-3. unlock.
-
-`getMotionSnapshot()`:
-
-1. lock `_motionMutex`,
-2. return `_motionDetector.snapshot()`.
-
-### 4.4. Processing task
+### 5.3. Processing task changes
 
 W `CsiService::processingTask()` zastąp obecne:
 
@@ -471,45 +643,37 @@ packet.isMotionDetected = false;
 packet.motionScore = 0.0f;
 ```
 
-wywołaniem pomocniczym.
-
-Dodaj prywatną metodę albo lokalny helper:
+wywołaniem detektora:
 
 ```cpp
-CsiMotionSnapshot CsiService::processMotionPacket(CsiPacket& packet, uint32_t nowMs);
-void CsiService::maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs);
-```
-
-Logika:
-
-```cpp
+self->applyPendingMotionCommandsNonBlocking();
 packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
 const auto motion = self->processMotionPacket(packet, now);
 packet.motionScore = motion.score;
 packet.isMotionDetected = motion.motion;
+self->publishMotionSnapshot(motion);
 self->maybePublishMotion(motion, now);
 ```
 
-Zastosuj to w obu miejscach: pierwszy `pop()` i pętla drain burst.
+Zastosuj to w obu miejscach: pierwszy `pop()` oraz drain burst loop.
 
 `maybePublishMotion()`:
 
 ```cpp
 const bool changed = snapshot.motion != _lastPublishedMotion;
 const bool keepalive = snapshot.motion && (nowMs - _lastMotionCallbackMs >= MOTION_KEEPALIVE_MS);
-const bool forceClear = !snapshot.motion && _lastPublishedMotion;
 
-if (changed || keepalive || forceClear) {
+if (changed || keepalive) {
     MotionCallback cb = getMotionCallbackSnapshot();
-    if (cb) cb(snapshot.motion);
     _lastPublishedMotion = snapshot.motion;
     _lastMotionCallbackMs = nowMs;
+    if (cb) cb(snapshot.motion);
 }
 ```
 
-Callback może wywołać `AlarmService::submitInput()`, ale nie może odpalać pełnej ewaluacji alarmów inline.
+Nie trzymaj locka podczas `cb(...)`.
 
-## 5. Konfiguracja RTC i JSON
+## 6. Konfiguracja RTC i JSON
 
 Zmodyfikuj:
 
@@ -524,37 +688,29 @@ src/wifisensing/WifiSensingSettings.h
 src/wifisensing/WifiSensingSettings.cpp
 ```
 
-### 5.1. RTC struct
+### 6.1. RTC fields
 
-W `RtcWifiSensingTypes.h` rozszerz `WifiSensingData` o płaskie pola CSI. JSON ma być zagnieżdżony, ale RTC struct może zostać prosty i packed.
+Dodaj do `WifiSensingData` płaskie pola:
 
 ```cpp
-static constexpr uint8_t kMaxCsiAlarmBands = 4;
-
-struct __attribute__((packed)) WifiSensingData {
-    bool enabled = Defaults::WifiSensing::Enabled;
-    uint16_t sampleIntervalMs = Defaults::WifiSensing::SampleIntervalMs;
-    float varianceThreshold = Defaults::WifiSensing::VarianceThreshold;
-
-    bool csiAlarmEnabled = Defaults::WifiSensing::CsiAlarmEnabled;
-    uint8_t csiAlarmBandCount = 0;
-    uint16_t csiAlarmBandStart[kMaxCsiAlarmBands] = {0, 0, 0, 0};
-    uint16_t csiAlarmBandEnd[kMaxCsiAlarmBands] = {0, 0, 0, 0};
-    uint16_t csiBaselineFrames = Defaults::WifiSensing::CsiBaselineFrames;
-    uint8_t csiTopK = Defaults::WifiSensing::CsiTopK;
-    float csiEnterThreshold = Defaults::WifiSensing::CsiEnterThreshold;
-    float csiClearThreshold = Defaults::WifiSensing::CsiClearThreshold;
-    uint16_t csiHoldMs = Defaults::WifiSensing::CsiHoldMs;
-    uint16_t csiClearHoldMs = Defaults::WifiSensing::CsiClearHoldMs;
-    float csiMinNoise = Defaults::WifiSensing::CsiMinNoise;
-    float csiMinEnergy = Defaults::WifiSensing::CsiMinEnergy;
-    float csiNoisyThreshold = Defaults::WifiSensing::CsiNoisyThreshold;
-    bool csiAutoRecalibration = Defaults::WifiSensing::CsiAutoRecalibration;
-    uint8_t csiSensitivity = Defaults::WifiSensing::CsiSensitivity;
-};
+bool csiAlarmEnabled;
+uint8_t csiAlarmBandCount;
+uint16_t csiAlarmBandStart[4];
+uint16_t csiAlarmBandEnd[4];
+uint16_t csiBaselineFrames;
+uint8_t csiTopK;
+float csiEnterThreshold;
+float csiClearThreshold;
+uint16_t csiHoldMs;
+uint16_t csiClearHoldMs;
+float csiMinNoise;
+float csiMinEnergy;
+float csiNoisyThreshold;
+bool csiAutoRecalibration;
+uint8_t csiSensitivity;
 ```
 
-W `RtcDefaultValues.h` dodaj defaults w namespace `RTC::Defaults::WifiSensing`:
+Defaults:
 
 ```cpp
 constexpr bool CsiAlarmEnabled = false;
@@ -571,17 +727,9 @@ constexpr bool CsiAutoRecalibration = true;
 constexpr uint8_t CsiSensitivity = 1;
 ```
 
-W `RtcConfig.h`:
+### 6.2. JSON shape
 
-```cpp
-constexpr uint32_t kSchemaVersion = 43;
-```
-
-Dodaj komentarz w historii schema, jeżeli plik ma taką sekcję.
-
-### 5.2. JSON shape
-
-`/api/wifisensing/config` ma zwracać:
+`/api/wifisensing/config`:
 
 ```json
 {
@@ -608,55 +756,29 @@ Dodaj komentarz w historii schema, jeżeli plik ma taką sekcję.
 }
 ```
 
-Dodaj klucze w `ConfigKeys.h`:
-
-```cpp
-constexpr const char* kCsiAlarm = "csi_alarm";
-constexpr const char* kBands = "bands";
-constexpr const char* kStart = "start";
-constexpr const char* kEnd = "end";
-constexpr const char* kBaselineFrames = "baseline_frames";
-constexpr const char* kTopK = "top_k";
-constexpr const char* kEnterThreshold = "enter_threshold";
-constexpr const char* kClearThreshold = "clear_threshold";
-constexpr const char* kHoldMs = "hold_ms";
-constexpr const char* kClearHoldMs = "clear_hold_ms";
-constexpr const char* kMinNoise = "min_noise";
-constexpr const char* kMinEnergy = "min_energy";
-constexpr const char* kNoisyThreshold = "noisy_threshold";
-constexpr const char* kAutoRecalibration = "auto_recalibration";
-constexpr const char* kSensitivity = "sensitivity";
-```
-
-Jeżeli istnieją podobne klucze globalne, nie duplikuj nazw — użyj istniejących.
-
-### 5.3. Walidacja JSON
-
-W `deserializeWifiSensing()`:
+Walidacja:
 
 ```text
-- brak csi_alarm = backward compatibility, zachowaj defaults/current values
-- bands: max 4
-- start/end clamp 0..255
-- jeżeli start > end, zamień
-- pomiń pasma o width 0 tylko jeżeli są poza zakresem po clampie
-- top_k clamp 1..32
-- baseline_frames clamp 30..1000
-- enter_threshold clamp 1.0..100.0
-- clear_threshold clamp 0.5..enter_threshold
-- hold_ms clamp 100..10000
-- clear_hold_ms clamp 100..30000
-- min_noise clamp 0.1..1000.0
-- min_energy clamp 0.0..10000.0
-- noisy_threshold clamp enter_threshold..500.0
-- sensitivity clamp 0..2
+bands max 4
+start/end clamp 0..255
+if start > end swap
+top_k clamp 1..32
+baseline_frames clamp 30..1000
+enter_threshold clamp 1.0..100.0
+clear_threshold clamp 0.5..enter_threshold
+hold_ms clamp 100..10000
+clear_hold_ms clamp 100..30000
+min_noise clamp 0.1..1000.0
+min_energy clamp 0.0..10000.0
+noisy_threshold clamp enter_threshold..500.0
+sensitivity clamp 0..2
 ```
 
-Opcjonalnie sortuj i merge’uj overlapping bands, ale nie jest to wymagane w MVP. Jeżeli robisz merge, zachowaj limit 4 po merge.
+Brak `csi_alarm` w JSON = backward compatibility, zostaw defaults/current values.
 
-### 5.4. Runtime apply
+### 6.3. Runtime apply
 
-`WifiSensingSettings` obecnie przyjmuje tylko `WifiSensingService*`. Rozszerz konstruktor:
+`WifiSensingSettings` ma dostać `CsiService*` i aplikować CSI alarm niezależnie od RSSI `enabled`.
 
 ```cpp
 WifiSensingSettings(FS* fs,
@@ -664,35 +786,9 @@ WifiSensingSettings(FS* fs,
                     WIFISENSING::CSI::CsiService* csiService);
 ```
 
-Dodaj forward declaration `namespace CSI { class CsiService; }`.
+Ważne: toggle RSSI sensing nie może wyłączać CSI alarmu. CSI alarm ma własne `csi_alarm.enabled`.
 
-W `begin()`:
-
-```text
-- zastosuj RSSI sensing tylko gdy settings.enabled == true
-- zastosuj CSI alarm niezależnie od RSSI settings.enabled
-```
-
-To ważne: CSI alarm nie może zależeć od toggle’a RSSI WiFi sensing.
-
-Dodaj helper:
-
-```cpp
-static WIFISENSING::CSI::CsiMotionConfig buildCsiMotionConfig(const RTC::WifiSensingData& state);
-bool applyCsiRuntimeState(const RTC::WifiSensingData& state);
-```
-
-`applyCsiRuntimeState()`:
-
-```cpp
-if (!_csiService) return true;
-_csiService->setMotionConfig(buildCsiMotionConfig(state));
-return true;
-```
-
-W `onConfigUpdated()` rollback musi obejmować RSSI i CSI. Jeżeli zapis configu nie przejdzie, przywróć runtime do `previousState`.
-
-## 6. API backend
+## 7. API backend
 
 Zmodyfikuj:
 
@@ -701,94 +797,56 @@ src/api/wifisensing/WifiSensingApiService.h
 src/api/wifisensing/WifiSensingApiService.cpp
 ```
 
-### 6.1. Status
+### 7.1. Status
 
-Rozszerz `CsiMetricsSnapshot` w `CsiService.h` o pola motion:
-
-```cpp
-bool motionEnabled = false;
-bool motionBaselineReady = false;
-bool motionDetected = false;
-bool motionNoisy = false;
-bool motionNeedsCalibration = false;
-float motionScore = 0.0f;
-float motionConfidence = 0.0f;
-uint32_t motionFramesSeen = 0;
-uint16_t motionWidth = 0;
-uint16_t motionSelectedCarrierCount = 0;
-uint16_t motionValidCarrierCount = 0;
-uint8_t motionBandCount = 0;
-const char* motionState = "disabled";
-```
-
-W `getMetricsSnapshot()` pobierz `CsiMotionSnapshot` i uzupełnij pola.
-
-W `/api/wifisensing/status` pod `csi` dodaj:
+Rozszerz `/api/wifisensing/status` o:
 
 ```json
-"motion": {
-  "enabled": true,
-  "state": "monitoring",
-  "baseline_ready": true,
-  "detected": false,
-  "noisy": false,
-  "needs_calibration": false,
-  "score": 1.25,
-  "confidence": 0.0,
-  "frames_seen": 1820,
-  "width": 192,
-  "band_count": 2,
-  "selected_carriers": 24,
-  "valid_carriers": 90
+"csi": {
+  "motion": {
+    "enabled": true,
+    "state": "monitoring",
+    "baseline_ready": true,
+    "detected": false,
+    "noisy": false,
+    "needs_calibration": false,
+    "score": 1.25,
+    "confidence": 0.0,
+    "frames_seen": 1820,
+    "width": 192,
+    "band_count": 2,
+    "selected_carriers": 24,
+    "valid_carriers": 90
+  }
 }
 ```
 
 Nie usuwaj istniejących pól `csi.*`.
 
-### 6.2. Calibrate endpoint
+### 7.2. Calibrate endpoint
 
-Dodaj endpoint:
+Dodaj:
 
 ```text
 POST /api/wifisensing/csi/calibrate
 admin only
 ```
 
-W `WifiSensingApiService.h`:
+Handler ma tylko ustawić calibration request, nie robić kalibracji synchronicznie.
 
-```cpp
-esp_err_t handleCalibrateCsiAlarm(PsychicRequest* request);
-```
-
-W `begin()`:
-
-```cpp
-_server->on("/api/wifisensing/csi/calibrate", HTTP_POST,
-    wrapAuth([this](PsychicRequest* request) {
-        return handleCalibrateCsiAlarm(request);
-    }, AuthenticationPredicates::IS_ADMIN));
-```
-
-Dopasuj dokładną sygnaturę `wrapAuth` do istniejących wzorców w repo.
-
-Response:
+Response OK:
 
 ```json
-{
-  "ok": true,
-  "state": "calibrating"
-}
+{ "ok": true, "state": "calibrating" }
 ```
 
-Jeżeli `_csiService == nullptr`:
+Gdy CSI service unavailable:
 
 ```json
 { "ok": false, "error": "csi_service_unavailable" }
 ```
 
-i status HTTP odpowiedni do istniejących praktyk w API.
-
-## 7. Integracja z alarmami
+## 8. Integracja z alarmami
 
 Zmodyfikuj:
 
@@ -806,9 +864,7 @@ src/alarms/notifications/AlarmMessageBuilder.h
 src/notifications/telegram/commands/AlarmsCommand.cpp
 ```
 
-### 7.1. Enum/source
-
-`AlarmEnums.h`:
+### 8.1. Enum/source
 
 ```cpp
 enum class AlarmSource : uint8_t {
@@ -830,7 +886,7 @@ String mapping:
 WifiCsiMotion <-> "wifi_csi_motion"
 ```
 
-### 7.2. Alarm input
+### 8.2. Input aggregation
 
 `AlarmInputData.h`:
 
@@ -844,7 +900,7 @@ float wifiCsiMotion = NAN;
 float wifiCsiMotion = NAN;
 ```
 
-`AlarmService` private field:
+`AlarmService` private:
 
 ```cpp
 float _lastWifiCsiMotion = NAN;
@@ -859,37 +915,25 @@ if (!std::isnan(inputData.wifiCsiMotion)) {
 }
 ```
 
-`processPending()` pass-through to coordinator.
+`submitInput()` jest akceptowalny z CSI callbacka, bo obecny model tylko kopiuje snapshot pod krótkim `portMUX` i ustawia pending evaluation. Nie wolno wołać `processPending()` z CSI.
 
-### 7.3. Evaluator
-
-`AlarmEvaluator::getSensorValue()`:
+### 8.3. Evaluator
 
 ```cpp
 case AlarmSource::WifiCsiMotion:
     return sensors.wifiCsiMotion;
 ```
 
-Jeżeli `AlarmEvaluator` dostaje osobne parametry, rozszerz `AlarmInputData`/coordinator tak, żeby `wifiCsiMotion` było w jednym modelu wejściowym. Nie dodawaj CSI-specific branches poza source mappingiem.
-
-### 7.4. Boolean-like alarm UI/backend
-
-Backend może użyć zwykłego operatora:
+Reguła techniczna:
 
 ```text
 operator = above
 threshold = 0.5
 ```
 
-UI ma jednak traktować `wifi_csi_motion` jako boolean source:
+UI ma to pokazać jako boolean: `CSI motion detected`, bez suwaka float.
 
-```text
-CSI motion detected
-```
-
-Nie pokazuj użytkownikowi suwaka float dla 0/1, jeżeli łatwo to ukryć w istniejących komponentach.
-
-## 8. Wiring w ServiceRegistry
+## 9. Wiring w ServiceRegistry
 
 Zmodyfikuj:
 
@@ -897,21 +941,13 @@ Zmodyfikuj:
 src/system/services/ServiceRegistry.h
 src/system/services/ServiceRegistryCallbacks.cpp
 src/system/init/services/CoreServicesInitializer.cpp
-src/system/init/services/*WifiSensing* albo odpowiedni initializer
 ```
 
-Dokładne nazwy sprawdź w repo przed edycją.
-
-### 8.1. Motion callback
-
-W `ServiceRegistryCallbacks.cpp::wireRuntimeCallbacks()` dodaj:
+W `wireRuntimeCallbacks()`:
 
 ```cpp
 if (_csiService && _alarmService) {
     _csiService->setMotionCallback([this](bool motion) {
-        if (_isDying.load(std::memory_order_acquire)) {
-            return;
-        }
         ALARMS::AlarmInputData input;
         input.wifiCsiMotion = motion ? 1.0f : 0.0f;
         _alarmService->submitInput(input);
@@ -927,15 +963,9 @@ if (_csiService) {
 }
 ```
 
-Użyj faktycznych nazw pól (`_isDying`, `_alarmService`, `_csiService`) z repo. Jeżeli `_isDying` nie jest dostępne w tej klasie, pomiń guard albo użyj istniejącego shutdown guardu.
+Użyj faktycznych nazw pól/guardów z repo. Nie dodawaj notyfikacji ani LED tutaj.
 
-### 8.2. Settings constructor
-
-Tam, gdzie tworzony jest `WifiSensingSettings`, przekaż `CsiService*`.
-
-Update testów inicjalizacji service registry, jeżeli kompilacja native pokaże mismatch konstruktora.
-
-## 9. Frontend: typy i API
+## 10. Frontend API/types
 
 Zmodyfikuj:
 
@@ -944,17 +974,11 @@ interface/src/lib/types/connectivity/wifiSensing.ts
 interface/src/lib/services/api/connectivity/WifiSensingApiService.ts
 interface/src/lib/types/domain/alarms.ts
 interface/src/lib/features/alarms/components/alarmThresholdConfig.ts
-interface/src/lib/features/alarms/components/fields/AlarmConditionFields.svelte
-interface/src/lib/features/alarms/components/AlarmRuleModal.svelte
-interface/src/lib/features/alarms/components/AlarmRuleList.svelte
-interface/src/lib/features/alarms/components/useAlarmRuleForm.svelte.ts
 interface/messages/en.json
 interface/messages/pl.json
 ```
 
-### 9.1. WiFi sensing types
-
-Dodaj:
+Dodaj typy:
 
 ```ts
 export interface CsiAlarmBand {
@@ -995,21 +1019,7 @@ export interface CsiMotionStatus {
 }
 ```
 
-`WifiSensingSettings`:
-
-```ts
-csi_alarm: CsiAlarmSettings;
-```
-
-`CsiRuntimeMetrics`:
-
-```ts
-motion: CsiMotionStatus;
-```
-
-### 9.2. API service
-
-Dodaj:
+API method:
 
 ```ts
 async calibrateCsiAlarm(): Promise<{ ok: boolean; state?: string; error?: string }> {
@@ -1019,7 +1029,7 @@ async calibrateCsiAlarm(): Promise<{ ok: boolean; state?: string; error?: string
 }
 ```
 
-## 10. Frontend: CSI page UX
+## 11. Frontend CSI page UX
 
 Zmodyfikuj:
 
@@ -1031,23 +1041,20 @@ interface/src/lib/features/wifisensing/csi/CsiWaterfallChart.svelte
 interface/src/lib/features/wifisensing/csi/useCsiWaterfallChart.svelte.ts
 ```
 
-Dodaj nowy helper/component:
+Dodaj:
 
 ```text
 interface/src/lib/features/wifisensing/csi/useCsiAlarmConfig.svelte.ts
 interface/src/lib/features/wifisensing/csi/CsiAlarmControls.svelte
 ```
 
-### 10.1. UI
-
-Na stronie CSI dodaj panel:
+Panel:
 
 ```text
 CSI Alarm
 [ ] Enabled
 Status: disabled/calibrating/monitoring/motion/noisy/needs calibration
 Score: x.xx
-Confidence: xx%
 Bands: [58-70] [125-132] [+]
 [Select band]
 [Calibrate empty room]
@@ -1056,83 +1063,30 @@ Advanced: topK, hold, clear hold, thresholds, min noise
 [Save]
 ```
 
-Przycisk `Calibrate empty room`:
+Konflikt z uPlot drag-to-zoom:
 
 ```text
-- disabled gdy csi_alarm.enabled == false
-- disabled gdy bands.length == 0
-- POST /api/wifisensing/csi/calibrate
-- po kliknięciu pokaż stan calibrating
+selectionMode = false → obecny drag-to-zoom działa jak teraz
+selectionMode = true  → transparent overlay obsługuje pointer events i wybór pasma
 ```
 
-### 10.2. Konflikt z uPlot drag-to-zoom
+Nie wyłączaj zoomu permanentnie.
 
-`CsiAmplitudeChart` obecnie używa drag do zoomu. Nie przejmuj tego zachowania globalnie.
-
-Dodaj tryb:
-
-```ts
-selectionMode: boolean;
-selectedBands: CsiAlarmBand[];
-onBandSelected?: (band: CsiAlarmBand) => void;
-```
-
-Gdy `selectionMode == false`:
+Mapowanie X → subcarrier index:
 
 ```text
-uPlot działa jak teraz, drag = zoom
+ratio = clamp((clientX - plotLeft) / plotWidth, 0, 1)
+index = round(ratio * (subcarrierCount - 1))
 ```
 
-Gdy `selectionMode == true`:
-
-```text
-nad wykresem pojawia się transparentny overlay div
-pointerdown/pointermove/pointerup obsługuje wybór pasma
-uPlot drag nie dostaje eventów
-```
-
-Nie wyłączaj na stałe zoomu.
-
-### 10.3. Mapowanie X → subcarrier index
-
-W `useCsiAmplitudeChart.svelte.ts` dodaj metodę:
-
-```ts
-function clientXToIndex(clientX: number): number | null
-```
-
-Implementacja:
-
-```text
-- weź bounding rect plot area albo root chart rect
-- policz ratio 0..1
-- index = round(ratio * (subcarrierCount - 1))
-- clamp 0..subcarrierCount - 1
-```
-
-Jeżeli uPlot exposes scale/bbox — użyj tego. Jeżeli nie, fallback na rect całego chartu jest akceptowalny w MVP.
-
-### 10.4. Overlay pasm
-
-Amplitude overlay:
+Overlay amplitude/waterfall:
 
 ```text
 left = start / subcarrierCount * 100%
 width = (end - start + 1) / subcarrierCount * 100%
 ```
 
-Waterfall overlay analogicznie. Dodaj props:
-
-```ts
-selectedBands?: CsiAlarmBand[];
-subcarrierCount?: number;
-```
-
-Nie renderuj overlay gdy `subcarrierCount <= 0`.
-
-### 10.5. Sensitivity mapping
-
-UI może dawać prosty wybór:
+Sensitivity mapping:
 
 ```text
 Low    -> enter 8.0, clear 4.0
@@ -1140,13 +1094,9 @@ Medium -> enter 6.0, clear 3.0
 High   -> enter 4.5, clear 2.2
 ```
 
-Przy zmianie sensitivity zaktualizuj thresholds, chyba że użytkownik ręcznie edytował Advanced — wtedy zachowaj ręczne wartości.
+## 12. Frontend alarm source
 
-## 11. Frontend: alarm source
-
-### 11.1. Domain type
-
-W `interface/src/lib/types/domain/alarms.ts` dodaj source:
+Dodaj source:
 
 ```ts
 'wifi_csi_motion'
@@ -1158,49 +1108,19 @@ Metadata:
 label: CSI Motion
 unit: none
 booleanLike: true
+operator: above
+threshold: 0.5
 ```
 
-Dopasuj do istniejącego modelu metadata.
-
-### 11.2. Alarm form
-
-Dla `wifi_csi_motion`:
-
-```ts
-operator = 'above'
-threshold = 0.5
-```
-
-Ukryj albo zablokuj operator/threshold. Tekst warunku:
+Formularz alarmu dla `wifi_csi_motion`:
 
 ```text
-CSI motion detected
+- ukryj/zablokuj operator
+- ukryj/zablokuj threshold
+- tekst: CSI motion detected
 ```
 
-Nie pokazuj użytkownikowi `> 0.5` poza debugiem.
-
-### 11.3. i18n
-
-Dodaj klucze EN/PL, minimum:
-
-```json
-"source_wifi_csi_motion": "CSI Motion"
-"alarm_condition_wifi_csi_motion": "CSI motion detected"
-"csi_alarm_title": "CSI Alarm"
-"csi_alarm_select_band": "Select band"
-"csi_alarm_calibrate": "Calibrate empty room"
-"csi_alarm_baseline_ready": "Baseline ready"
-"csi_alarm_noisy": "Noisy environment"
-"csi_alarm_needs_calibration": "Needs calibration"
-```
-
-Po zmianach uruchom:
-
-```bash
-cd interface && npm run i18n:build
-```
-
-## 12. Testy backend
+## 13. Backend tests
 
 Dodaj/zmodyfikuj:
 
@@ -1214,69 +1134,44 @@ test/test_alarm_message_builder/test_alarm_message_builder.cpp
 test/test_service_registry_initialization/test_service_registry_initialization.cpp
 ```
 
-### 12.1. Detector tests
-
-Scenariusze:
-
-1. `disabled_returns_disabled_no_motion`
-2. `no_bands_returns_needs_configuration`
-3. `baseline_converges_after_configured_frames`
-4. `narrow_band_motion_triggers_after_hold`
-5. `single_frame_spike_does_not_trigger`
-6. `motion_clears_after_clear_hold`
-7. `global_noise_enters_noisy_environment`
-8. `width_change_resets_baseline`
-9. `dead_carriers_are_ignored`
-10. `selected_band_only_detects_selected_band_changes`
-
-Synthetic packet helper:
-
-```cpp
-static CsiPacket makePacket(uint16_t width,
-                            int8_t real = 10,
-                            int8_t imag = 0,
-                            std::initializer_list<uint16_t> boosted = {});
-```
-
-Boost local band by changing IQ values in selected indexes.
-
-### 12.2. Config JSON tests
-
-Testuj:
+Detector tests:
 
 ```text
-- save includes nested csi_alarm
-- deserialize missing csi_alarm keeps defaults
-- max 4 bands
-- reversed start/end normalized
-- thresholds clamped
-- top_k clamped
+disabled_returns_disabled_no_motion
+storage_allocation_failure_returns_unavailable
+no_bands_returns_needs_configuration
+baseline_converges_after_configured_frames
+narrow_band_motion_triggers_after_hold
+single_frame_spike_does_not_trigger
+motion_clears_after_clear_hold
+global_noise_enters_noisy_environment
+width_change_resets_baseline
+dead_carriers_are_ignored
+selected_band_only_detects_selected_band_changes
+process_does_not_allocate_after_begin, if existing test infra can assert this
 ```
 
-### 12.3. Alarm tests
-
-Testuj:
+Config tests:
 
 ```text
-- enum string WifiCsiMotion -> wifi_csi_motion
-- JSON parser accepts wifi_csi_motion
-- evaluator triggers above 0.5 when input = 1.0
-- evaluator does not trigger when input = 0.0
-- message builder has sane label/unit
+save includes nested csi_alarm
+missing csi_alarm keeps defaults
+max 4 bands
+reversed start/end normalized
+thresholds clamped
+top_k clamped
 ```
 
-### 12.4. Existing Python harness
-
-Nie usuwaj:
+Alarm tests:
 
 ```text
-scripts/sensing_analysis/csi_alarm_harness.py
-test/test_csi_alarm_harness.py
+WifiCsiMotion <-> wifi_csi_motion
+evaluator triggers above 0.5 for 1.0
+evaluator does not trigger for 0.0
+message builder has sane label/unit
 ```
 
-Możesz dopisać komentarz w nowym detektorze, że production C++ jest portem idei harnessu, ale z band selection.
-
-## 13. Testy frontend
+## 14. Frontend tests
 
 Dodaj/zmodyfikuj:
 
@@ -1290,16 +1185,16 @@ interface/src/lib/features/alarms/components/AlarmRuleList.test.ts
 Scenariusze:
 
 ```text
-- parseCsiFrame nadal czyta motionScore/isMotionDetected
-- selected band state zapisuje start/end w kolejności rosnącej
-- selection mode nie zmienia zachowania poza overlay
-- wifi_csi_motion form ustawia above/0.5
-- lista reguł pokazuje boolean text zamiast >0.5
+parseCsiFrame nadal czyta motionScore/isMotionDetected
+selected band zapisuje start/end rosnąco
+selection mode nie psuje normalnego zoomu
+wifi_csi_motion ustawia above/0.5
+lista reguł pokazuje boolean text zamiast >0.5
 ```
 
-## 14. Komendy weryfikacyjne
+## 15. Komendy weryfikacyjne
 
-Uruchamiaj w tej kolejności, nie rób pełnych clean buildów bez potrzeby.
+Uruchamiaj po fazach:
 
 ```bash
 $HOME/.platformio/penv/bin/pio test -e native -f test_csi_band_motion_detector
@@ -1313,81 +1208,90 @@ cd interface && npm run i18n:build && npm run check && npm run test:run
 ./scripts/build-fast.sh
 ```
 
-Jeżeli `pio` nie jest w PATH, używaj `$HOME/.platformio/penv/bin/pio`.
+Dodatkowa kontrola hot path:
 
-## 15. Manualny test na urządzeniu
+```bash
+grep -R "std::vector\|String\|heap_caps_malloc\|new " -n src/wifisensing/csi/algo src/wifisensing/csi/core
+```
+
+Wynik nie może pokazywać alokacji w `process()` ani per-frame path. Alokacje w `begin()/end()/startProcessingTask()` są akceptowalne.
+
+## 16. Manualny test na urządzeniu
 
 1. Flash firmware.
 2. Wejdź na `/wifisensing/csi`.
 3. Włącz CSI Alarm.
 4. Włącz `Select band`.
-5. Zaznacz 1–2 pasma widoczne jako stabilne i reagujące lokalnie, np. okolice pików z wykresu, ale nie całe spektrum.
+5. Zaznacz 1–2 stabilne pasma reagujące lokalnie.
 6. Zapisz config.
 7. Opuść pomieszczenie / nie ruszaj się.
 8. Kliknij `Calibrate empty room`.
-9. Czekaj aż status będzie `baseline_ready` / `monitoring`.
+9. Czekaj na `baseline_ready` / `monitoring`.
 10. Porusz się w pomieszczeniu.
-11. Sprawdź:
-    - `motion.detected == true`,
-    - CSI frame ma `isMotionDetected == true`,
-    - alarm `wifi_csi_motion` odpala się przez normalny pipeline,
-    - po braku ruchu stan wraca do false.
-12. Zamknij stronę CSI i powtórz test alarmu. Alarm musi nadal działać headless.
-13. Reboot urządzenia: config pasm ma zostać, baseline ma się skalibrować od nowa.
+11. Sprawdź `motion.detected == true` i alarm `wifi_csi_motion`.
+12. Przestań się ruszać i sprawdź powrót do false.
+13. Zamknij stronę CSI i powtórz test. Alarm musi działać headless.
+14. Reboot: config pasm zostaje, baseline kalibruje się od nowa.
+15. Obserwuj `queueDropsLastSec`, `packetsPerSec`, stack budget i heap telemetry.
 
-## 16. Ryzyka i edge-case’y
+## 17. Ryzyka i oczekiwana obsługa
 
-| Ryzyko | Oczekiwana obsługa |
+| Ryzyko | Obsługa |
 |---|---|
-| Statyczne piki na wykresie | Nie triggerują same z siebie; score jest zmianą względem baseline |
-| Globalny skok gain/noise | `NoisyEnvironment`, motion false |
+| Statyczne piki | Nie triggerują, score jest zmianą względem baseline |
+| Globalny gain/noise jump | `NoisyEnvironment`, motion false |
 | Martwe/null carriery | `minEnergy` + valid mask |
-| Za mało carrierów w paśmie | `NeedsConfiguration` albo `validSelectedCarrierCount` niski |
-| Zmiana szerokości CSI | reset baseline |
-| Brak otwartej strony CSI | `CsiConsumer::AlarmSystem` utrzymuje CSI aktywne |
-| Single callback frontend | nie używaj `_csiCallback` do alarmów; dodaj osobny `_motionCallback` |
-| Packet loss | hold/hysteresis minimalizują pojedyncze dropy |
-| Za szybka adaptacja baseline | EWMA tylko gdy no motion/no noisy/score low |
-| False positives po starcie | alarm false aż baseline ready |
-| RSSI wifi_motion regression | nie ruszać istniejącego source ani jego configu |
+| Za mało carrierów w paśmie | `NeedsConfiguration` albo motion false |
+| Width mismatch | reset baseline |
+| Brak strony CSI | `CsiConsumer::AlarmSystem` utrzymuje CSI aktywne |
+| Single callback frontend | osobny `MotionCallback`, nie `_csiCallback` |
+| Packet loss | hold/hysteresis minimalizuje dropy |
+| Za szybka adaptacja baseline | EWMA tylko no motion/no noisy/score low |
+| PSRAM allocation fail | `Unavailable`, motion false, CSI streaming działa dalej |
+| RSSI regression | nie ruszać `wifi_motion` |
 
-## 17. Acceptance criteria
+## 18. Acceptance criteria
 
-Implementacja jest gotowa, gdy:
+Gotowe, gdy:
 
-1. `wifi_motion` nadal działa jak dotychczas na RSSI variance.
-2. Jest nowe źródło `wifi_csi_motion` end-to-end: enum, JSON, frontend, evaluator.
-3. CSI detector działa w `CsiService::processingTask()` i uzupełnia `packet.motionScore` oraz `packet.isMotionDetected`.
-4. Wire format CSI nie zmienia rozmiaru ani kolejności pól.
+1. `wifi_motion` nadal działa jak wcześniej na RSSI variance.
+2. Nowe źródło `wifi_csi_motion` działa end-to-end: backend enum, JSON, frontend, evaluator.
+3. CSI detector działa w `CsiProcess` i uzupełnia `packet.motionScore` oraz `packet.isMotionDetected`.
+4. CSI wire format nie zmienia rozmiaru ani kolejności pól.
 5. CSI alarm działa bez otwartej strony CSI.
-6. Wybrane pasma zapisują się w `/api/wifisensing/config` pod `csi_alarm.bands`.
-7. Kalibracja jest dostępna przez `POST /api/wifisensing/csi/calibrate`.
+6. Wybrane pasma zapisują się pod `csi_alarm.bands`.
+7. `POST /api/wifisensing/csi/calibrate` resetuje baseline asynchronicznie/non-blocking.
 8. `/api/wifisensing/status` pokazuje `csi.motion`.
 9. Alarmy dostają tylko `wifiCsiMotion = 0.0f | 1.0f`.
 10. Nie ma bezpośredniej notyfikacji/Telegram/LED z CSI.
-11. Native tests przechodzą.
-12. `cd interface && npm run check && npm run test:run` przechodzi.
-13. `./scripts/build-fast.sh` przechodzi.
-14. Nie zmieniono `lib/framework/**` ani `src/wifisensing/csi/vendor/**`.
+11. Duże bufory detektora są alokowane raz w PSRAM.
+12. `CsiBandMotionDetector::process()` nie alokuje pamięci.
+13. Nie dodano osobnego taska CSI motion w MVP.
+14. Config/calibration API nie blokuje taska CSI.
+15. Nie zmieniono `lib/framework/**` ani `src/wifisensing/csi/vendor/**`.
+16. Native tests, frontend checks i `./scripts/build-fast.sh` przechodzą.
 
-## 18. Kolejność implementacji
+## 19. Kolejność implementacji
 
 ### Phase 1 — Detector pure C++
 
 1. Dodaj `CsiMotionTypes.h`.
 2. Dodaj `CsiBandMotionDetector.h/.cpp`.
-3. Dodaj testy native detektora.
-4. Uruchom tylko test detektora.
+3. Dodaj `CsiMotionStorage` alokowany raz w PSRAM z native fallback.
+4. Zaimplementuj Welford baseline, z-score, selected bands, top-K, hysteresis, noise gate.
+5. Dodaj testy native detektora.
+6. Uruchom tylko test detektora.
 
 Nie dotykaj jeszcze alarmów ani UI.
 
 ### Phase 2 — CSI Service integration
 
 1. Dodaj detector member i motion callback do `CsiService`.
-2. Podepnij detector w `processingTask()`.
-3. Dodaj motion fields do `CsiMetricsSnapshot`.
-4. Utrzymaj WebSocket CSI bez zmian layoutu.
-5. Uruchom `test_csi_wire_format` jeśli istnieje i nowy detector test.
+2. Dodaj pending config/calibration mailbox.
+3. Podepnij detector w `processingTask()`.
+4. Dodaj motion fields do `CsiMetricsSnapshot`.
+5. Utrzymaj WebSocket CSI bez zmian layoutu.
+6. Uruchom test detektora i wire format, jeśli istnieje.
 
 ### Phase 3 — Config/API
 
@@ -1432,19 +1336,7 @@ Nie dotykaj jeszcze alarmów ani UI.
 4. Fast firmware build.
 5. Manual checklist.
 
-## 19. Źródła techniczne do kontekstu
-
-Te źródła są tylko kontekstem, nie wymagają implementacji ML:
-
-- Espressif ESP-IDF Wi-Fi API Reference: `esp_wifi_set_csi_rx_cb`, `esp_wifi_set_csi_config`, `esp_wifi_set_csi`. Ważne dla zasady, że callback CSI jest hot path i nie może robić ciężkiej pracy.
-- Yousefi et al., “A Survey of Human Activity Recognition Using WiFi CSI”, arXiv:1708.07129. Kontekst: ruch człowieka zmienia multipath i sekwencje CSI.
-- Li et al., “Wi-Motion: A Robust Human Activity Recognition Using WiFi Signals”, arXiv:1810.11705. Kontekst: CSI amplitude/phase jako feature dla ruchu.
-- Rousseeuw & Croux, “Alternatives to the Median Absolute Deviation”, Journal of the American Statistical Association, 1993. Kontekst robust scale.
-- Hampel/MAD robust statistics. Kontekst: odporność na outliery, ale w MVP używamy Welford stddev z guardami pamięciowymi.
-
 ## 20. Prompt do Codex Goal Mode
-
-Skopiuj poniższy prompt do Goal Mode:
 
 ```text
 Pracuj w repo MatrixHub. Najpierw przeczytaj AGENTS.md oraz csi_alarm.md w root repo. Zaimplementuj WiFi CSI motion alarm dokładnie według planu z csi_alarm.md.
@@ -1459,14 +1351,19 @@ Twarde ograniczenia:
 - Nie zmieniaj semantyki istniejącego `wifi_motion`.
 - Nie wysyłaj notyfikacji bezpośrednio z CSI.
 - CSI alarm musi działać headless, bez otwartej strony CSI.
-- Pracuj etapami z planu: detector → CsiService → config/API → alarm source → frontend CSI UX → frontend alarms → testy.
+- Optymalizacja ESP32-S3/PSRAM jest wymagana.
+- Nie dodawaj osobnego taska dla detektora w MVP; użyj istniejącego `CsiProcess`.
+- Zero heap allocation/new/vector/String/JSON w CSI hot path.
+- Duże bufory detektora alokuj raz w PSRAM; task stack/TCB/FreeRTOS control blocks zostają w internal DRAM.
+- Config/calibration API nie może blokować per-frame CSI processing; użyj pending mailbox i apply w `CsiProcess`.
 
 Wymagania techniczne:
-- Dodaj `CsiBandMotionDetector` z baseline Welford, per-subcarrier z-score, selected bands, top-K scoring, hysteresis, hold/clear hold, noisy gate i recalibration guard.
+- Dodaj `CsiBandMotionDetector` z PSRAM-backed `CsiMotionStorage`, baseline Welford, per-subcarrier z-score, selected bands, top-K scoring, hysteresis, hold/clear hold, noisy gate i recalibration guard.
+- `CsiBandMotionDetector::process()` ma mieć zero alokacji i deterministyczny runtime.
 - Podepnij detektor w `CsiService::processingTask()` i wypełniaj `packet.motionScore` oraz `packet.isMotionDetected`.
 - Dodaj `CsiService::setMotionCallback`, `setMotionConfig`, `requestMotionCalibration`, `getMotionSnapshot`.
 - Rozszerz `/api/wifisensing/config` o nested `csi_alarm` i `/api/wifisensing/status` o `csi.motion`.
-- Dodaj `POST /api/wifisensing/csi/calibrate`.
+- Dodaj `POST /api/wifisensing/csi/calibrate` jako non-blocking request.
 - Dodaj `AlarmSource::WifiCsiMotion` string `wifi_csi_motion` i pełne mapowanie backend/frontend.
 - UI alarmów ma traktować `wifi_csi_motion` jako boolean: operator `above`, threshold `0.5`, bez suwaka float dla użytkownika.
 - Strona CSI ma mieć wybór pasm myszką bez psucia obecnego drag-to-zoom: selection mode używa overlay, normalny tryb zostawia zoom.
