@@ -26,7 +26,8 @@ technical references that support implementation, debugging, and validation.
 - [operations/security_hardening.md](operations/security_hardening.md) - security model and hardening notes
 - [operations/testing.md](operations/testing.md) - backend and frontend validation
 - [operations/runtime-diagnostics.md](operations/runtime-diagnostics.md) - live heap, task, mutex, WebSocket, and restart diagnostics
-- [operations/final-regression-gate-2026-06-19.md](operations/final-regression-gate-2026-06-19.md) - final release-gate evidence for the 2026-06-19 device run
+- [operations/final-validation-report.md](operations/final-validation-report.md) - final commercial-grade validation report
+- [operations/final-regression-gate-2026-06-19.md](operations/final-regression-gate-2026-06-19.md) - detailed release-gate evidence for the 2026-06-19 device run
 - [operations/dram_optimizations.md](operations/dram_optimizations.md) - DRAM usage guidance
 - [operations/hygienic_sleep.md](operations/hygienic_sleep.md) - hygiene sleep and maintenance restart flow
 - [../main_docs/BUILD_SPEED_OPTIMIZATION.md](../main_docs/BUILD_SPEED_OPTIMIZATION.md) - measured PlatformIO build-speed optimization report
