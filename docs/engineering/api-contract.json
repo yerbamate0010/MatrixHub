@@ -253,12 +253,12 @@
       "path": "/rest/power/status",
       "auth": "authenticated",
       "request": "none",
-      "response": "Wake reason, sleep state, inactivity config, uptime",
+      "response": "Wake reason, sleep state, inactivity config, uptime, and thermal diagnostics",
       "restartRequired": false,
       "firmware": ["src/api/power/PowerApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/core/PowerApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/tests/stress_test.py", "scripts/contract/verify_api_contract.py"]
+      "tests": ["test/test_power_api_service/test_power_api_service.cpp", "scripts/tests/stress_test.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "power.config",

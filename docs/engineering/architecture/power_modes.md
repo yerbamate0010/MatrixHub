@@ -65,7 +65,20 @@ Authenticated endpoint returning current power state, including:
 - `grace_after_boot_ms`
 - `wake_interval_ms`
 - `last_activity_ms`
+- `thermal_state`
+- `thermal_temp_c`
+- `thermal_cpu_mhz`
+- `thermal_throttled`
+- `thermal_soft_c`
+- `thermal_hard_c`
+- `thermal_critical_c`
 - `uptime_ms`
+
+This endpoint is intentionally read-only from the inactivity tracker point of
+view: polling power status for diagnostics must not refresh `last_activity_ms`.
+An open UI still prevents accidental sleep through the `/ws/system` activity
+path, which represents an active client session rather than passive status
+scraping.
 
 ### `PUT /rest/power/config`
 
@@ -93,6 +106,8 @@ Current rules:
 
 - last activity and boot timestamps are restored from RTC when possible
 - AP clients count as activity, so the device should not sleep while someone is connected to SoftAP
+- `/ws/system` and other active control/data channels count as activity
+- passive diagnostic reads such as `GET /rest/power/status` do not count as activity
 - the grace period is respected after boot
 - inactivity sleep only happens if `sleep_enabled` is true
 

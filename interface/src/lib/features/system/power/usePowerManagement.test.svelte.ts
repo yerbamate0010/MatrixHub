@@ -69,6 +69,13 @@ describe('usePowerManagement', () => {
 			wake_interval_ms: 300000,
 			last_activity_ms: 1000,
 			uptime_ms: 10000,
+			thermal_state: 'normal',
+			thermal_temp_c: 44.5,
+			thermal_cpu_mhz: 240,
+			thermal_throttled: false,
+			thermal_soft_c: 60,
+			thermal_hard_c: 68,
+			thermal_critical_c: 80,
 			sleep_enabled: true
 		});
 		api.updateConfig.mockResolvedValue({
@@ -90,6 +97,8 @@ describe('usePowerManagement', () => {
 						expect(power.status?.sleep_enabled).toBe(true);
 						expect(power.localSleepEnabled).toBe(true);
 						expect(power.localInactivityTimeoutMs).toBe(600000);
+						expect(power.status?.thermal_state).toBe('normal');
+						expect(power.status?.thermal_cpu_mhz).toBe(240);
 						expect(power.hasChanges).toBe(false);
 						resolve();
 					}, 0);

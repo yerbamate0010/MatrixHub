@@ -12,6 +12,8 @@
 	import Timer from '~icons/tabler/hourglass';
 	import Interval from '~icons/tabler/repeat';
 	import Save from '~icons/tabler/device-floppy';
+	import Cpu from '~icons/tabler/cpu';
+	import Thermometer from '~icons/tabler/temperature';
 	import type { PowerStatus } from '$lib/types/system/power';
 	import { formatMs } from '$lib/features/system/power/formatPowerDuration';
 	import { i18n } from '$lib/i18n.svelte';
@@ -131,6 +133,38 @@
 		clampInactivityOnBlur();
 		clampGraceOnBlur();
 		onSave();
+	}
+
+	function formatTemperature(value: number | null | undefined): string {
+		return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(1)} °C` : '--';
+	}
+
+	function thermalStateLabel(state: PowerStatus['thermal_state']): string {
+		switch (state) {
+			case 'soft_throttle':
+				return m.power_thermal_state_soft({ locale: i18n.languageTag });
+			case 'hard_throttle':
+				return m.power_thermal_state_hard({ locale: i18n.languageTag });
+			case 'critical':
+				return m.power_thermal_state_critical({ locale: i18n.languageTag });
+			case 'normal':
+				return m.power_thermal_state_normal({ locale: i18n.languageTag });
+			default:
+				return m.power_thermal_state_unknown({ locale: i18n.languageTag });
+		}
+	}
+
+	function thermalValueClass(state: PowerStatus['thermal_state']): string {
+		switch (state) {
+			case 'critical':
+				return 'text-sm text-error font-semibold';
+			case 'hard_throttle':
+				return 'text-sm text-error';
+			case 'soft_throttle':
+				return 'text-sm text-warning';
+			default:
+				return 'text-sm text-base-content';
+		}
 	}
 
 	let helpOpen = $state(false);
@@ -264,6 +298,22 @@
 				iconClass={statIconClass}
 				label={m.power_wake_title({ locale: i18n.languageTag })}
 				value={formatMs(status.wake_interval_ms)}
+			/>
+
+			<StatusRow
+				icon={Thermometer}
+				iconClass={statIconClass}
+				label={m.power_thermal_title({ locale: i18n.languageTag })}
+				value={`${formatTemperature(status.thermal_temp_c)} · ${thermalStateLabel(status.thermal_state)}`}
+				valueClass={thermalValueClass(status.thermal_state)}
+			/>
+
+			<StatusRow
+				icon={Cpu}
+				iconClass={statIconClass}
+				label={m.power_thermal_cpu_title({ locale: i18n.languageTag })}
+				value={`${status.thermal_cpu_mhz} MHz`}
+				valueClass={status.thermal_throttled ? 'text-sm text-warning' : 'text-sm text-base-content'}
 			/>
 
 			{#if status.sleep_requested}

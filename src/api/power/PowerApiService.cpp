@@ -7,6 +7,7 @@
 #include "../../system/power/PowerManager.h"
 #include "../../system/power/PowerSettingsService.h"
 #include "../../system/power/PowerWakeController.h"
+#include "../../system/thermal/ThermalMonitor.h"
 #include "../../system/boot/BootTracker.h"
 #include "../../system/rtc/RtcConfig.h"
 #include "../../config/System.h"
@@ -19,6 +20,20 @@ namespace API {
 
 namespace {
 constexpr const char* kPowerConfigPath = "/rest/power/config";
+
+const char* thermalStateToString(SYSTEM::ThermalState state) {
+    switch (state) {
+        case SYSTEM::ThermalState::NORMAL:
+            return "normal";
+        case SYSTEM::ThermalState::SOFT_THROTTLE:
+            return "soft_throttle";
+        case SYSTEM::ThermalState::HARD_THROTTLE:
+            return "hard_throttle";
+        case SYSTEM::ThermalState::CRITICAL:
+            return "critical";
+    }
+    return "unknown";
+}
 }
 
 PowerApiService::PowerApiService(PsychicHttpServer* server,
@@ -51,10 +66,12 @@ PowerApiService::PowerApiService(PsychicHttpServer* server,
 
 void PowerApiService::begin() {
     _server->on("/rest/power/status", HTTP_GET,
-        wrapAuth([this](PsychicRequest *request) -> esp_err_t {
+        _securityManager->wrapRequest([this](PsychicRequest *request) -> esp_err_t {
             if (!_powerManager) return request->reply(500);
             auto reason = _powerManager->wakeReason();
             auto cfg = _powerManager->inactivityConfig();
+            auto& thermal = SYSTEM::ThermalMonitor::instance();
+            const auto thermalState = thermal.getState();
 
             const char* reasonStr = "unknown";
             switch (reason) {
@@ -85,12 +102,19 @@ void PowerApiService::begin() {
             w.key(CONFIG::Keys::kGraceAfterBootMs); w.value(cfg.graceAfterBootMs); w.raw(",");
             w.key(CONFIG::Keys::kWakeIntervalMs); w.value(_powerManager->wakeIntervalMs()); w.raw(",");
             w.key(CONFIG::Keys::kLastActivityMs); w.value(_powerManager->lastActivityMs()); w.raw(",");
+            w.key(CONFIG::Keys::kThermalState); w.string(thermalStateToString(thermalState)); w.raw(",");
+            w.key(CONFIG::Keys::kThermalTempC); w.value(thermal.getTemperature(), 1); w.raw(",");
+            w.key(CONFIG::Keys::kThermalCpuMhz); w.value(thermal.getCpuFrequency()); w.raw(",");
+            w.key(CONFIG::Keys::kThermalThrottled); w.value(thermal.isThrottled()); w.raw(",");
+            w.key(CONFIG::Keys::kThermalSoftC); w.value(THERMAL::TEMP_SOFT_THROTTLE, 1); w.raw(",");
+            w.key(CONFIG::Keys::kThermalHardC); w.value(THERMAL::TEMP_HARD_THROTTLE, 1); w.raw(",");
+            w.key(CONFIG::Keys::kThermalCriticalC); w.value(THERMAL::TEMP_CRITICAL, 1); w.raw(",");
             w.key(CONFIG::Keys::kUptimeMs); w.value((uint32_t)millis());
             w.raw("}");
             w.finish();
 
             return ESP_OK;
-        })
+        }, AuthenticationPredicates::IS_AUTHENTICATED)
     );
 
     _server->on("/rest/power/hygieneSleep", HTTP_POST,

@@ -13,5 +13,12 @@ export interface PowerStatus extends PowerConfig {
 	sleep_eta_ms: number;
 	wake_interval_ms: number;
 	last_activity_ms: number;
+	thermal_state: 'normal' | 'soft_throttle' | 'hard_throttle' | 'critical' | 'unknown';
+	thermal_temp_c: number | null;
+	thermal_cpu_mhz: number;
+	thermal_throttled: boolean;
+	thermal_soft_c: number;
+	thermal_hard_c: number;
+	thermal_critical_c: number;
 	uptime_ms: number;
 }

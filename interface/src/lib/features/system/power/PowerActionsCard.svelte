@@ -42,19 +42,12 @@
 	}
 
 	function confirmReset() {
-		confirm({
+		confirmRestartAndSave(async () => {}, {
 			title: m.power_dialog_reset_title({ locale: i18n.languageTag }),
 			message: m.power_dialog_reset_msg({ locale: i18n.languageTag }),
-			labels: {
-				cancel: { label: m.power_dialog_restart_abort({ locale: i18n.languageTag }), icon: Cancel },
-				confirm: {
-					label: m.power_dialog_reset_confirm({ locale: i18n.languageTag }),
-					icon: FactoryReset
-				}
-			},
-			onConfirm: () => {
-				onFactoryReset();
-			}
+			cancelLabel: m.power_dialog_restart_abort({ locale: i18n.languageTag }),
+			confirmLabel: m.power_dialog_reset_confirm({ locale: i18n.languageTag }),
+			triggerRestart: onFactoryReset
 		});
 	}
 

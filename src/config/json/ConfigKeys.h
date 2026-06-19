@@ -178,6 +178,13 @@ namespace Keys {
     constexpr const char* kSleepEtaMs = "sleep_eta_ms";
     constexpr const char* kWakeIntervalMs = "wake_interval_ms";
     constexpr const char* kLastActivityMs = "last_activity_ms";
+    constexpr const char* kThermalState = "thermal_state";
+    constexpr const char* kThermalTempC = "thermal_temp_c";
+    constexpr const char* kThermalCpuMhz = "thermal_cpu_mhz";
+    constexpr const char* kThermalThrottled = "thermal_throttled";
+    constexpr const char* kThermalSoftC = "thermal_soft_c";
+    constexpr const char* kThermalHardC = "thermal_hard_c";
+    constexpr const char* kThermalCriticalC = "thermal_critical_c";
 
     // System Info (Read-Only)
     constexpr const char* kEspPlatform = "esp_platform";

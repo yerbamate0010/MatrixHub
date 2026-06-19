@@ -164,6 +164,16 @@ void test_websocket_activity_is_rate_limited_even_at_debug() {
     TEST_ASSERT_EQUAL_STRING("[Power] Activity: ws/system", s_logs[1].message.c_str());
 }
 
+void test_websocket_activity_refreshes_timer_without_info_spam() {
+    POWER::PowerActivityTracker tracker;
+
+    TEST_STUBS::ARDUINO::millisValue = 5000;
+    tracker.notifyActivity("ws/system");
+
+    TEST_ASSERT_EQUAL_UINT32(5000, POWER::ActivityMonitor::getLastActivityMs());
+    TEST_ASSERT_EQUAL_UINT32(0, s_logs.size());
+}
+
 void test_ap_station_presence_refreshes_activity_without_spam() {
     POWER::PowerActivityTracker tracker;
     POWER::PowerSleepController sleepController;
@@ -190,6 +200,7 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_websocket_activity_is_hidden_from_info_logs);
     RUN_TEST(test_websocket_activity_is_rate_limited_even_at_debug);
+    RUN_TEST(test_websocket_activity_refreshes_timer_without_info_spam);
     RUN_TEST(test_ap_station_presence_refreshes_activity_without_spam);
     return UNITY_END();
 }
