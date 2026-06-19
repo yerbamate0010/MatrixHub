@@ -172,11 +172,29 @@ void MacroEngine::executeLoop() {
 #endif
 
         unsigned long lastNotifyTime = 0;
+        uint32_t executedCommands = 0;
+        const uint32_t scriptStartMs = millis();
+        PsramString abortError;
 
         while (!_stopSignal) {
             if (!parser.next(currentCmd)) break; // EOF
 
+            if (currentCmd.type == CommandType::UNKNOWN) {
+                abortError = currentCmd.textData.empty() ? "Invalid macro command" : currentCmd.textData;
+                LOGW("Aborting macro due to invalid command at line %u: %s",
+                     (unsigned)parser.getLineNumber(),
+                     abortError.c_str());
+                break;
+            }
+
             if (currentCmd.type != CommandType::REM) {
+                executedCommands++;
+                if (executionLimitExceeded(scriptStartMs, executedCommands, abortError)) {
+                    LOGW("Aborting macro at line %u: %s",
+                         (unsigned)parser.getLineNumber(),
+                         abortError.c_str());
+                    break;
+                }
                 {
                     SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(10));
                     if (lock.isLocked()) {
@@ -194,11 +212,21 @@ void MacroEngine::executeLoop() {
             if (currentCmd.type == CommandType::REPEAT) {
                 for (uint32_t i = 0; i < currentCmd.numericData; i++) {
                     if (_stopSignal) break;
+                    executedCommands++;
+                    if (executionLimitExceeded(scriptStartMs, executedCommands, abortError)) {
+                        LOGW("Aborting macro repeat at line %u: %s",
+                             (unsigned)parser.getLineNumber(),
+                             abortError.c_str());
+                        break;
+                    }
                     processCommand(lastCmd, lastCmd, defaultDelay);
                     if (defaultDelay > 0) {
                         performDelay(defaultDelay);
                     }
                     vTaskDelay(pdMS_TO_TICKS(1));
+                }
+                if (!abortError.empty()) {
+                    break;
                 }
             } else {
                 if (currentCmd.type != CommandType::REM && currentCmd.type != CommandType::DEFAULT_DELAY) {
@@ -247,7 +275,15 @@ void MacroEngine::executeLoop() {
         {
             SYSTEM::ScopeLock lock(_mutex, pdMS_TO_TICKS(500));
             if (lock.isLocked()) {
-                _state.status = (_stopSignal) ? MacroStatus::IDLE : MacroStatus::COMPLETED;
+                if (!abortError.empty()) {
+                    _state.status = MacroStatus::ERROR;
+                    _state.lastError = abortError;
+                } else {
+                    _state.status = (_stopSignal) ? MacroStatus::IDLE : MacroStatus::COMPLETED;
+                    if (!_stopSignal) {
+                        _state.lastError.clear();
+                    }
+                }
             }
         }
         notifyState();

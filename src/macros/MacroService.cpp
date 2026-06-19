@@ -169,6 +169,12 @@ PsramString MacroService::getScriptContent(const char* f) {
     return MacroRepository::getScriptContent(f); 
 }
 
+bool MacroService::scriptExists(const char* filename) {
+    SYSTEM::ScopeLock lock(_fileMutex);
+    if (!lock.isLocked()) return false;
+    return MacroRepository::scriptExists(filename);
+}
+
 bool MacroService::deleteScript(const char* filename) {
     SYSTEM::ScopeLock lock(_fileMutex);
     if (!lock.isLocked()) return false;

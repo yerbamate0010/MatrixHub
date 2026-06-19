@@ -207,6 +207,8 @@
 	"macros_boot_script_hint": "Włącz Makra, aby uruchamiać skrypt startowy.",
 	"macros_error_script_content": "Nie udało się wczytać treści skryptu.",
 	"macros_error_filename_required": "Nazwa pliku jest wymagana.",
+	"macros_error_filename_invalid": "Użyj 1-32 znaków: litery, cyfry, kropka, myślnik albo podkreślenie.",
+	"macros_error_script_too_large": "Skrypt jest za duży. Maksymalny rozmiar to 8 KB.",
 	"macros_error_save_script": "Nie udało się zapisać skryptu.",
 	"macros_error_boot_script_not_found": "Wybrany skrypt startowy nie istnieje.",
 	"macros_msg_started": "Skrypt uruchomiony",

@@ -15,6 +15,7 @@ public:
     static bool deleteScript(const char* filename);
     static bool saveScript(const char* filename, const char* content);
     static PsramString getScriptContent(const char* filename);
+    static bool scriptExists(const char* filename);
 
 private:
     static SemaphoreHandle_t _fsMutex;

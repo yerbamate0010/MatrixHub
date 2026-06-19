@@ -12,9 +12,9 @@
 	const commands = [
 		{ syntax: 'STRING [text]', desc: () => m.macros_cmd_string() },
 		{ syntax: 'STRINGLN [text]', desc: () => m.macros_cmd_stringln() },
-		{ syntax: 'DELAY [ms]', desc: () => m.macros_cmd_delay() },
-		{ syntax: 'DEFAULT_DELAY [ms]', desc: () => m.macros_cmd_defdelay() },
-		{ syntax: 'REPEAT [count]', desc: () => m.macros_cmd_repeat() },
+		{ syntax: 'DELAY [0-60000 ms]', desc: () => m.macros_cmd_delay() },
+		{ syntax: 'DEFAULT_DELAY [0-60000 ms]', desc: () => m.macros_cmd_defdelay() },
+		{ syntax: 'REPEAT [1-1000]', desc: () => m.macros_cmd_repeat() },
 		{
 			syntax: 'KEY [code]',
 			desc: () => m.macros_cmd_key()

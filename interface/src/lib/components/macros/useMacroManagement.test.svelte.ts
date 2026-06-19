@@ -19,6 +19,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	macros_boot_script_disabled: () => 'disabled',
 	macros_error_script_content: () => 'script content error',
 	macros_error_filename_required: () => 'filename required',
+	macros_error_filename_invalid: () => 'filename invalid',
+	macros_error_script_too_large: () => 'script too large',
 	macros_error_save_script: () => 'save script error',
 	macros_error_start: () => 'start error',
 	macros_error_stop: () => 'stop error',
@@ -206,6 +208,90 @@ describe('useMacroManagement', () => {
 						expect(macros.showEditor).toBe(true);
 						expect(notifications.error).toHaveBeenCalledWith('backend rejected', 3000);
 						expect(notifications.success).not.toHaveBeenCalled();
+						resolve();
+					});
+			});
+		});
+
+		cleanup?.();
+	});
+
+	it('rejects unsafe filenames before uploading', async () => {
+		const notifications = {
+			error: vi.fn(),
+			success: vi.fn()
+		};
+		const api = {
+			getSettings: vi.fn(),
+			listScripts: vi.fn(),
+			getStatus: vi.fn(),
+			getScriptContent: vi.fn(),
+			uploadScript: vi.fn(),
+			saveSettings: vi.fn(),
+			runScript: vi.fn(),
+			stopScript: vi.fn(),
+			deleteScript: vi.fn()
+		};
+
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const macros = useMacroManagement({
+					createApi: () => api,
+					notifications
+				});
+
+				void macros
+					.saveScript({
+						filename: '../bad.txt',
+						content: 'REM test'
+					})
+					.then(() => {
+						expect(api.uploadScript).not.toHaveBeenCalled();
+						expect(notifications.error).toHaveBeenCalledWith('filename invalid', 3000);
+						resolve();
+					});
+			});
+		});
+
+		cleanup?.();
+	});
+
+	it('rejects oversized scripts before uploading', async () => {
+		const notifications = {
+			error: vi.fn(),
+			success: vi.fn()
+		};
+		const api = {
+			getSettings: vi.fn(),
+			listScripts: vi.fn(),
+			getStatus: vi.fn(),
+			getScriptContent: vi.fn(),
+			uploadScript: vi.fn(),
+			saveSettings: vi.fn(),
+			runScript: vi.fn(),
+			stopScript: vi.fn(),
+			deleteScript: vi.fn()
+		};
+
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const macros = useMacroManagement({
+					createApi: () => api,
+					notifications
+				});
+
+				void macros
+					.saveScript({
+						filename: 'large.txt',
+						content: 'A'.repeat(8193)
+					})
+					.then(() => {
+						expect(api.uploadScript).not.toHaveBeenCalled();
+						expect(notifications.error).toHaveBeenCalledWith('script too large', 3000);
 						resolve();
 					});
 			});

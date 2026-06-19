@@ -39,6 +39,7 @@ public:
     bool deleteScript(const char* filename);
     bool saveScript(const char* filename, const char* content);
     MACROS::PsramString getScriptContent(const char* filename);
+    bool scriptExists(const char* filename);
 
     // Settings (Direct RTC Access)
     void applySettings();

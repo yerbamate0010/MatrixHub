@@ -168,4 +168,17 @@ PsramString MacroRepository::getScriptContent(const char* filename) {
     return psContent;
 }
 
+bool MacroRepository::scriptExists(const char* filename) {
+    char path[128];
+    snprintf(path, sizeof(path), "/scripts/%s", filename);
+
+    SYSTEM::ScopeLock lock(_fsMutex ? _fsMutex : nullptr, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
+    if (_fsMutex && !lock.isLocked()) {
+        LOGW("FS mutex timeout in scriptExists");
+        return false;
+    }
+
+    return LittleFS.exists(path);
+}
+
 } // namespace MACROS

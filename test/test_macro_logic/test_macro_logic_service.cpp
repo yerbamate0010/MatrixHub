@@ -26,3 +26,23 @@ void test_engine_clear_state() {
     TEST_ASSERT_EQUAL_STRING("", state.currentScript.c_str());
     TEST_ASSERT_EQUAL_STRING("", state.lastError.c_str());
 }
+
+void test_engine_execution_budget_limits_commands_and_runtime() {
+    MACROS::MacroEngine engine;
+    MACROS::PsramString error;
+
+    TEST_STUBS::ARDUINO::millisValue = 1000;
+    TEST_ASSERT_FALSE(engine.executionLimitExceeded(1000, MACROS::LIMITS::MAX_EXPANDED_COMMANDS, error));
+    TEST_ASSERT_EQUAL_STRING("", error.c_str());
+
+    TEST_ASSERT_TRUE(engine.executionLimitExceeded(
+        1000,
+        MACROS::LIMITS::MAX_EXPANDED_COMMANDS + 1,
+        error));
+    TEST_ASSERT_EQUAL_STRING("Macro command limit exceeded", error.c_str());
+
+    error.clear();
+    TEST_STUBS::ARDUINO::millisValue = 1000 + MACROS::LIMITS::MAX_RUNTIME_MS + 1;
+    TEST_ASSERT_TRUE(engine.executionLimitExceeded(1000, 1, error));
+    TEST_ASSERT_EQUAL_STRING("Macro runtime limit exceeded", error.c_str());
+}

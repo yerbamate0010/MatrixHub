@@ -257,6 +257,22 @@ void MacroEngine::notifyState() {
      if (cb) cb(copy);
 }
 
+bool MacroEngine::executionLimitExceeded(uint32_t scriptStartMs, uint32_t executedCommands, PsramString& error) const {
+    if (executedCommands > LIMITS::MAX_EXPANDED_COMMANDS) {
+        error = "Macro command limit exceeded";
+        return true;
+    }
+
+    const uint32_t elapsedMs = millis() - scriptStartMs;
+    if (elapsedMs > LIMITS::MAX_RUNTIME_MS) {
+        error = "Macro runtime limit exceeded";
+        return true;
+    }
+
+    error.clear();
+    return false;
+}
+
 bool MacroEngine::isTaskAlive(TaskHandle_t handle) const {
     if (!handle) return false;
 #if defined(INCLUDE_eTaskGetState) && (INCLUDE_eTaskGetState == 1)

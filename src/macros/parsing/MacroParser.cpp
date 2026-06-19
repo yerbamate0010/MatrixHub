@@ -79,6 +79,25 @@ static int32_t safeParseInt(const char* str, int32_t defaultValue = 0, bool allo
     return static_cast<int32_t>(val);
 }
 
+static uint32_t safeParseBoundedUInt(const char* str, uint32_t defaultValue, uint32_t minValue, uint32_t maxValue) {
+    if (!str || *str == '\0') return defaultValue;
+    char* endptr = nullptr;
+    long long val = strtoll(str, &endptr, 10);
+    if (endptr == str) {
+        LOGW("Invalid number: '%s', using default %u", str, (unsigned)defaultValue);
+        return defaultValue;
+    }
+    if (val < static_cast<long long>(minValue)) {
+        LOGW("Value '%lld' clamped to %u", val, (unsigned)minValue);
+        return minValue;
+    }
+    if (static_cast<unsigned long long>(val) > maxValue) {
+        LOGW("Value '%lld' clamped to %u", val, (unsigned)maxValue);
+        return maxValue;
+    }
+    return static_cast<uint32_t>(val);
+}
+
 MacroParser::MacroParser() 
     : _fileOpen(false), _memoryMode(false), _memoryData(nullptr), _lineNumber(0), _bufferIndex(0), _bufferLength(0), 
       _error(PsramAllocator<char>()), _buffer(PsramAllocator<uint8_t>()) {
@@ -163,8 +182,6 @@ void MacroParser::fillBuffer() {
 }
 
 bool MacroParser::readLine(PsramString& line) {
-    static constexpr size_t MAX_LINE_LENGTH = 256; // Safety limit
-    
     line.clear();
     // Optimization: Reserve likely capacity to avoid reallocations
     line.reserve(64); 
@@ -187,11 +204,11 @@ bool MacroParser::readLine(PsramString& line) {
         if (c == '\n') return true; 
         
         // Safety: Truncate excessively long lines
-        if (line.length() < MAX_LINE_LENGTH) {
+        if (line.length() < LIMITS::MAX_LINE_LENGTH) {
             line += c;
-        } else if (line.length() == MAX_LINE_LENGTH) {
+        } else if (line.length() == LIMITS::MAX_LINE_LENGTH) {
             // WARN-9: Log only once at truncation point
-            LOGW("Line %d truncated at %zu chars", _lineNumber + 1, MAX_LINE_LENGTH);
+            LOGW("Line %d truncated at %zu chars", _lineNumber + 1, LIMITS::MAX_LINE_LENGTH);
         }
         contentRead = true;
     }
@@ -237,7 +254,7 @@ void MacroParser::parseLine(const PsramString& line, MacroCommand& cmd) {
     // Command Dispatch Logic
     if (commandStr == "DELAY") {
         cmd.type = CommandType::DELAY;
-        cmd.numericData = safeParseInt(args.c_str(), 0, false);
+        cmd.numericData = safeParseBoundedUInt(args.c_str(), 0, 0, LIMITS::MAX_DELAY_MS);
     } 
     else if (commandStr == "STRING") {
         cmd.type = CommandType::STRING;
@@ -249,7 +266,7 @@ void MacroParser::parseLine(const PsramString& line, MacroCommand& cmd) {
     }
     else if (commandStr == "REPEAT") {
         cmd.type = CommandType::REPEAT;
-        cmd.numericData = safeParseInt(args.c_str(), 1, false);
+        cmd.numericData = safeParseBoundedUInt(args.c_str(), 1, 1, LIMITS::MAX_REPEAT_COUNT);
     }
     else if (commandStr == "GUI" || commandStr == "WINDOWS" ||
              commandStr == "CTRL" || commandStr == "CONTROL" ||
@@ -315,7 +332,7 @@ void MacroParser::parseLine(const PsramString& line, MacroCommand& cmd) {
     }
     else if (commandStr == "DEFAULT_DELAY" || commandStr == "DEFAULTDELAY") {
         cmd.type = CommandType::DEFAULT_DELAY;
-        cmd.numericData = safeParseInt(args.c_str(), 0, false);
+        cmd.numericData = safeParseBoundedUInt(args.c_str(), 0, 0, LIMITS::MAX_DEFAULT_DELAY_MS);
     }
     else if (commandStr == "MOUSE_MOVE") {
         cmd.type = CommandType::MOUSE_MOVE;
@@ -373,7 +390,7 @@ void MacroParser::parseLine(const PsramString& line, MacroCommand& cmd) {
     }
     else if (commandStr == "REPLAY") {
          cmd.type = CommandType::REPEAT;
-         cmd.numericData = safeParseInt(args.c_str(), 1, false);
+         cmd.numericData = safeParseBoundedUInt(args.c_str(), 1, 1, LIMITS::MAX_REPEAT_COUNT);
     }
     else if (commandStr == "CONSUMER" || commandStr == "MEDIA") {
         cmd.type = CommandType::CONSUMER;

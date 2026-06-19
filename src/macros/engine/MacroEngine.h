@@ -46,6 +46,7 @@ private:
     void executeLoop();
     void performDelay(uint32_t ms);
     void processCommand(const MacroCommand& cmd, MacroCommand& lastCmd, uint32_t& defaultDelay);
+    bool executionLimitExceeded(uint32_t scriptStartMs, uint32_t executedCommands, PsramString& error) const;
     void notifyState();
     bool isTaskAlive(TaskHandle_t handle) const;
     void cleanupTaskResources();

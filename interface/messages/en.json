@@ -207,6 +207,8 @@
 	"macros_boot_script_hint": "Enable Macros to run the boot script.",
 	"macros_error_script_content": "Failed to load script content.",
 	"macros_error_filename_required": "Filename is required.",
+	"macros_error_filename_invalid": "Use 1-32 characters: letters, numbers, dot, dash or underscore.",
+	"macros_error_script_too_large": "Script is too large. Maximum size is 8 KB.",
 	"macros_error_save_script": "Failed to save script.",
 	"macros_error_boot_script_not_found": "The selected boot script does not exist.",
 	"macros_msg_started": "Script started",

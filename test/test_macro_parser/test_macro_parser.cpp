@@ -106,6 +106,47 @@ void test_stress_overflow() {
     parser.end();
 }
 
+void test_parser_clamps_delay_and_repeat_limits() {
+    const char* script =
+        "DELAY 999999999\n"
+        "DEFAULT_DELAY 999999999\n"
+        "REPEAT 999999999\n"
+        "REPLAY 999999999\n"
+        "REPEAT -5\n"
+        "REPLAY -5\n";
+
+    MacroParser parser;
+    TEST_ASSERT_TRUE(parser.beginFromContent((const uint8_t*)script, strlen(script)));
+
+    MacroCommand cmd;
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::DELAY, cmd.type);
+    TEST_ASSERT_EQUAL(MACROS::LIMITS::MAX_DELAY_MS, cmd.numericData);
+
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::DEFAULT_DELAY, cmd.type);
+    TEST_ASSERT_EQUAL(MACROS::LIMITS::MAX_DEFAULT_DELAY_MS, cmd.numericData);
+
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::REPEAT, cmd.type);
+    TEST_ASSERT_EQUAL(MACROS::LIMITS::MAX_REPEAT_COUNT, cmd.numericData);
+
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::REPEAT, cmd.type);
+    TEST_ASSERT_EQUAL(MACROS::LIMITS::MAX_REPEAT_COUNT, cmd.numericData);
+
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::REPEAT, cmd.type);
+    TEST_ASSERT_EQUAL(1, cmd.numericData);
+
+    TEST_ASSERT_TRUE(parser.next(cmd));
+    TEST_ASSERT_EQUAL(CommandType::REPEAT, cmd.type);
+    TEST_ASSERT_EQUAL(1, cmd.numericData);
+
+    TEST_ASSERT_FALSE(parser.next(cmd));
+    parser.end();
+}
+
 
 int main(int argc, char **argv) {
     (void)argc;
@@ -114,6 +155,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_parser_standard_commands);
     RUN_TEST(test_parser_missing_eof_newline);
     RUN_TEST(test_stress_overflow);
+    RUN_TEST(test_parser_clamps_delay_and_repeat_limits);
     return UNITY_END();
 }
 

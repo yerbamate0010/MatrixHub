@@ -9,12 +9,43 @@
 #include "../../macros/MacroSettingsService.h"
 #include "../../system/utils/json/JsonResponseWriter.h"
 #include <utils/ResponseUtils.h>
+#include <cctype>
 
 namespace MACROS {
 
     namespace {
         constexpr const char* kMacroSettingsPath = "/api/macros/settings";
-        constexpr size_t kMacroUploadPayloadLimitBytes = 12288;
+
+        bool isValidScriptFilename(const String& filename) {
+            if (filename.isEmpty() || filename.length() > LIMITS::MAX_FILENAME_LENGTH) {
+                return false;
+            }
+            if (filename.indexOf('/') >= 0 || filename.indexOf('\\') >= 0 || filename.indexOf("..") >= 0) {
+                return false;
+            }
+            if (filename.endsWith(".tmp")) {
+                return false;
+            }
+            for (const char c : filename) {
+                const unsigned char uc = static_cast<unsigned char>(c);
+                if (!std::isalnum(uc) && c != '_' && c != '-' && c != '.') {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool requireScriptFilename(PsychicRequest* request, const String& filename) {
+            if (filename.isEmpty()) {
+                Response::error(request, 400, "input/missing_filename");
+                return false;
+            }
+            if (!isValidScriptFilename(filename)) {
+                Response::error(request, 400, "input/invalid_filename");
+                return false;
+            }
+            return true;
+        }
     }
 
     MacroApiService::MacroApiService(PsychicHttpServer* server,
@@ -110,6 +141,10 @@ namespace MACROS {
             return StateHandlerResult::success();
         }
 
+        if (!isValidScriptFilename(String(nextState.bootScript))) {
+            return StateHandlerResult::failure("input/invalid_boot_script", 400);
+        }
+
         char path[128];
         snprintf(path, sizeof(path), "/scripts/%s", nextState.bootScript);
         if (!LittleFS.exists(path)) {
@@ -141,28 +176,29 @@ namespace MACROS {
     esp_err_t MacroApiService::handleUpload(PsychicRequest* request) {
         if (request->contentType().startsWith("application/json")) {
             // Safety: Check body size before parsing to prevent RAM exhaustion
-            if (request->contentLength() > kMacroUploadPayloadLimitBytes) {
+            if (request->contentLength() > LIMITS::MAX_UPLOAD_PAYLOAD_BYTES) {
                 return Response::payloadTooLarge(request);
             }
             return this->parseJsonBody(
                 request,
-                LIMITS::API::JSON_DOC::MACROS_UPLOAD,
+                ::LIMITS::API::JSON_DOC::MACROS_UPLOAD,
                 [this, request](JsonDocument& doc) -> esp_err_t {
-                String filename = doc[CONFIG::Keys::kFilename];
-                String content = doc[CONFIG::Keys::kContent];
-                
-                // WARN-4: Sanitize filename to prevent path traversal attacks
-                filename.replace("/", "");
-                filename.replace("\\", "");
-                filename.replace("..", "");
-                
-                if (filename.isEmpty() || filename.length() > 32) {
+                if (!doc[CONFIG::Keys::kFilename].is<const char*>()) {
+                    return Response::error(request, 400, "input/missing_filename");
+                }
+                if (!doc[CONFIG::Keys::kContent].is<const char*>()) {
+                    return Response::error(request, 400, "input/missing_content");
+                }
+
+                String filename = doc[CONFIG::Keys::kFilename].as<const char*>();
+                String content = doc[CONFIG::Keys::kContent].as<const char*>();
+
+                if (!isValidScriptFilename(filename)) {
                     LOGE("Upload Invalid Filename: '%s'", filename.c_str());
                     return Response::error(request, 400, "input/invalid_filename");
                 }
                 
-                // WARN-5: Limit content size to prevent filesystem/RAM exhaustion (8KB max)
-                if (content.length() > 8192) {
+                if (content.length() > LIMITS::MAX_SCRIPT_SIZE_BYTES) {
                     return Response::error(request, 400, "input/script_too_large");
                 }
                 
@@ -179,7 +215,7 @@ namespace MACROS {
                     return Response::error(request, 500, "internal/save_failed");
                 }
             },
-            kMacroUploadPayloadLimitBytes);
+            LIMITS::MAX_UPLOAD_PAYLOAD_BYTES);
         }
         return Response::error(request, 400, "input/unsupported_content_type");
     }
@@ -191,21 +227,20 @@ namespace MACROS {
         } else if (request->bodyLength() > 0) {
             esp_err_t err = this->parseJsonBody(
                 request,
-                LIMITS::API::JSON_DOC::MACROS_DEFAULT,
+                ::LIMITS::API::JSON_DOC::MACROS_DEFAULT,
                 [&filename](JsonDocument& doc) -> esp_err_t {
                     filename = doc[CONFIG::Keys::kName].as<String>();
                     return ESP_OK;
                 },
-                LIMITS::API::JSON_DOC::MACROS_DEFAULT);
+                ::LIMITS::API::JSON_DOC::MACROS_DEFAULT);
             if (err != ESP_OK) return err;
         }
 
-        // Sanitize filename
-        filename.replace("/", "");
-        filename.replace("\\", "");
-        filename.replace("..", "");
+        if (!requireScriptFilename(request, filename)) return ESP_OK;
 
-        if (filename.isEmpty()) return Response::error(request, 400, "input/missing_filename");
+        if (!_service->scriptExists(filename.c_str())) {
+            return Response::error(request, 404, "input/script_not_found");
+        }
 
         if (_service->deleteScript(filename.c_str())) {
             Utils::JsonResponseWriter w(request->request());
@@ -229,22 +264,21 @@ namespace MACROS {
             if (request->bodyLength() > 0) {
                 esp_err_t err = this->parseJsonBody(
                     request,
-                    LIMITS::API::JSON_DOC::MACROS_DEFAULT,
+                    ::LIMITS::API::JSON_DOC::MACROS_DEFAULT,
                     [&filename](JsonDocument& doc) -> esp_err_t {
                         filename = doc[CONFIG::Keys::kName].as<String>();
                         return ESP_OK;
                     },
-                    LIMITS::API::JSON_DOC::MACROS_DEFAULT);
+                    ::LIMITS::API::JSON_DOC::MACROS_DEFAULT);
                 if (err != ESP_OK) return err;
             }
         }
 
-        // Sanitize filename
-        filename.replace("/", "");
-        filename.replace("\\", "");
-        filename.replace("..", "");
+        if (!requireScriptFilename(request, filename)) return ESP_OK;
 
-        if (filename.isEmpty()) return Response::error(request, 400, "input/missing_filename");
+        if (!_service->scriptExists(filename.c_str())) {
+            return Response::error(request, 404, "input/script_not_found");
+        }
 
         if (_service->startScript(filename.c_str())) {
             Utils::JsonResponseWriter w(request->request());
@@ -300,13 +334,11 @@ namespace MACROS {
     esp_err_t MacroApiService::handleGetContent(PsychicRequest* request) {
         if (!request->hasParam("name")) return Response::error(request, 400, "input/missing_filename");
         String filename = request->getParam("name")->value();
-        
-        // CRITICAL: Sanitize filename to prevent path traversal
-        filename.replace("/", "");
-        filename.replace("\\", "");
-        filename.replace("..", "");
-        
-        if (filename.isEmpty()) return Response::error(request, 400, "input/invalid_filename");
+
+        if (!requireScriptFilename(request, filename)) return ESP_OK;
+        if (!_service->scriptExists(filename.c_str())) {
+            return Response::error(request, 404, "input/script_not_found");
+        }
         
         PsramString content = _service->getScriptContent(filename.c_str());
         return request->reply(content.c_str());

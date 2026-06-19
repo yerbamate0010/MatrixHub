@@ -21,6 +21,7 @@
 		placeholder={m.macros_editor_name_placeholder()}
 		bind:value={filename}
 		disabled={!isNew}
+		maxlength={32}
 	/>
 
 	<FormTextarea

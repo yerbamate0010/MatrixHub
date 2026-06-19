@@ -34,6 +34,29 @@ interface MacroManagementDeps {
 	notifications?: MacroNotifications;
 }
 
+const MAX_MACRO_FILENAME_LENGTH = 32;
+const MAX_MACRO_SCRIPT_BYTES = 8192;
+const MACRO_FILENAME_PATTERN = /^[A-Za-z0-9._-]+$/;
+
+function byteLength(value: string) {
+	if (typeof TextEncoder !== 'undefined') {
+		return new TextEncoder().encode(value).length;
+	}
+	return value.length;
+}
+
+function isValidScriptFilename(filename: string) {
+	return (
+		filename.length > 0 &&
+		filename.length <= MAX_MACRO_FILENAME_LENGTH &&
+		!filename.includes('/') &&
+		!filename.includes('\\') &&
+		!filename.includes('..') &&
+		!filename.endsWith('.tmp') &&
+		MACRO_FILENAME_PATTERN.test(filename)
+	);
+}
+
 export function useMacroManagement(deps: MacroManagementDeps = {}) {
 	const apiClient = deps.createApi ? null : useApiClient();
 	const toast = deps.notifications ?? notifications;
@@ -204,6 +227,14 @@ export function useMacroManagement(deps: MacroManagementDeps = {}) {
 		if (isSavingScript) return;
 		if (!filename) {
 			toast.error(m.macros_error_filename_required(), 3000);
+			return;
+		}
+		if (!isValidScriptFilename(filename)) {
+			toast.error(m.macros_error_filename_invalid(), 3000);
+			return;
+		}
+		if (byteLength(data.content) > MAX_MACRO_SCRIPT_BYTES) {
+			toast.error(m.macros_error_script_too_large(), 3000);
 			return;
 		}
 

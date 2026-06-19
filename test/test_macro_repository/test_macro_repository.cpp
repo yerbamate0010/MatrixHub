@@ -54,9 +54,17 @@ void test_list_scripts_normalizes_path() {
     TEST_ASSERT_EQUAL_STRING("foo.txt", files[0].c_str());
 }
 
+void test_script_exists_uses_scripts_directory() {
+    fsStubSetFileExists("/scripts/exists.txt", true);
+
+    TEST_ASSERT_TRUE(MacroRepository::scriptExists("exists.txt"));
+    TEST_ASSERT_FALSE(MacroRepository::scriptExists("missing.txt"));
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_list_scripts_skips_tmp);
     RUN_TEST(test_list_scripts_normalizes_path);
+    RUN_TEST(test_script_exists_uses_scripts_directory);
     return UNITY_END();
 }

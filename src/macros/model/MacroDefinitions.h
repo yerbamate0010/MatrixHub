@@ -14,6 +14,18 @@ using SYSTEM::PsramAllocator;
 using SYSTEM::PsramString;
 using SYSTEM::PsramVector;
 
+namespace LIMITS {
+    constexpr size_t MAX_FILENAME_LENGTH = 32;
+    constexpr size_t MAX_SCRIPT_SIZE_BYTES = 8192;
+    constexpr size_t MAX_UPLOAD_PAYLOAD_BYTES = 12288;
+    constexpr size_t MAX_LINE_LENGTH = 256;
+    constexpr uint32_t MAX_DELAY_MS = 60000;
+    constexpr uint32_t MAX_DEFAULT_DELAY_MS = 60000;
+    constexpr uint32_t MAX_REPEAT_COUNT = 1000;
+    constexpr uint32_t MAX_EXPANDED_COMMANDS = 4096;
+    constexpr uint32_t MAX_RUNTIME_MS = 5 * 60 * 1000;
+}
+
 /**
  * @brief Custom Allocator to force container storage into ESP32-S3 PSRAM.
  * Prevents heap fragmentation in internal SRAM.

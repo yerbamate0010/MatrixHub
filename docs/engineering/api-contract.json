@@ -661,7 +661,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.list",
@@ -674,7 +674,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.run",
@@ -687,7 +687,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.stop",
@@ -700,7 +700,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.status",
@@ -713,7 +713,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/tests/stress_test.py", "scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/tests/stress_test.py", "scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.content",
@@ -726,7 +726,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "macros.delete",
@@ -739,7 +739,7 @@
       "firmware": ["src/api/macros/MacroApiService.cpp"],
       "frontend": ["interface/src/lib/services/api/integrations/MacroApiService.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": ["scripts/diagnostics/check_macros.py", "scripts/contract/verify_api_contract.py"]
     },
     {
       "id": "airmouse.status",
