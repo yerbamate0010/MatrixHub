@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test": "../../interface/node_modules/.bin/vitest run --config vitest.config.mjs",
+    "typecheck": "../../interface/node_modules/.bin/tsc -p tsconfig.json --noEmit"
+  },
   "exports": {
     ".": "./src/index.ts"
   }

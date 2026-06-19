@@ -500,3 +500,425 @@ export interface ApSettings {
   gateway_ip: string;
   subnet_mask: string;
 }
+
+export interface DiagnosticsHeapRegion {
+  name: string;
+  available: boolean;
+  caps: number;
+  total: number;
+  free: number;
+  minimumFree: number;
+  largestBlock: number;
+  fragmentationPercent: number;
+}
+
+export interface DiagnosticsHeapResponse {
+  schema: "diagnostics.heap.v1";
+  regions: {
+    default: DiagnosticsHeapRegion;
+    internal: DiagnosticsHeapRegion;
+    psram: DiagnosticsHeapRegion;
+  };
+}
+
+export interface DiagnosticsHttpHealth {
+  activeClients: number;
+  peakClients: number;
+  opens: number;
+  closes: number;
+  lastOpenMs: number;
+  lastCloseMs: number;
+  wsActiveClients: number;
+  wsPeakClients: number;
+  wsOpens: number;
+  wsCloses: number;
+  lastWsOpenMs: number;
+  lastWsCloseMs: number;
+  wsForcedRemovals: number;
+  wsQueueDrops: number;
+  lastWsQueueDropMs: number;
+  lastWsQueueDropPayload: number;
+  wsHeapFallbacks: number;
+  lastWsHeapFallbackMs: number;
+  lastWsHeapFallbackPayload: number;
+  maxWsHeapFallbackPayload: number;
+}
+
+export interface DiagnosticsSummaryResponse {
+  schema: string;
+  firmware: {
+    name: string;
+    version: string;
+    buildTarget: string;
+  };
+  uptimeSec: number;
+  boot: {
+    bootCount: number;
+    unexpectedRestarts: number;
+    lastBootUnexpected: boolean;
+    lastSessionUptimeMs: number;
+    lastShutdownReason: number;
+    lastResetReason: number;
+    currentResetReason: number;
+    freeHeapAtShutdown: number;
+  };
+  watchdog: {
+    initialized: boolean;
+    timeoutSec: number;
+  };
+  heap: {
+    internalFree: number;
+    internalMinimumFree: number;
+    internalLargestBlock: number;
+    internalFragmentationPercent: number;
+    psramFree: number;
+    psramMinimumFree: number;
+    psramLargestBlock: number;
+    psramFragmentationPercent: number;
+  };
+  http: DiagnosticsHttpHealth;
+  features: {
+    configRead: boolean;
+    count: number;
+  };
+}
+
+export interface DiagnosticsLockCounter {
+  attempts: number;
+  successes: number;
+  timeouts: number;
+  slowAcquires: number;
+  unlimitedWaits: number;
+  maxWaitTicks: number;
+  maxWaitMs: number;
+}
+
+export interface DiagnosticsMutexesResponse {
+  schema: "diagnostics.mutexes.v1";
+  instrumented: boolean;
+  coverage: {
+    contentionCounters: boolean;
+    holdTimeBuckets: boolean;
+    timeoutCounters: boolean;
+    slowAcquireCounters: boolean;
+    perLockNames: boolean;
+  };
+  runtime: {
+    slowThresholdTicks: number;
+    slowThresholdMs: number;
+    standard: DiagnosticsLockCounter;
+    recursive: DiagnosticsLockCounter;
+  };
+  reason: string;
+  criticalLocks: Array<{
+    name: string;
+    instrumented: boolean;
+    counterScope: string;
+  }>;
+}
+
+export interface DiagnosticsEndpointEntry {
+  path: string;
+  method: string;
+  auth: string;
+  description: string;
+}
+
+export interface DiagnosticsEndpointsResponse {
+  schema: "diagnostics.endpoints.v1";
+  metrics: {
+    requestCounts: boolean;
+    errorCounts: boolean;
+    latencyBuckets: boolean;
+    httpTransportCounters: boolean;
+  };
+  diagnostics: DiagnosticsEndpointEntry[];
+}
+
+export interface DiagnosticsFeatureState {
+  key: string;
+  serviceAvailable: boolean;
+  configKnown: boolean;
+  configuredEnabled: boolean;
+  runtimeMeasured: boolean;
+  runtimeActive: boolean;
+  detail?: string;
+}
+
+export interface DiagnosticsFeaturesResponse {
+  schema: "diagnostics.features.v1";
+  configRead: boolean;
+  features: DiagnosticsFeatureState[];
+}
+
+export interface PowerConfig {
+  sleep_enabled: boolean;
+  inactivity_timeout_ms: number;
+  grace_after_boot_ms: number;
+}
+
+export interface PowerStatus extends PowerConfig {
+  wake_reason: string;
+  wake_cause_raw: number;
+  wake_gpio_mask: string;
+  wake_ext1_mask: string;
+  sleep_requested: boolean;
+  sleep_eta_ms: number;
+  wake_interval_ms: number;
+  last_activity_ms: number;
+  thermal_state: "normal" | "soft_throttle" | "hard_throttle" | "critical" | "unknown";
+  thermal_temp_c: number | null;
+  thermal_cpu_mhz: number;
+  thermal_throttled: boolean;
+  thermal_soft_c: number;
+  thermal_hard_c: number;
+  thermal_critical_c: number;
+  uptime_ms: number;
+}
+
+export interface RssiSample {
+  rssi: number;
+  timestamp: number;
+  variance?: number;
+}
+
+export interface WifiSensingStats {
+  current: number;
+  filtered?: number;
+  min: number;
+  max: number;
+  avg: number;
+  variance: number;
+  sampleCount: number;
+  windowMs: number;
+}
+
+export interface WifiSensingData {
+  enabled: boolean;
+  running: boolean;
+  active: boolean;
+  connectedSSID: string;
+  connectedChannel: number;
+  stats: WifiSensingStats;
+  motionDetected: boolean;
+  variance_threshold: number;
+  samples?: RssiSample[];
+}
+
+export interface WifiSensingSettings {
+  enabled: boolean;
+  sample_interval_ms: number;
+  variance_threshold: number;
+}
+
+export interface CsiRuntimeMetrics {
+  enabled: boolean;
+  queue_allocated: boolean;
+  active_consumer_mask: number;
+  consumer_count: number;
+  frontend_consumer_active: boolean;
+  alarm_consumer_active: boolean;
+  boot_consumer_active: boolean;
+  queue_depth: number;
+  queue_capacity: number;
+  queue_drops_total: number;
+  queue_drops_last_sec: number;
+  rx_frames_total: number;
+  rx_accepted_total: number;
+  rx_throttled_total: number;
+  queued_packets_total: number;
+  dequeued_packets_total: number;
+  packets_forwarded_total: number;
+  batches_forwarded_total: number;
+  batches_dropped_total: number;
+  packets_per_sec: number;
+  batches_per_sec: number;
+  last_packet_ms: number;
+  last_batch_ms: number;
+  calibration_count: number;
+  calibration_target: number;
+  calibration_state: string;
+  ws_client_count: number;
+  ws_queue_enabled: boolean;
+}
+
+export interface WifiSensingStatus extends WifiSensingData {
+  schema: "wifisensing.status.v1";
+  sample_interval_ms: number;
+  csi: CsiRuntimeMetrics;
+}
+
+export type AlarmSource =
+  | "co2"
+  | "temperature"
+  | "humidity"
+  | "wifi_motion"
+  | "ble_temperature"
+  | "ble_humidity"
+  | "ble_battery"
+  | "ble_rssi";
+
+export type AlarmOperator = "above" | "below";
+export type NotifyChannel = "telegram" | "led" | "webhook" | "pushover";
+export type AlarmSeverity = "info" | "warning" | "critical";
+
+export interface AlarmRule {
+  id: string;
+  enabled: boolean;
+  name: string;
+  source: AlarmSource;
+  operator: AlarmOperator;
+  threshold: number;
+  severity: AlarmSeverity;
+  notify_channels: NotifyChannel[];
+  cooldown_seconds: number;
+  shelly_device_ids?: string[];
+  ble_device_mac?: string;
+  created_at?: number;
+  updated_at?: number;
+  triggered?: boolean;
+  last_triggered?: number;
+  current_value?: number;
+}
+
+export interface AlarmRulesConfig {
+  schema_version: 1;
+  rules: AlarmRule[];
+}
+
+export interface LogFile {
+  name: string;
+  size: number;
+}
+
+export interface LogMonth {
+  name: string;
+  path: string;
+  files: LogFile[];
+}
+
+export interface LogListResponse {
+  total_size?: number;
+  months: LogMonth[];
+}
+
+export interface TailLine {
+  t: number;
+  l: string;
+  g: string;
+  m: string;
+}
+
+export interface TailResponse {
+  capacity?: number;
+  lines: TailLine[];
+}
+
+export interface TailClearResponse {
+  ok: boolean;
+  status: string;
+}
+
+export interface NotificationSettings {
+  telegram_enabled: boolean;
+  webhook_enabled: boolean;
+  bot_token: string;
+  chat_id: string;
+  commands_enabled: boolean;
+  webhook_url: string;
+  pushover_enabled: boolean;
+  pushover_user: string;
+  pushover_token: string;
+  is_configured: boolean;
+}
+
+export interface NotificationTestResult {
+  ok: boolean;
+  configured?: boolean;
+  httpCode?: number;
+  error?: string;
+  response?: string;
+}
+
+export interface ScriptStatus {
+  current_script: string;
+  status: "IDLE" | "RUNNING" | "PAUSED" | "ERROR" | "COMPLETED";
+  current_line: number;
+  uptime_ms: number;
+  last_error: string;
+}
+
+export interface ScriptFile {
+  name: string;
+}
+
+export interface MacroSettings {
+  enabled: boolean;
+  boot_script: string;
+  boot_delay: number;
+}
+
+export interface MacroActionResponse {
+  ok: boolean;
+  status?: "saved" | "deleted" | "started" | "stopped" | "no_changes";
+  error?: string;
+}
+
+export interface HeartbeatSlot {
+  enabled: boolean;
+  name: string;
+  url: string;
+  allow_insecure: boolean;
+}
+
+export interface HeartbeatSettings {
+  interval_ms: number;
+  slots: HeartbeatSlot[];
+}
+
+export type HeartbeatTestStatus = "queued" | "no_enabled_slots" | "ping_failed";
+
+export interface HeartbeatTestResult {
+  success: boolean;
+  message: string;
+  status?: HeartbeatTestStatus;
+  active_slots?: number;
+  retry_count?: number;
+  timeout_ms?: number;
+  retry_after_ms?: number;
+}
+
+export type UdpFormat = "line" | "json" | "csv";
+
+export interface UdpSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  format: UdpFormat;
+  interval_ms: number;
+}
+
+export type UdpTestStatus =
+  | "queued"
+  | "sent"
+  | "not_configured"
+  | "worker_stopping"
+  | "wifi_disconnected"
+  | "send_failed"
+  | "unavailable";
+
+export interface UdpTestResult {
+  success: boolean;
+  message: string;
+  status?: UdpTestStatus;
+  retry_after_ms?: number;
+}
+
+export interface CompensationSettings {
+  enabled: boolean;
+  base_temp_offset: number;
+  reference_cpu_temp: number;
+  temp_offset_per_cpu_degree: number;
+  min_temp_offset: number;
+  max_temp_offset: number;
+}

@@ -23,7 +23,7 @@ function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.replace(/\/+$/, "");
 }
 
-function buildRequestUrl(baseUrl: string, path: string) {
+export function buildDeviceApiUrl(baseUrl: string, path: string) {
   if (/^https?:\/\//i.test(path)) {
     return path;
   }
@@ -79,7 +79,7 @@ export function createDeviceApiClient(options: DeviceApiClientOptions) {
     const timeoutId = setTimeout(() => controller.abort(), defaultTimeoutMs);
 
     try {
-      const response = await rawFetch(buildRequestUrl(options.baseUrl, path), {
+      const response = await rawFetch(buildDeviceApiUrl(options.baseUrl, path), {
         ...init,
         signal: init?.signal ?? controller.signal
       });

@@ -19,6 +19,7 @@ import type {
   TelemetryHistorySnapshot,
   TelemetrySnapshot
 } from "./types";
+import { normalizeDeviceOrigin } from "./device";
 
 export interface RealtimeEnvelopeFrame {
   type?: string;
@@ -928,9 +929,11 @@ export function parseRealtimeEnvelopeFrame(frame: string): RealtimeEnvelopeFrame
 }
 
 export function buildDeviceWebSocketUrl(origin: string, path = "/ws/system") {
-  const deviceUrl = new URL(origin);
-  const protocol = deviceUrl.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${deviceUrl.host}${path}`;
+  const normalized = normalizeDeviceOrigin(origin);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = new URL(normalizedPath, `${normalized.origin}/`);
+  url.protocol = normalized.protocol === "https:" ? "wss:" : "ws:";
+  return url.toString();
 }
 
 export function parseSystemStatusPacket(buffer: ArrayBuffer): SystemStatus | null {
