@@ -44,8 +44,8 @@ export const MATRIX_EFFECT_SPEED_SCALE_CONFIG = {
 >;
 
 export const MATRIX_EFFECT_SPEED_SCALES: MatrixEffectSpeedScale[] = ['ms', 's', 'm', 'h'];
-export const MATRIX_COLOR_MAX = 0xffffff;
-export const MATRIX_CUSTOM_ICON_SLOTS = 3;
+const MATRIX_COLOR_MAX = 0xffffff;
+const MATRIX_CUSTOM_ICON_SLOTS = 3;
 export const MATRIX_CUSTOM_ICON_PIXELS = 64;
 
 // Keep this aligned with the backend validator. Matrix effects use one compact

@@ -19,7 +19,7 @@ export interface HeartbeatSettings {
 	slots: HeartbeatSlot[];
 }
 
-export type HeartbeatTestStatus = 'queued' | 'no_enabled_slots' | 'ping_failed';
+type HeartbeatTestStatus = 'queued' | 'no_enabled_slots' | 'ping_failed';
 
 export interface HeartbeatTestResult {
 	success: boolean;

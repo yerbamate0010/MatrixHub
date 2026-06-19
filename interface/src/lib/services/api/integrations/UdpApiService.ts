@@ -17,7 +17,7 @@ export interface UdpSettings {
 	interval_ms: number;
 }
 
-export type UdpTestStatus =
+type UdpTestStatus =
 	| 'queued'
 	| 'sent'
 	| 'not_configured'
