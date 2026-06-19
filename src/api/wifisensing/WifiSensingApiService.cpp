@@ -275,7 +275,8 @@ esp_err_t WifiSensingApiService::handleGetStatus(PsychicRequest* request) {
     writer.key("width"); writer.value(static_cast<unsigned int>(csi.motion.width)); writer.raw(",");
     writer.key("band_count"); writer.value(static_cast<unsigned int>(csi.motion.bandCount)); writer.raw(",");
     writer.key("selected_carriers"); writer.value(static_cast<unsigned int>(csi.motion.selectedCarrierCount)); writer.raw(",");
-    writer.key("valid_carriers"); writer.value(static_cast<unsigned int>(csi.motion.validCarrierCount));
+    writer.key("valid_carriers"); writer.value(static_cast<unsigned int>(csi.motion.validCarrierCount)); writer.raw(",");
+    writer.key("last_reset_reason"); writer.string(WIFISENSING::CSI::toString(csi.motion.lastResetReason));
     writer.raw("},");
     writer.key("ws_client_count"); writer.value(static_cast<unsigned long>(_csiEndpoint.broadcaster().getClientCount())); writer.raw(",");
     writer.key("ws_queue_enabled"); writer.value(_csiEndpoint.broadcaster().isQueueEnabled());

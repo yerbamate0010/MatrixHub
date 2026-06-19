@@ -66,6 +66,22 @@ describe('WifiSensingApiService', () => {
 				calibration_count: 9,
 				calibration_target: 100,
 				calibration_state: 'collecting',
+				motion: {
+					enabled: true,
+					state: 'monitoring',
+					baseline_ready: true,
+					detected: false,
+					noisy: false,
+					needs_calibration: false,
+					score: 0,
+					confidence: 0,
+					frames_seen: 42,
+					width: 64,
+					band_count: 1,
+					selected_carriers: 8,
+					valid_carriers: 8,
+					last_reset_reason: 'width_change'
+				},
 				ws_client_count: 1,
 				ws_queue_enabled: true
 			}

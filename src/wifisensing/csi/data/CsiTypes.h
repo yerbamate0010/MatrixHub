@@ -21,10 +21,10 @@ struct CsiPacket {
     size_t len;
     float compensate_gain; // Filled by the processing task after dequeue, not in ISR.
     
-    // Kept in the transport shape even though CSI-side motion scoring is currently
-    // disabled, so backend/frontend parsing stays stable while the algorithm evolves.
-    float motionScore;      // MVS Variance or other metric
-    bool isMotionDetected;  // Threshold check result
+    // Filled by the processing task after CsiBandMotionDetector evaluates the packet.
+    // These fields are part of the stable /ws/csi record header.
+    float motionScore;
+    bool isMotionDetected;
 };
 
 // Callback function type for processing CSI packets (Batched)

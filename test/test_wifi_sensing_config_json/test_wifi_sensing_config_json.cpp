@@ -179,14 +179,32 @@ void test_load_csi_alarm_clamps_values() {
     TEST_ASSERT_EQUAL_UINT16(255, w.csiAlarmBandEnd[0]);
     TEST_ASSERT_EQUAL_UINT16(30, w.csiBaselineFrames);
     TEST_ASSERT_EQUAL_UINT8(32, w.csiTopK);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.0f, w.csiEnterThreshold);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.0f, w.csiClearThreshold);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.5f, w.csiEnterThreshold);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 2.2f, w.csiClearThreshold);
     TEST_ASSERT_EQUAL_UINT16(100, w.csiHoldMs);
     TEST_ASSERT_EQUAL_UINT16(30000, w.csiClearHoldMs);
     TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.1f, w.csiMinNoise);
     TEST_ASSERT_FLOAT_WITHIN(0.01f, 10000.0f, w.csiMinEnergy);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.0f, w.csiNoisyThreshold);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.5f, w.csiNoisyThreshold);
     TEST_ASSERT_EQUAL_UINT8(2, w.csiSensitivity);
+}
+
+void test_csi_alarm_sensitivity_is_backend_authoritative() {
+    JsonDocument doc;
+    JsonObject alarm = doc["csi_alarm"].to<JsonObject>();
+    alarm["sensitivity"] = 0;
+    alarm["enter_threshold"] = 1.0f;
+    alarm["clear_threshold"] = 0.5f;
+    alarm["noisy_threshold"] = 2.0f;
+    JsonObject obj = doc.as<JsonObject>();
+
+    CONFIG::JSON::loadWifiSensing(obj);
+
+    const auto& w = RTC::mockStore.wifiSensing;
+    TEST_ASSERT_EQUAL_UINT8(0, w.csiSensitivity);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 8.0f, w.csiEnterThreshold);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.0f, w.csiClearThreshold);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 8.0f, w.csiNoisyThreshold);
 }
 
 int main(int argc, char **argv) {
@@ -198,5 +216,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_missing_csi_alarm_keeps_existing_values);
     RUN_TEST(test_load_csi_alarm_max_four_bands_and_normalizes_ranges);
     RUN_TEST(test_load_csi_alarm_clamps_values);
+    RUN_TEST(test_csi_alarm_sensitivity_is_backend_authoritative);
     return UNITY_END();
 }

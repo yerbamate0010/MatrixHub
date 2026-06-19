@@ -222,6 +222,8 @@
 				min="1"
 				max="100"
 				bind:value={settings.enter_threshold}
+				readonly
+				aria-readonly="true"
 				disabled={!isAdmin}
 			/>
 		</label>
@@ -234,6 +236,8 @@
 				min="0.5"
 				max={settings.enter_threshold}
 				bind:value={settings.clear_threshold}
+				readonly
+				aria-readonly="true"
 				disabled={!isAdmin}
 			/>
 		</label>

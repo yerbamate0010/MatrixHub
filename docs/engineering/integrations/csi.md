@@ -6,18 +6,22 @@ This document describes the current CSI runtime path in the firmware. It is inte
 
 Important distinction:
 
-- `CSI` currently provides raw channel data capture, batching, and WebSocket delivery to the UI.
-- Motion detection used by automation and alarms lives in the separate RSSI-based path: `WifiSensingService` and `WifiSensingTaskRunner`.
+- `CSI` provides raw channel data capture, batching, WebSocket delivery to the UI,
+  and an embedded CSI motion detector used by the alarm source
+  `wifi_csi_motion`.
+- RSSI variance motion detection remains a separate source, `wifi_motion`, owned
+  by `WifiSensingService` and `WifiSensingTaskRunner`.
 
 ## Current architecture
 
-The active CSI path is built from four pieces:
+The active CSI path is built from these pieces:
 
 1. `CsiService`
    - owns the CSI lifecycle
    - tracks active consumers (`Frontend`, `AlarmSystem`, `Boot`)
    - allocates the queue and processing task when the first consumer enables CSI
-   - applies RX gain compensation and batches packets before forwarding them
+   - applies RX gain compensation, feeds `CsiBandMotionDetector`, publishes
+     motion snapshots, and batches packets before forwarding them
 
 2. `CsiPingSession`
    - opens a raw ICMP socket
@@ -29,13 +33,32 @@ The active CSI path is built from four pieces:
    - the callback copies `wifi_csi_info_t` into a fixed-size `CsiPacket`
    - inbound traffic is throttled to keep the stream stable and limit queue pressure
 
-4. `WifiSensingApiService` and the frontend
+4. `CsiBandMotionDetector`
+   - converts interleaved I/Q samples to gain-compensated per-subcarrier energy
+   - learns a quiet baseline and noise floor
+   - scores selected bands with top-K z-scores, hysteresis, hold/clear hold, and
+     noisy-environment gating
+   - keeps the packet path allocation-free after startup
+
+5. `WifiSensingApiService` and the frontend
    - exposes the WebSocket endpoint at `/ws/csi`
    - enables the `Frontend` CSI consumer only while a client is connected
    - broadcasts binary CSI frames to the browser
+   - exposes `/api/wifisensing/status` and
+     `POST /api/wifisensing/csi/calibrate`
    - `interface/src/lib/features/wifisensing/csi/useCsiConnection.svelte.ts`
      decodes frames and feeds the CSI charts used by
      `interface/src/routes/wifisensing/csi/+page.svelte`
+
+6. Alarm integration
+   - `WifiSensingSettings` translates persisted `csi_alarm` config into
+     `CsiMotionConfig`
+   - `CsiService` activates the `AlarmSystem` consumer when CSI alarms are
+     enabled, so the path can run headless without the CSI page open
+   - `ServiceRegistryCallbacks` maps the detector boolean to
+     `AlarmInputData::wifiCsiMotion`
+   - alarm rules consume the boolean-like source `wifi_csi_motion`; raw
+     amplitude and diagnostic score do not drive the alarm evaluator directly
 
 ## Runtime data flow
 
@@ -46,8 +69,14 @@ The current flow is:
 3. `CsiService` enables CSI capture, allocates a PSRAM-backed queue, starts `CsiPingSession`, and launches the processing task.
 4. The ESP32 sends ICMP Echo Requests to the gateway.
 5. Incoming CSI frames are copied in the RX callback and pushed into `CsiDataQueue`.
-6. The processing task drains the queue, applies gain compensation, batches packets, and passes them to the API broadcaster.
-7. The browser receives binary frames and derives amplitude charts from interleaved I/Q bytes.
+6. The processing task drains the queue, applies gain compensation, runs
+   `CsiBandMotionDetector`, updates `motionScore` and `isMotionDetected`, and
+   publishes a motion snapshot.
+7. On motion state changes or keepalive intervals, the CSI motion callback
+   submits `wifiCsiMotion = 0/1` to `AlarmService`.
+8. The worker batches packets and passes them to the API broadcaster.
+9. The browser receives binary frames and derives amplitude charts from
+   interleaved I/Q bytes.
 
 ## Wire format used by `/ws/csi`
 
@@ -68,6 +97,9 @@ Notes:
 
 - `MAX_CSI_DATA_LEN` is `512` bytes in the queue/storage layer.
 - The frontend converts I/Q pairs into amplitudes with `sqrt(re^2 + im^2)`.
+- `motionScore` and `isMotionDetected` are produced by the firmware detector.
+  They are diagnostics and stream overlays for the CSI UI; the alarm evaluator
+  receives only the boolean-like `wifi_csi_motion` input.
 - WebSocket payloads may contain a batch of multiple CSI packet records.
 - The worker currently batches up to `MAX_CSI_BATCH_PACKETS` records and the
   API preserves that as one WebSocket payload. If a future worker ever emits a
@@ -101,6 +133,9 @@ The nested `csi` object includes:
   `batches_dropped_total`, `packets_per_sec`, and `batches_per_sec`
 - freshness and calibration: `last_packet_ms`, `last_batch_ms`,
   `calibration_count`, `calibration_target`, and `calibration_state`
+- nested `motion` status: CSI alarm enablement, detector state, baseline
+  readiness, detected/noisy flags, calibration need, score, confidence,
+  frame/width/carrier counters, selected band count, and `last_reset_reason`
 - WebSocket state: `ws_client_count` and `ws_queue_enabled`
 
 `scripts/diagnostics/trigger_wifisensing.py` records this status before and
@@ -110,20 +145,20 @@ is not present.
 
 ## Current limitations
 
-The repository still contains `src/wifisensing/csi/algo/CsiAlgorithm.*`, but that algorithm is not part of the active runtime path.
+The repository still contains `src/wifisensing/csi/algo/CsiAlgorithm.*`, but
+that legacy algorithm is not part of the active runtime path.
 
-Today:
+Today the active runtime detector is
+`src/wifisensing/csi/algo/CsiBandMotionDetector.*`.
 
-- `CsiService` sets `packet.motionScore = 0.0f`
-- `CsiService` sets `packet.isMotionDetected = false`
-- CSI data is therefore suitable for visualization, debugging, and future experimentation, not for current automation decisions
+Production caveats:
 
-If you need real motion detection today, use the RSSI variance path:
-
-- `src/wifisensing/WifiSensingService.*`
-- `src/wifisensing/core/WifiSensingTaskRunner.*`
-
-That path is the one currently wired into motion state evaluation and alarm integration.
+- CSI sensing depends strongly on AP, channel, antenna placement, room geometry,
+  and local RF noise. The defaults are conservative but final tuning still needs
+  real quiet/motion/noisy captures from the deployment environment.
+- `motionScore` is diagnostic. Alarm rules should use `wifi_csi_motion`, which
+  represents the confirmed detector state as `0/1`.
+- RSSI `wifi_motion` alarms remain available and independent.
 
 ## Memory and tasking notes
 
@@ -137,16 +172,17 @@ That path is the one currently wired into motion state evaluation and alarm inte
 
 ## When to extend this module
 
-Keep this document aligned with runtime reality. If CSI-side motion scoring is re-enabled in the future, the change is not complete until all three are updated:
+Keep this document aligned with runtime reality. If CSI motion scoring, the
+binary CSI record, or alarm semantics change, the change is not complete until
+all three are updated:
 
 1. `CsiService` processing path
 2. `/ws/csi` payload semantics
 3. this document
 
 CSI alarm integration is tracked separately in
-[`csi-alarms-plan.md`](./csi-alarms-plan.md). That plan is intentionally
-deferred until offline quiet/motion/noisy captures prove false-positive safety.
-The helper `scripts/sensing_analysis/csi_alarm_harness.py` provides the current
-offline test harness.
+[`csi-alarms-plan.md`](./csi-alarms-plan.md). That file is now a historical
+design note plus remaining production-confidence checklist, not a statement
+that CSI alarms are absent from firmware.
 
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Integrations](../README.md#integrations-and-specialized-subsystems)

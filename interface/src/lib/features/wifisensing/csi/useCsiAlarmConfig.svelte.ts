@@ -31,11 +31,25 @@ function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value));
 }
 
+function normalizeSensitivity(value: unknown): 0 | 1 | 2 {
+	return Math.round(clamp(Number(value), 0, 2)) as 0 | 1 | 2;
+}
+
+function sensitivityThresholds(sensitivity: 0 | 1 | 2) {
+	if (sensitivity === 0) {
+		return { enter: 8, clear: 4 };
+	}
+	if (sensitivity === 2) {
+		return { enter: 4.5, clear: 2.2 };
+	}
+	return { enter: 6, clear: 3 };
+}
+
 function cloneSettings(settings: CsiAlarmSettings): CsiAlarmSettings {
 	return {
 		...settings,
 		bands: settings.bands.map((band) => ({ ...band })),
-		sensitivity: clamp(settings.sensitivity, 0, 2) as 0 | 1 | 2
+		sensitivity: normalizeSensitivity(settings.sensitivity)
 	};
 }
 
@@ -47,8 +61,8 @@ function normalizeBand(band: CsiAlarmBand): CsiAlarmBand {
 
 export function normalizeCsiAlarmSettings(settings?: Partial<CsiAlarmSettings>): CsiAlarmSettings {
 	const merged = { ...DEFAULT_CSI_ALARM_SETTINGS, ...(settings ?? {}) };
-	const enter = clamp(Number(merged.enter_threshold), 1, 100);
-	const clear = clamp(Number(merged.clear_threshold), 0.5, enter);
+	const sensitivity = normalizeSensitivity(merged.sensitivity);
+	const { enter, clear } = sensitivityThresholds(sensitivity);
 	const bands = Array.isArray(merged.bands) ? merged.bands.slice(0, 4).map(normalizeBand) : [];
 
 	return {
@@ -64,22 +78,16 @@ export function normalizeCsiAlarmSettings(settings?: Partial<CsiAlarmSettings>):
 		min_energy: clamp(Number(merged.min_energy), 0, 10000),
 		noisy_threshold: clamp(Number(merged.noisy_threshold), enter, 500),
 		auto_recalibration: !!merged.auto_recalibration,
-		sensitivity: clamp(Number(merged.sensitivity), 0, 2) as 0 | 1 | 2
+		sensitivity
 	};
 }
 
 function applySensitivity(settings: CsiAlarmSettings, sensitivity: 0 | 1 | 2) {
 	settings.sensitivity = sensitivity;
-	if (sensitivity === 0) {
-		settings.enter_threshold = 8;
-		settings.clear_threshold = 4;
-	} else if (sensitivity === 2) {
-		settings.enter_threshold = 4.5;
-		settings.clear_threshold = 2.2;
-	} else {
-		settings.enter_threshold = 6;
-		settings.clear_threshold = 3;
-	}
+	const thresholds = sensitivityThresholds(sensitivity);
+	settings.enter_threshold = thresholds.enter;
+	settings.clear_threshold = thresholds.clear;
+	settings.noisy_threshold = clamp(settings.noisy_threshold, thresholds.enter, 500);
 }
 
 export function useCsiAlarmConfig(getApi: () => WifiSensingApiService) {

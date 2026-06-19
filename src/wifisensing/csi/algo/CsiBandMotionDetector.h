@@ -24,7 +24,7 @@ public:
     bool begin();
     void end();
     void configure(const CsiMotionConfig& config);
-    void resetBaseline();
+    void resetBaseline(CsiMotionResetReason reason = CsiMotionResetReason::ManualCalibration);
     CsiMotionSnapshot process(const CsiPacket& packet, uint32_t nowMs);
     CsiMotionSnapshot snapshot() const { return _snapshot; }
     bool isEnabled() const { return _config.enabled; }
@@ -63,6 +63,7 @@ private:
     uint32_t _noisyClearSinceMs = 0;
     uint32_t _globalHighSinceMs = 0;
     bool _storageAllocationFailed = false;
+    CsiMotionResetReason _lastResetReason = CsiMotionResetReason::None;
 };
 
 } // namespace CSI

@@ -2,6 +2,7 @@
 #include "../App.h"
 #include "ConfigKeys.h"
 #include "../../system/rtc/RtcConfig.h"
+#include "../../wifisensing/csi/algo/CsiMotionTypes.h"
 #include <algorithm>
 #include <cmath>
 
@@ -39,14 +40,16 @@ void normalizeCsiAlarmConfig(RTC::WifiSensingData& data) {
 
     data.csiBaselineFrames = clampValue<uint16_t>(data.csiBaselineFrames, 30, 1000);
     data.csiTopK = clampValue<uint8_t>(data.csiTopK, 1, 32);
-    data.csiEnterThreshold = clampFloat(data.csiEnterThreshold, 1.0f, 100.0f, 6.0f);
-    data.csiClearThreshold = clampFloat(data.csiClearThreshold, 0.5f, data.csiEnterThreshold, 3.0f);
+    data.csiSensitivity = WIFISENSING::CSI::normalizeCsiMotionSensitivity(data.csiSensitivity);
+    const WIFISENSING::CSI::CsiMotionSensitivityPreset sensitivityPreset =
+        WIFISENSING::CSI::csiMotionSensitivityPreset(data.csiSensitivity);
+    data.csiEnterThreshold = sensitivityPreset.enterThreshold;
+    data.csiClearThreshold = sensitivityPreset.clearThreshold;
     data.csiHoldMs = clampValue<uint16_t>(data.csiHoldMs, 100, 10000);
     data.csiClearHoldMs = clampValue<uint16_t>(data.csiClearHoldMs, 100, 30000);
     data.csiMinNoise = clampFloat(data.csiMinNoise, 0.1f, 1000.0f, 4.0f);
     data.csiMinEnergy = clampFloat(data.csiMinEnergy, 0.0f, 10000.0f, 4.0f);
     data.csiNoisyThreshold = clampFloat(data.csiNoisyThreshold, data.csiEnterThreshold, 500.0f, 80.0f);
-    data.csiSensitivity = clampValue<uint8_t>(data.csiSensitivity, 0, 2);
 }
 
 void deserializeCsiAlarm(JsonObject& obj, RTC::WifiSensingData& data) {

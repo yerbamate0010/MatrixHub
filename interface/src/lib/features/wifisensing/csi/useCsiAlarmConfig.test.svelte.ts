@@ -42,13 +42,26 @@ describe('normalizeCsiAlarmSettings', () => {
 		expect(settings.bands[0]).toEqual({ start: 0, end: 255 });
 		expect(settings.baseline_frames).toBe(30);
 		expect(settings.top_k).toBe(32);
-		expect(settings.enter_threshold).toBe(1);
-		expect(settings.clear_threshold).toBe(1);
+		expect(settings.enter_threshold).toBe(4.5);
+		expect(settings.clear_threshold).toBe(2.2);
 		expect(settings.hold_ms).toBe(100);
 		expect(settings.clear_hold_ms).toBe(30000);
 		expect(settings.min_noise).toBe(0.1);
 		expect(settings.min_energy).toBe(10000);
-		expect(settings.noisy_threshold).toBe(1);
+		expect(settings.noisy_threshold).toBe(4.5);
 		expect(settings.sensitivity).toBe(2);
+	});
+
+	it('derives thresholds from sensitivity presets', () => {
+		const settings = normalizeCsiAlarmSettings({
+			sensitivity: 0,
+			enter_threshold: 1,
+			clear_threshold: 0.5,
+			noisy_threshold: 2
+		});
+
+		expect(settings.enter_threshold).toBe(8);
+		expect(settings.clear_threshold).toBe(4);
+		expect(settings.noisy_threshold).toBe(8);
 	});
 });

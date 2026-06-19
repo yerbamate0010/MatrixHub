@@ -29,6 +29,37 @@ enum class CsiMotionState : uint8_t {
     Unavailable = 7,
 };
 
+enum class CsiMotionResetReason : uint8_t {
+    None = 0,
+    Startup = 1,
+    ConfigChange = 2,
+    ManualCalibration = 3,
+    WidthChange = 4,
+    UnavailableStorage = 5,
+    InvalidFrame = 6,
+};
+
+struct CsiMotionSensitivityPreset {
+    float enterThreshold;
+    float clearThreshold;
+};
+
+inline uint8_t normalizeCsiMotionSensitivity(uint8_t sensitivity) {
+    return sensitivity > 2 ? 2 : sensitivity;
+}
+
+inline CsiMotionSensitivityPreset csiMotionSensitivityPreset(uint8_t sensitivity) {
+    switch (normalizeCsiMotionSensitivity(sensitivity)) {
+        case 0:
+            return {8.0f, 4.0f};
+        case 2:
+            return {4.5f, 2.2f};
+        case 1:
+        default:
+            return {6.0f, 3.0f};
+    }
+}
+
 struct CsiMotionConfig {
     bool enabled = false;
     uint8_t bandCount = 0;
@@ -59,9 +90,11 @@ struct CsiMotionSnapshot {
     uint16_t selectedCarrierCount = 0;
     uint16_t validCarrierCount = 0;
     uint8_t bandCount = 0;
+    CsiMotionResetReason lastResetReason = CsiMotionResetReason::None;
 };
 
 const char* toString(CsiMotionState state);
+const char* toString(CsiMotionResetReason reason);
 
 } // namespace CSI
 } // namespace WIFISENSING

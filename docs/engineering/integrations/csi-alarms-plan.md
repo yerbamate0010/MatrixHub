@@ -4,48 +4,53 @@ Navigation: [Project README](../../../README.md) · [Engineering Reference](../R
 
 ## Decision
 
-CSI is not enabled as a production alarm source yet.
+This file is a historical design note plus a remaining production-confidence
+checklist. The firmware now implements a CSI alarm source named
+`wifi_csi_motion`.
 
-The current firmware streams CSI for visualization and diagnostics, while alarm
-source `wifi_motion` is RSSI variance. The archived CSI algorithm in
-`src/features/sensing/csi/archive/` is a useful reference, but it is disabled and
-does not yet have enough false-positive evidence for commercial alarm behavior.
+The current firmware streams CSI for visualization and diagnostics, and
+`CsiBandMotionDetector` also produces a confirmed motion boolean for the alarm
+engine. RSSI variance remains the separate alarm source `wifi_motion`.
 
-This podgol therefore defines the production path and adds an offline harness.
-Runtime alarm integration must wait until the harness has real empty-room,
-motion, reconnect, and noisy-environment captures.
+The remaining risk is not that the runtime path is missing. The remaining risk
+is field confidence: the defaults still need real empty-room, motion, reconnect,
+and noisy-environment captures from representative deployments before claiming
+commercial-grade false-positive behavior.
 
 ## Non-goals for the current release
 
 - Do not alarm on raw CSI amplitude.
 - Do not reuse `/ws/csi` visualization fields as alarm truth.
-- Do not expose `csi_motion_score` in the rule UI until false-positive tests pass.
-- Do not keep CSI enabled only because an alarm rule exists unless the service
-  has explicit lifecycle ownership, diagnostics, and power/memory budget.
+- Do not expose raw CSI amplitudes or `motionScore` as alarm truth.
+- Do not merge CSI alarm semantics into the RSSI `wifi_motion` source.
+- Do not remove lifecycle ownership, diagnostics, or power/memory visibility
+  from the explicit `AlarmSystem` CSI consumer.
 
 ## Required production signal
 
-A production CSI alarm source should be named `csi_motion_score` or a similarly
-explicit contract name. It must represent a normalized confidence-bearing score,
-not raw amplitude or single-frame variance.
+The production alarm source is named `wifi_csi_motion`. It represents the
+confirmed detector boolean as `0/1`. The CSI score and confidence remain
+diagnostic fields in status and the `/ws/csi` stream.
 
 Minimum signal pipeline:
 
 1. Decode each CSI packet into I/Q pairs.
 2. Convert pairs to energy or amplitude per subcarrier.
-3. Reject malformed, empty, reconnect-period, and gain-reset frames.
-4. Warm up after CSI enable or WiFi reconnect.
+3. Reject malformed or empty frames, and suppress broad reconnect/gain-like
+   disturbances before they can become confirmed motion.
+4. Warm up after CSI enable, config change, width change, or manual calibration.
 5. Calibrate an adaptive baseline from a quiet window.
 6. Estimate noise floor from baseline dispersion.
-7. Compute a rolling temporal score over a fixed window.
+7. Compute a selected-band score from the top-K per-subcarrier z-scores.
 8. Apply hysteresis with separate enter and exit thresholds.
 9. Require debounce/min-duration before confirmation.
-10. Apply cooldown after clear.
+10. Apply clear hold after motion stops.
 11. Emit confidence and state, not only a boolean.
 
 Minimum runtime states:
 
-- `idle`
+- `disabled`
+- `needs_configuration`
 - `calibrating`
 - `monitoring`
 - `motion_candidate`
@@ -59,24 +64,27 @@ The alarm path must learn baseline from device-local data because CSI amplitude
 depends on AP, channel, antenna orientation, RSSI, gain state, room geometry, and
 nearby transmitters.
 
-Initial suggested parameters for offline falsification:
+Current default parameters:
 
-- warmup frames: 30
 - calibration frames: 150
-- score window: 40 frames
-- noise floor multiplier: 6.0 for motion candidate
-- clear multiplier: 3.0
-- minimum confirmed duration: 1500 ms
-- noisy-environment threshold: baseline dispersion above expected quiet range
-- reconnect holdoff: at least 5000 ms after WiFi/CSI reset
+- top-K carriers: 8
+- medium sensitivity enter threshold: 6.0
+- medium sensitivity clear threshold: 3.0
+- low sensitivity enter/clear: 8.0 / 4.0
+- high sensitivity enter/clear: 4.5 / 2.2
+- minimum confirmed duration: 1200 ms
+- clear hold: 2500 ms
+- minimum noise floor: 4.0
+- minimum energy: 4.0
+- noisy score threshold: 80.0
 
-These are not production constants. They are starting points for harness-driven
-experiments and must be tuned from captures.
+These are conservative defaults. They still need harness-driven tuning from
+captures before being treated as universal production constants.
 
 ## Required datasets
 
-Before enabling a firmware alarm source, collect and keep uncommitted raw
-captures under `artifacts/diagnostics/<timestamp>/csi-alarm/`:
+Before broad deployment, collect and keep uncommitted raw captures under
+`artifacts/diagnostics/<timestamp>/csi-alarm/`:
 
 - empty room, 30 minutes
 - empty room with normal AP/background network traffic, 30 minutes
@@ -120,32 +128,31 @@ Supported JSONL input shape:
 Each payload is interleaved signed I/Q bytes. The harness does not need live
 device credentials and should be safe for CI.
 
-## Runtime integration gates
+## Remaining production-confidence gates
 
-Do not add `csi_motion_score` to `AlarmSource` until all gates pass:
+The runtime path exists. Treat these as the gates for claiming production-grade
+false-positive resistance:
 
-1. Native C++ algorithm tests cover quiet, motion, noisy, reconnect, malformed,
-   and cooldown scenarios.
+1. Native C++ algorithm tests cover quiet, motion, noisy, reconnect/gain jump,
+   malformed, and cooldown scenarios.
 2. The offline harness passes against real captures from the required datasets.
-3. `/api/wifisensing/status` exposes CSI alarm state, score, confidence,
-   baseline age, noisy flag, and last reset reason.
-4. Alarm evaluator receives CSI score only when state is `monitoring` or
-   `motion_confirmed`; all other states must evaluate as unavailable.
-5. Frontend alarm rule UI labels the source as experimental unless real-world
-   false-positive data proves otherwise.
-6. Device smoke verifies that enabling a CSI alarm consumer keeps CSI lifecycle
+3. `/api/wifisensing/status` exposes CSI alarm state, score, confidence, noisy
+   flag, carrier counts, and `last_reset_reason`.
+4. Alarm evaluator receives only the boolean-like `wifi_csi_motion` signal.
+   Score remains diagnostic.
+5. Device smoke verifies that enabling a CSI alarm consumer keeps CSI lifecycle
    balanced and does not leak queue, task, or WebSocket resources.
 
-## Future firmware shape
+## Current firmware shape
 
-Recommended implementation layout:
+Implementation layout:
 
-- `src/wifisensing/csi/algo/CsiMotionDetector.{h,cpp}`
-- `test/test_csi_motion_detector/`
+- `src/wifisensing/csi/algo/CsiBandMotionDetector.{h,cpp}`
+- `test/test_csi_band_motion_detector/`
 - `WIFISENSING::CSI::CsiMotionSnapshot`
 - `CsiService::getMotionSnapshot()`
-- alarm input field `csiMotionScore`
-- alarm source string `csi_motion_score`
+- alarm input field `wifiCsiMotion`
+- alarm source string `wifi_csi_motion`
 
 The detector should be fed by the CSI processing task after gain compensation
 and before WebSocket serialization. It must not allocate on the packet path and
@@ -153,13 +160,13 @@ must not call alarm notification code directly.
 
 ## Current status
 
-Deferral is intentional and release-safe:
+Runtime implementation is active:
 
-- current CSI visualization remains active,
-- current RSSI `wifi_motion` alarms remain unchanged,
-- no new alarm source is exposed,
-- no user-facing false-positive path is introduced,
-- an offline harness and integration gates now define the next implementation
-  step.
+- CSI visualization remains active,
+- RSSI `wifi_motion` alarms remain unchanged,
+- CSI alarm rules use the separate source `wifi_csi_motion`,
+- `AlarmService` consumes only a boolean-like CSI motion value,
+- `motionScore`, confidence, noisy state, and reset reason remain diagnostics,
+- the offline harness and real captures remain the next confidence step.
 
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Integrations](../README.md#integrations-and-specialized-subsystems)

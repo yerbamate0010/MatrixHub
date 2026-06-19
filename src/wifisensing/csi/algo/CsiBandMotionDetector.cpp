@@ -87,6 +87,27 @@ const char* toString(CsiMotionState state) {
     }
 }
 
+const char* toString(CsiMotionResetReason reason) {
+    switch (reason) {
+        case CsiMotionResetReason::None:
+            return "none";
+        case CsiMotionResetReason::Startup:
+            return "startup";
+        case CsiMotionResetReason::ConfigChange:
+            return "config_change";
+        case CsiMotionResetReason::ManualCalibration:
+            return "manual_calibration";
+        case CsiMotionResetReason::WidthChange:
+            return "width_change";
+        case CsiMotionResetReason::UnavailableStorage:
+            return "unavailable_storage";
+        case CsiMotionResetReason::InvalidFrame:
+            return "invalid_frame";
+        default:
+            return "unknown";
+    }
+}
+
 CsiBandMotionDetector::~CsiBandMotionDetector() {
     end();
 }
@@ -99,11 +120,12 @@ bool CsiBandMotionDetector::begin() {
     _storage = allocateStorage();
     _storageAllocationFailed = (_storage == nullptr);
     if (!_storage) {
+        _lastResetReason = CsiMotionResetReason::UnavailableStorage;
         _snapshot = makeSnapshot(CsiMotionState::Unavailable);
         return false;
     }
 
-    resetBaseline();
+    resetBaseline(CsiMotionResetReason::Startup);
     _snapshot = makeSnapshot(_config.enabled ? CsiMotionState::NeedsConfiguration : CsiMotionState::Disabled);
     return true;
 }
@@ -120,20 +142,24 @@ void CsiBandMotionDetector::end() {
 void CsiBandMotionDetector::configure(const CsiMotionConfig& config) {
     _config = config;
     normalizeConfig(_config);
-    resetBaseline();
 
     if (!_storage) {
+        _lastResetReason = CsiMotionResetReason::UnavailableStorage;
         _snapshot = makeSnapshot(CsiMotionState::Unavailable);
     } else if (!_config.enabled) {
+        resetBaseline(CsiMotionResetReason::ConfigChange);
         _snapshot = makeSnapshot(CsiMotionState::Disabled);
     } else if (_config.bandCount == 0) {
+        resetBaseline(CsiMotionResetReason::ConfigChange);
         _snapshot = makeSnapshot(CsiMotionState::NeedsConfiguration);
     } else {
+        resetBaseline(CsiMotionResetReason::ConfigChange);
         _snapshot = makeSnapshot(CsiMotionState::Calibrating);
     }
 }
 
-void CsiBandMotionDetector::resetBaseline() {
+void CsiBandMotionDetector::resetBaseline(CsiMotionResetReason reason) {
+    _lastResetReason = reason;
     _baselineReady = false;
     _motion = false;
     _baselineFramesSeen = 0;
@@ -146,6 +172,7 @@ void CsiBandMotionDetector::resetBaseline() {
     _snapshot.motion = false;
     _snapshot.noisy = false;
     _snapshot.needsCalibration = _config.enabled && _config.bandCount > 0;
+    _snapshot.lastResetReason = _lastResetReason;
 }
 
 CsiMotionSnapshot CsiBandMotionDetector::process(const CsiPacket& packet, uint32_t nowMs) {
@@ -164,6 +191,7 @@ CsiMotionSnapshot CsiBandMotionDetector::process(const CsiPacket& packet, uint32
     const uint16_t width = static_cast<uint16_t>(packet.len / 2);
     if (width < 8 || width > MAX_CSI_SUBCARRIERS) {
         _motion = false;
+        _lastResetReason = CsiMotionResetReason::InvalidFrame;
         _snapshot = makeSnapshot(CsiMotionState::Unavailable);
         return _snapshot;
     }
@@ -197,6 +225,8 @@ CsiMotionSnapshot CsiBandMotionDetector::process(const CsiPacket& packet, uint32
     const bool noisy = updateNoisyGate(score, nowMs);
     CsiMotionState state = _snapshot.state;
 
+    const bool broadDisturbance = score.globalHighRatio >= kGlobalHighRatioThreshold;
+
     if (noisy) {
         _motion = false;
         _noisyClearSinceMs = 0;
@@ -214,6 +244,11 @@ CsiMotionSnapshot CsiBandMotionDetector::process(const CsiPacket& packet, uint32
             _noisyClearSinceMs = 0;
             state = CsiMotionState::NoisyEnvironment;
         }
+    } else if (broadDisturbance) {
+        _motion = false;
+        _candidateSinceMs = 0;
+        _clearSinceMs = 0;
+        state = CsiMotionState::Monitoring;
     } else {
         switch (_snapshot.state) {
             case CsiMotionState::Monitoring:
@@ -289,8 +324,10 @@ void CsiBandMotionDetector::normalizeConfig(CsiMotionConfig& config) const {
     config.bandCount = clampValue<uint8_t>(config.bandCount, 0, MAX_CSI_ALARM_BANDS);
     config.baselineFrames = clampValue<uint16_t>(config.baselineFrames, 30, 1000);
     config.topK = clampValue<uint8_t>(config.topK, 1, 32);
-    config.enterThreshold = clampFinite(config.enterThreshold, 1.0f, 100.0f, 6.0f);
-    config.clearThreshold = clampFinite(config.clearThreshold, 0.5f, config.enterThreshold, 3.0f);
+    config.sensitivity = normalizeCsiMotionSensitivity(config.sensitivity);
+    const CsiMotionSensitivityPreset sensitivityPreset = csiMotionSensitivityPreset(config.sensitivity);
+    config.enterThreshold = sensitivityPreset.enterThreshold;
+    config.clearThreshold = sensitivityPreset.clearThreshold;
     config.holdMs = clampValue<uint16_t>(config.holdMs, 100, 10000);
     config.clearHoldMs = clampValue<uint16_t>(config.clearHoldMs, 100, 30000);
     config.minNoise = clampFinite(config.minNoise, 0.1f, 1000.0f, 4.0f);
@@ -300,7 +337,6 @@ void CsiBandMotionDetector::normalizeConfig(CsiMotionConfig& config) const {
         config.enterThreshold,
         500.0f,
         80.0f);
-    config.sensitivity = clampValue<uint8_t>(config.sensitivity, 0, 2);
 
     for (uint8_t i = 0; i < config.bandCount; ++i) {
         CsiBandRange& band = config.bands[i];
@@ -320,7 +356,7 @@ void CsiBandMotionDetector::normalizeConfig(CsiMotionConfig& config) const {
 
 void CsiBandMotionDetector::resetBaselineForWidth(uint16_t width) {
     _width = width;
-    resetBaseline();
+    resetBaseline(CsiMotionResetReason::WidthChange);
     _snapshot.width = width;
 }
 
@@ -514,6 +550,7 @@ CsiMotionSnapshot CsiBandMotionDetector::makeSnapshot(CsiMotionState state, cons
     snapshot.framesSeen = _framesSeen;
     snapshot.width = _width;
     snapshot.bandCount = _config.bandCount;
+    snapshot.lastResetReason = _lastResetReason;
     if (score) {
         snapshot.selectedCarrierCount = score->selectedCarrierCount;
         snapshot.validCarrierCount = score->validCarrierCount;

@@ -67,6 +67,7 @@ export interface CsiMotionStatus {
 	band_count: number;
 	selected_carriers: number;
 	valid_carriers: number;
+	last_reset_reason: string;
 }
 
 export interface CsiRuntimeMetrics {

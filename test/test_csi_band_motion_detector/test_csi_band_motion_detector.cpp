@@ -98,6 +98,9 @@ void test_storage_allocation_failure_returns_unavailable() {
 
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(CsiMotionState::Unavailable), static_cast<uint8_t>(snapshot.state));
     TEST_ASSERT_FALSE(snapshot.motion);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(WIFISENSING::CSI::CsiMotionResetReason::UnavailableStorage),
+        static_cast<uint8_t>(snapshot.lastResetReason));
 }
 
 void test_no_bands_returns_needs_configuration() {
@@ -259,6 +262,89 @@ void test_selected_band_only_detects_selected_band_changes() {
         static_cast<uint8_t>(snapshot.state));
 }
 
+void test_sensitivity_presets_override_manual_thresholds() {
+    CsiMotionConfig lowSensitivity = enabledConfig();
+    lowSensitivity.sensitivity = 0;
+    lowSensitivity.enterThreshold = 1.0f;
+    lowSensitivity.clearThreshold = 0.5f;
+    lowSensitivity.minNoise = 10.0f;
+
+    CsiBandMotionDetector lowDetector;
+    TEST_ASSERT_TRUE(lowDetector.begin());
+    lowDetector.configure(lowSensitivity);
+    trainBaseline(lowDetector, lowSensitivity);
+
+    auto snapshot = lowDetector.process(makePacketWithBand(kWidth, 10, 10, 17, 13), 2000);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(CsiMotionState::Monitoring), static_cast<uint8_t>(snapshot.state));
+    TEST_ASSERT_FALSE(snapshot.motion);
+
+    CsiMotionConfig highSensitivity = enabledConfig();
+    highSensitivity.sensitivity = 2;
+    highSensitivity.enterThreshold = 100.0f;
+    highSensitivity.clearThreshold = 50.0f;
+    highSensitivity.minNoise = 10.0f;
+
+    CsiBandMotionDetector highDetector;
+    TEST_ASSERT_TRUE(highDetector.begin());
+    highDetector.configure(highSensitivity);
+    trainBaseline(highDetector, highSensitivity);
+
+    snapshot = highDetector.process(makePacketWithBand(kWidth, 10, 10, 17, 13), 2000);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CsiMotionState::MotionCandidate),
+        static_cast<uint8_t>(snapshot.state));
+    TEST_ASSERT_FALSE(snapshot.motion);
+}
+
+void test_global_gain_jump_does_not_confirm_motion_before_noisy_gate() {
+    CsiBandMotionDetector detector;
+    TEST_ASSERT_TRUE(detector.begin());
+    const CsiMotionConfig config = enabledConfig();
+    detector.configure(config);
+    trainBaseline(detector, config);
+
+    CsiPacket disturbed = makePacket(kWidth, 10);
+    disturbed.compensate_gain = 1.8f;
+
+    auto snapshot = detector.process(disturbed, 2000);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(CsiMotionState::Monitoring), static_cast<uint8_t>(snapshot.state));
+    TEST_ASSERT_FALSE(snapshot.motion);
+
+    snapshot = detector.process(disturbed, 2100);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(CsiMotionState::Monitoring), static_cast<uint8_t>(snapshot.state));
+    TEST_ASSERT_FALSE(snapshot.motion);
+
+    snapshot = detector.process(disturbed, 2600);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CsiMotionState::NoisyEnvironment),
+        static_cast<uint8_t>(snapshot.state));
+    TEST_ASSERT_TRUE(snapshot.noisy);
+    TEST_ASSERT_FALSE(snapshot.motion);
+}
+
+void test_reset_reason_reports_manual_and_width_reset() {
+    CsiBandMotionDetector detector;
+    TEST_ASSERT_TRUE(detector.begin());
+    const CsiMotionConfig config = enabledConfig();
+    detector.configure(config);
+
+    auto snapshot = trainBaseline(detector, config);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(WIFISENSING::CSI::CsiMotionResetReason::WidthChange),
+        static_cast<uint8_t>(snapshot.lastResetReason));
+
+    detector.resetBaseline();
+    snapshot = detector.snapshot();
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(WIFISENSING::CSI::CsiMotionResetReason::ManualCalibration),
+        static_cast<uint8_t>(snapshot.lastResetReason));
+
+    snapshot = detector.process(makePacket(80, 10), 4000);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(WIFISENSING::CSI::CsiMotionResetReason::WidthChange),
+        static_cast<uint8_t>(snapshot.lastResetReason));
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -275,5 +361,8 @@ int main(int argc, char** argv) {
     RUN_TEST(test_width_change_resets_baseline);
     RUN_TEST(test_dead_carriers_are_ignored);
     RUN_TEST(test_selected_band_only_detects_selected_band_changes);
+    RUN_TEST(test_sensitivity_presets_override_manual_thresholds);
+    RUN_TEST(test_global_gain_jump_does_not_confirm_motion_before_noisy_gate);
+    RUN_TEST(test_reset_reason_reports_manual_and_width_reset);
     return UNITY_END();
 }
