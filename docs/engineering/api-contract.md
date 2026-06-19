@@ -69,3 +69,28 @@ cd interface && npm run check
 cd interface && npm run test:run
 cd interface && DEVICE_URL=https://192.168.0.30 TEST_USERNAME=admin TEST_PASSWORD=admin npm run test:e2e
 ```
+
+## Release Contract Checklist
+
+For a release candidate, run the contract verifier even when no endpoint paths
+were intentionally changed:
+
+```bash
+python scripts/contract/verify_api_contract.py
+python scripts/diagnostics/check_runtime_diagnostics.py --device-url https://192.168.0.30 --username admin --password admin
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --safe-writes
+```
+
+The release contract is healthy when:
+
+- all maintained `/api/*`, `/rest/*`, and `/ws/*` literals are represented in
+  `api-contract.json`,
+- firmware, frontend services, SDK, diagnostics, and docs agree on HTTPS/WSS
+  paths,
+- WebSockets authenticate with the `access_token` cookie,
+- diagnostics endpoints expose heap, task, mutex, feature, and endpoint data,
+- smoke reports no missing endpoints, schema mismatches, or unexpected restarts.
+
+Notification delivery test endpoints are intentionally excluded from the shared
+device release checklist. Keep them covered by local unit tests and only run
+live delivery checks on an isolated device/account.

@@ -183,6 +183,97 @@ The soak suite writes CSV, JSON, and Markdown reports under `artifacts/soak/`.
 For release evidence, keep the generated Markdown report together with the
 firmware build hash and the smoke/stress reports from the same run.
 
+## Release Build And Flash
+
+Use the full release build when UI assets or embedded frontend output matter:
+
+```bash
+/home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix
+```
+
+Use the backend-only build for a quick repeat after a successful full build:
+
+```bash
+SKIP_UI=1 /home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix
+```
+
+Upload only after stopping any serial monitor:
+
+```bash
+pkill -f "pio device monitor" || true
+/home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix -t upload
+```
+
+Open the monitor on the detected USB CDC port, for example:
+
+```bash
+/home/test/.platformio/penv/bin/pio device monitor --port /dev/ttyACM0
+```
+
+## Release Checklist
+
+Run this checklist from a clean worktree or record any intentional local changes
+before starting.
+
+1. Build and size:
+
+```bash
+/home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix
+SKIP_UI=1 /home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix
+/home/test/.platformio/penv/bin/pio run -e waveshare_esp32s3_matrix -t size
+```
+
+Expected result: firmware fits the `app0` partition from
+`partitions/partitions_s3.csv`; current release builds should leave meaningful
+headroom below `3,502,080` bytes.
+
+2. Host and frontend gates:
+
+```bash
+/home/test/.platformio/penv/bin/pio test -e native
+cd interface && npm run quality:frontend
+```
+
+3. API contract:
+
+```bash
+python scripts/contract/verify_api_contract.py
+```
+
+4. Runtime diagnostics and smoke:
+
+```bash
+python scripts/diagnostics/check_runtime_diagnostics.py --device-url https://192.168.0.30 --username admin --password admin
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --safe-writes
+```
+
+5. Stress and soak:
+
+```bash
+python scripts/tests/stress_test.py --device-url https://192.168.0.30 --username admin --password admin --cycles 100 --delay 0.01
+python scripts/tests/soak_test.py --device-url https://192.168.0.30 --username admin --password admin --duration 1h --interval 10s --plot
+```
+
+6. Optional feature toggles:
+
+```bash
+python scripts/tests/feature_toggle.py --device-url https://192.168.0.30 --username admin --password admin --feature ble
+python scripts/tests/feature_toggle.py --device-url https://192.168.0.30 --username admin --password admin --feature wifisensing
+```
+
+7. Evidence:
+
+- save the smoke/stress/soak Markdown reports from `artifacts/`,
+- record firmware flash/RAM size,
+- record any skipped optional checks and why,
+- never commit secrets, tokens, live logs with credentials, `node_modules`, or
+  generated build directories.
+
+Release passes only when all required gates pass, runtime counters stay stable,
+and the device shows no unexpected restart, panic, watchdog, brownout, or lock
+timeout growth. The Vite large-chunk warning is acceptable only while
+`npm run size` and `npm run quality:frontend` stay within budget.
+
 ## Test Layout
 
 Native tests live under `test/test_<module>/`.

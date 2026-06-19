@@ -85,4 +85,23 @@ Critical sections (like the Rate Limiter mutex) use a short timeout (100ms). If 
 ## 4. Standardized Logging
 All security events are logged using the project's internal logging system (`LOGW`, `LOGI`, `LOGE`) with the `Security` tag for easy monitoring and auditing via the serial console.
 
+## 5. Live Test Safety
+
+Release diagnostics must not create a second security incident while proving the
+device is healthy.
+
+- Use HTTPS-only URLs: `https://192.168.0.30` or `https://plantcare.local`.
+- Use JWT through `/rest/signIn`; do not pass tokens in WebSocket query strings.
+- Do not commit tokens, config snapshots containing secrets, or raw log tails
+  that include credentials.
+- Use read-only diagnostics first, then safe-write scripts that back up and
+  restore settings.
+- On shared devices, do not call live Telegram, Webhook, or Pushover delivery
+  endpoints. Local unit tests for parsers, validators, and schedulers are fine,
+  but external notification delivery can collide with other ESP devices.
+- Before factory reset, sleep, upload, restart, or feature toggles that may
+  restart runtime services, capture a baseline under `artifacts/diagnostics/`.
+- Keep `/api/diagnostics/*` protected by JWT and avoid exposing private keys,
+  passwords, bot tokens, webhook URLs, or full credential-bearing payloads.
+
 Navigation: [Project README](../../../README.md) · [Engineering Reference](../README.md) · [Operations](../README.md#operations)
