@@ -121,6 +121,32 @@ cd interface
 TEST_USERNAME=admin TEST_PASSWORD=admin npm run test:e2e
 ```
 
+## Live Device Smoke Tests
+
+Use the HTTPS/JWT smoke suite when validating a flashed device against the
+backend API contract and runtime diagnostics:
+
+```bash
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --read-only
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --safe-writes
+```
+
+The suite enforces HTTPS, uses JWT login, retries transient transport failures,
+checks protected-endpoint 401 recovery, captures heap snapshots before and
+after the run, and writes JSON/Markdown reports under
+`artifacts/device-smoke/`.
+
+`--safe-writes` only exercises settings endpoints with backup/restore or
+disabled no-op payloads. It does not send live Telegram notifications or call
+notification delivery test endpoints.
+
+Optional checks:
+
+```bash
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --read-only --wss
+python scripts/tests/device_smoke.py --device-url https://192.168.0.30 --username admin --password admin --restart
+```
+
 ## Test Layout
 
 Native tests live under `test/test_<module>/`.
