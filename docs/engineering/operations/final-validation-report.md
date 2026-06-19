@@ -2,10 +2,19 @@
 
 Date: 2026-06-19
 
-Target device:
+Validated device URL:
 
 - `https://192.168.0.30`
+
+Configured mDNS alias:
+
 - `https://plantcare.local`
+
+The validation host could not resolve `plantcare.local` through mDNS during
+the baseline or final audit (`getent hosts plantcare.local` returned no host
+entry and `curl` could not resolve the name). The device configuration still
+reports hostname `plantcare`, so the final live gate used the fixed HTTPS IP as
+the authoritative target and records mDNS as an environment/network caveat.
 
 Result: `PASS`
 
@@ -55,6 +64,8 @@ Final comparison:
 - Final WebSocket queue drops remained `0 -> 0`.
 - Final lock timeout counters did not grow:
   standard `0 -> 0`, recursive `2 -> 2`.
+- mDNS resolver behavior matched the baseline: hostname configured on-device,
+  but `plantcare.local` was not resolvable from the validation host.
 
 ## Final Gate Evidence
 
@@ -70,6 +81,8 @@ Final comparison:
 | Frontend production build passes | `npm run build` | PASS |
 | Frontend size budget passes | Client gzip 320.31 KB / 400 KB, CSS gzip 28.05 KB / 50 KB, total 1.26 MB / 1.5 MB | PASS |
 | E2E passes against real HTTPS device | `DEVICE_URL=https://192.168.0.30 ... npm run test:e2e`, 33/33 | PASS |
+| Fixed HTTPS IP remains authoritative test target | `https://192.168.0.30` smoke/stress/soak/runtime diagnostics | PASS |
+| mDNS alias documented with resolver caveat | Baseline and final host resolver checks could not resolve `plantcare.local` | CAVEAT |
 | Read-only device smoke passes | `device-smoke-192-168-0-30-20260619T071714Z.md`, 23/23 | PASS |
 | Safe-writes device smoke passes | `device-smoke-192-168-0-30-20260619T071730Z.md`, 44/44 | PASS |
 | Stress passes without reset/WDT | `stress-192-168-0-30-20260619T072602Z.md`, 2734/2734 | PASS |
