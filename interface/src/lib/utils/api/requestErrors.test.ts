@@ -110,7 +110,7 @@ describe('requestErrors', () => {
 			'Invalid or unsafe file path.'
 		);
 		expect(toUserRequestErrorMessage(new Error('fs/path_forbidden'))).toBe(
-			'This path is read-only in File Manager. Downloads are allowed, but uploads and deletions are blocked.'
+			'This path is protected in File Manager. The requested operation is blocked, but browsing and downloads may still be available.'
 		);
 		expect(toUserRequestErrorMessage(new Error('fs/path_missing'))).toBe('Missing file path.');
 		expect(toUserRequestErrorMessage(new Error('fs/file_not_found'))).toBe('File not found.');

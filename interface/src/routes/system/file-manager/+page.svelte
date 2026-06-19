@@ -7,11 +7,7 @@
 	import { getBreadcrumbs } from '$lib/utils/path/helpers';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import { createFileManagerState } from '$lib/stores/fileManagerState';
-	import {
-		isFileManagerReadOnlyPath,
-		isFileManagerUploadBlockedPath,
-		type FileEntry
-	} from '$lib/services/fileManager';
+	import { isFileManagerUploadBlockedPath, type FileEntry } from '$lib/services/fileManager';
 	import { AdminAccessCard, PageWrapper } from '$lib/components/layout';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
@@ -224,7 +220,9 @@
 							size="sm"
 							class="w-full"
 							onclick={() => void handleUpload()}
-							disabled={!fmState.uploadFiles?.length || fmState.uploading || isCurrentPathUploadBlocked}
+							disabled={!fmState.uploadFiles?.length ||
+								fmState.uploading ||
+								isCurrentPathUploadBlocked}
 							loading={fmState.uploading}
 						>
 							<UploadIcon class="mr-2 h-4 w-4" />

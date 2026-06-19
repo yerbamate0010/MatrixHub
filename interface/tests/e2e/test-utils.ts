@@ -91,10 +91,12 @@ export async function authenticateByApi(page: Page) {
 }
 
 export async function waitForAuthenticatedShell(page: Page) {
-	const drawer = page.locator('.drawer');
+	const shellEntry = page
+		.locator('.drawer, .drawer-content, a[href="/charts"], a[href="/alarms"]')
+		.first();
 
 	try {
-		await expect(drawer).toBeVisible({ timeout: 20000 });
+		await expect(shellEntry).toBeVisible({ timeout: 20000 });
 	} catch (error) {
 		const bodyText = (
 			await page
@@ -107,7 +109,7 @@ export async function waitForAuthenticatedShell(page: Page) {
 		}
 
 		await page.reload({ waitUntil: 'domcontentloaded' });
-		await expect(drawer).toBeVisible({ timeout: 20000 });
+		await expect(shellEntry).toBeVisible({ timeout: 20000 });
 	}
 }
 

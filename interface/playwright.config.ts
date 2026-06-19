@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const deviceUrl = process.env.DEVICE_URL ?? 'https://192.168.0.16';
+const deviceUrl = process.env.DEVICE_URL ?? 'https://192.168.0.30';
 const port = Number(process.env.E2E_PORT ?? 5174);
 const host = process.env.E2E_HOST ?? '127.0.0.1';
 
