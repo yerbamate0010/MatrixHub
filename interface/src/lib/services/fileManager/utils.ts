@@ -4,6 +4,7 @@ import type { FileManagerSystemState } from './types';
 const ROOT_PATH = '/';
 const LITTLEFS_PREFIX = '/littlefs';
 const PROTECTED_CONFIG_ROOT = '/config';
+const PROTECTED_LOG_ROOT = '/data';
 export const FILE_MANAGER_SDCARD_PATH = '/sdcard';
 
 export type FileManagerPathAccess = 'list' | 'download' | 'upload' | 'remove';
@@ -78,6 +79,19 @@ export function isFileManagerReadOnlyPath(path: string): boolean {
 	return startsWithPathPrefix(toNativePath(canonicalPath), PROTECTED_CONFIG_ROOT);
 }
 
+export function isFileManagerUploadBlockedPath(path: string): boolean {
+	const canonicalPath = canonicalizePath(path, ROOT_PATH);
+	if (!canonicalPath) {
+		return false;
+	}
+
+	const nativePath = toNativePath(canonicalPath);
+	return (
+		startsWithPathPrefix(nativePath, PROTECTED_CONFIG_ROOT) ||
+		startsWithPathPrefix(nativePath, PROTECTED_LOG_ROOT)
+	);
+}
+
 export function validateFileManagerPathAccess(
 	path: string,
 	access: FileManagerPathAccess,
@@ -92,10 +106,11 @@ export function validateFileManagerPathAccess(
 		return { ok: false, error: 'fs/path_forbidden' };
 	}
 
-	if (
-		(access === 'upload' || access === 'remove') &&
-		isFileManagerReadOnlyPath(canonicalPathResult.path)
-	) {
+	if (access === 'upload' && isFileManagerUploadBlockedPath(canonicalPathResult.path)) {
+		return { ok: false, error: 'fs/path_forbidden' };
+	}
+
+	if (access === 'remove' && isFileManagerReadOnlyPath(canonicalPathResult.path)) {
 		return { ok: false, error: 'fs/path_forbidden' };
 	}
 

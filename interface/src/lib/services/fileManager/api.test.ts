@@ -148,20 +148,34 @@ describe('fileManager api', () => {
 			item: (index: number) => (index === 0 ? uploadFile : null)
 		} as unknown as FileList;
 
-		state.currentPath = '/data';
+		state.currentPath = '/uploads';
 		state.uploadFiles = fileList;
-		apiClient.fetch.mockResolvedValue(
-			new Response(JSON.stringify({ error: 'fs/path_forbidden' }), {
-				status: 403,
-				headers: { 'content-type': 'application/json' }
-			})
-		);
+		apiClient.fetch.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
 		await actions.handleUpload();
 
 		expect(apiClient.fetch).toHaveBeenCalled();
 		const [url] = apiClient.fetch.mock.calls[0] as [string, RequestInit];
-		expect(url).toBe('/rest/fs/upload?path=%2Fdata');
+		expect(url).toBe('/rest/fs/upload?path=%2Fuploads');
 		expect(url).not.toContain('backend=');
+	});
+
+	it('blocks uploads to log storage before opening an HTTP request', async () => {
+		const { actions, apiClient, state } = createHarness();
+		const uploadFile = new File(['probe'], 'probe.txt', { type: 'text/plain' });
+		const fileList = {
+			0: uploadFile,
+			length: 1,
+			item: (index: number) => (index === 0 ? uploadFile : null)
+		} as unknown as FileList;
+
+		state.currentPath = '/data';
+		state.uploadFiles = fileList;
+
+		await actions.handleUpload();
+
+		expect(apiClient.fetch).not.toHaveBeenCalled();
+		expect(notificationMocks.showError).toHaveBeenCalled();
+		expect(state.uploading).toBe(false);
 	});
 });

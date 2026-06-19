@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	canonicalizeFileManagerPath,
+	isFileManagerUploadBlockedPath,
 	isFileManagerReadOnlyPath,
 	validateFileManagerPathAccess
 } from './utils';
@@ -48,6 +49,24 @@ describe('fileManager utils', () => {
 		expect(validateFileManagerPathAccess('/littlefs/config', 'remove')).toEqual({
 			ok: false,
 			error: 'fs/path_forbidden'
+		});
+	});
+
+	it('blocks uploads to log storage while keeping log downloads and removals client-valid', () => {
+		expect(isFileManagerUploadBlockedPath('/data')).toBe(true);
+		expect(isFileManagerUploadBlockedPath('/littlefs/data/2026-06')).toBe(true);
+		expect(isFileManagerReadOnlyPath('/data')).toBe(false);
+		expect(validateFileManagerPathAccess('/data', 'upload')).toEqual({
+			ok: false,
+			error: 'fs/path_forbidden'
+		});
+		expect(validateFileManagerPathAccess('/data/2026-06/log.bin', 'download')).toEqual({
+			ok: true,
+			path: '/data/2026-06/log.bin'
+		});
+		expect(validateFileManagerPathAccess('/data/old.bin', 'remove')).toEqual({
+			ok: true,
+			path: '/data/old.bin'
 		});
 	});
 

@@ -7,7 +7,11 @@
 	import { getBreadcrumbs } from '$lib/utils/path/helpers';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import { createFileManagerState } from '$lib/stores/fileManagerState';
-	import { isFileManagerReadOnlyPath, type FileEntry } from '$lib/services/fileManager';
+	import {
+		isFileManagerReadOnlyPath,
+		isFileManagerUploadBlockedPath,
+		type FileEntry
+	} from '$lib/services/fileManager';
 	import { AdminAccessCard, PageWrapper } from '$lib/components/layout';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
@@ -46,7 +50,7 @@
 	const features = $derived(appFeatures.features);
 	const featuresResolved = $derived(appFeatures.resolved);
 	const featureEnabled = $derived(featuresResolved ? (features.file_manager ?? true) : false);
-	const isCurrentPathReadOnly = $derived(isFileManagerReadOnlyPath(fmState.currentPath));
+	const isCurrentPathUploadBlocked = $derived(isFileManagerUploadBlockedPath(fmState.currentPath));
 	let initialRefreshStarted = $state(false);
 	let helpOpen = $state(false);
 	const locale = $derived(i18n.languageTag);
@@ -193,13 +197,12 @@
 			<div class="space-y-6 lg:col-span-1">
 				<BaseCard title="Upload Files" icon={UploadIcon}>
 					<div class="space-y-4">
-						{#if isCurrentPathReadOnly}
+						{#if isCurrentPathUploadBlocked}
 							<ContentBox class="border-warning/40 bg-warning/10 px-4 text-warning !py-3">
 								<div class="flex items-start gap-3">
 									<AlertIcon class="mt-0.5 h-5 w-5" />
 									<span>
-										This directory is read-only. Downloads are allowed, but uploads and deletions
-										are blocked for protected config files.
+										{m.file_manager_upload_blocked_path({ locale: i18n.languageTag })}
 									</span>
 								</div>
 							</ContentBox>
@@ -212,7 +215,7 @@
 								const target = event.target as HTMLInputElement;
 								setUploadFiles(target.files);
 							}}
-							disabled={fmState.uploading || isCurrentPathReadOnly}
+							disabled={fmState.uploading || isCurrentPathUploadBlocked}
 							size="sm"
 						/>
 
@@ -221,7 +224,7 @@
 							size="sm"
 							class="w-full"
 							onclick={() => void handleUpload()}
-							disabled={!fmState.uploadFiles?.length || fmState.uploading || isCurrentPathReadOnly}
+							disabled={!fmState.uploadFiles?.length || fmState.uploading || isCurrentPathUploadBlocked}
 							loading={fmState.uploading}
 						>
 							<UploadIcon class="mr-2 h-4 w-4" />

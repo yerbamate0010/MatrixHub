@@ -22,7 +22,7 @@ class UploadSession {
   bool isSuccess() const { return _isSuccess; }
 
  private:
-  void closeFile();
+  bool closeFile();
 
   FS* _fs;
   SYSTEM::PsramString _nativeDirectory;

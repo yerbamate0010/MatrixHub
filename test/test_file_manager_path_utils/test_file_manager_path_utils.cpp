@@ -59,6 +59,21 @@ void test_psram_join_paths_rejects_parent_traversal() {
 	TEST_ASSERT_TRUE(joined.empty());
 }
 
+void test_sanitize_filename_neutralizes_paths_and_parent_segments() {
+	TEST_ASSERT_EQUAL_STRING(
+		"__config_secret.json",
+		FileManagerPathUtils::sanitizeFilename("../config/secret.json").c_str()
+	);
+	TEST_ASSERT_EQUAL_STRING(
+		"evil_name.bin",
+		FileManagerPathUtils::sanitizeFilename("evil\\name.bin").c_str()
+	);
+	TEST_ASSERT_EQUAL_STRING(
+		"upload.bin",
+		FileManagerPathUtils::sanitizeFilename("").c_str()
+	);
+}
+
 void test_registry_translates_littlefs_prefix_after_canonicalization() {
 	StorageBackendRegistry registry(&LittleFS);
 	TEST_ASSERT_EQUAL_STRING(
@@ -124,6 +139,12 @@ void test_access_policy_blocks_uploads_to_log_storage() {
 			FileManagerPathUtils::FileManagerPathAccess::Download
 		)
 	);
+	TEST_ASSERT_TRUE(
+		FileManagerPathUtils::isAccessAllowed(
+			"/data/2026-06/old.bin",
+			FileManagerPathUtils::FileManagerPathAccess::Remove
+		)
+	);
 }
 
 void test_storage_service_psram_translation_matches_registry() {
@@ -153,6 +174,7 @@ void setup() {
 	RUN_TEST(test_canonicalize_rejects_backslashes);
 	RUN_TEST(test_psram_canonicalize_matches_string_contract);
 	RUN_TEST(test_psram_join_paths_rejects_parent_traversal);
+	RUN_TEST(test_sanitize_filename_neutralizes_paths_and_parent_segments);
 	RUN_TEST(test_registry_translates_littlefs_prefix_after_canonicalization);
 	RUN_TEST(test_registry_psram_overloads_match_string_contract);
 	RUN_TEST(test_registry_rejects_sdcard_backend_without_backend_support);
@@ -174,6 +196,7 @@ int main(int argc, char** argv) {
 	RUN_TEST(test_canonicalize_rejects_backslashes);
 	RUN_TEST(test_psram_canonicalize_matches_string_contract);
 	RUN_TEST(test_psram_join_paths_rejects_parent_traversal);
+	RUN_TEST(test_sanitize_filename_neutralizes_paths_and_parent_segments);
 	RUN_TEST(test_registry_translates_littlefs_prefix_after_canonicalization);
 	RUN_TEST(test_registry_psram_overloads_match_string_contract);
 	RUN_TEST(test_registry_rejects_sdcard_backend_without_backend_support);

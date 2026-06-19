@@ -915,52 +915,72 @@
       "method": "GET",
       "path": "/rest/fs/list",
       "auth": "admin",
-      "request": "query dir",
-      "response": "Directory listing JSON",
+      "request": "query dir; canonical absolute directory, traversal rejected",
+      "response": "Directory listing JSON with files[] entries",
       "restartRequired": false,
       "firmware": ["src/api/filemanager/FileManagerApiService.cpp", "src/config/json/ConfigKeys.h"],
       "frontend": ["interface/src/lib/services/fileManager/api.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": [
+        "scripts/contract/verify_api_contract.py",
+        "test/test_file_manager_path_utils/test_file_manager_path_utils.cpp",
+        "interface/src/lib/services/fileManager/api.test.ts"
+      ]
     },
     {
       "id": "fileManager.download",
       "method": "GET",
       "path": "/rest/fs/download",
       "auth": "admin",
-      "request": "query path",
-      "response": "File bytes",
+      "request": "query path; canonical absolute file path, traversal rejected",
+      "response": "File bytes; large /data log files acquire read lease while streaming",
       "restartRequired": false,
       "firmware": ["src/api/filemanager/FileManagerApiService.cpp", "src/config/json/ConfigKeys.h"],
       "frontend": ["interface/src/lib/services/fileManager/api.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": [
+        "scripts/contract/verify_api_contract.py",
+        "test/test_file_manager_path_utils/test_file_manager_path_utils.cpp",
+        "test/test_file_manager_log_protection/test_file_manager_log_protection.cpp",
+        "interface/src/lib/services/fileManager/api.test.ts"
+      ]
     },
     {
       "id": "fileManager.remove",
       "method": "DELETE",
       "path": "/rest/fs/remove",
       "auth": "admin",
-      "request": "query path",
-      "response": "JSON {ok,path}",
+      "request": "query path; /config protected, active /data log path protected",
+      "response": "JSON {ok}",
       "restartRequired": false,
       "firmware": ["src/api/filemanager/FileManagerApiService.cpp", "src/config/json/ConfigKeys.h"],
       "frontend": ["interface/src/lib/services/fileManager/api.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": [
+        "scripts/contract/verify_api_contract.py",
+        "test/test_file_manager_path_utils/test_file_manager_path_utils.cpp",
+        "test/test_file_manager_log_protection/test_file_manager_log_protection.cpp",
+        "interface/src/lib/services/fileManager/utils.test.ts"
+      ]
     },
     {
       "id": "fileManager.upload",
       "method": "POST",
       "path": "/rest/fs/upload",
       "auth": "admin",
-      "request": "multipart upload with query path",
-      "response": "JSON upload status",
+      "request": "multipart upload with query path; /config and /data upload targets forbidden",
+      "response": "JSON upload status; temp file removed on abort or failed finalize",
       "restartRequired": false,
       "firmware": ["src/api/filemanager/FileManagerApiService.cpp", "src/config/json/ConfigKeys.h"],
       "frontend": ["interface/src/lib/services/fileManager/api.ts"],
       "sdk": [],
-      "tests": ["scripts/contract/verify_api_contract.py"]
+      "tests": [
+        "scripts/contract/verify_api_contract.py",
+        "scripts/tests/verify_security.py",
+        "test/test_file_manager_path_utils/test_file_manager_path_utils.cpp",
+        "interface/src/lib/services/fileManager/api.test.ts",
+        "interface/src/lib/services/fileManager/utils.test.ts"
+      ]
     }
   ]
 }

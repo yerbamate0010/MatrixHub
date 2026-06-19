@@ -115,25 +115,34 @@ esp_err_t UploadSession::handleChunk(PsychicRequest* request,
   if (final) {
     {
       SYSTEM::ScopeLock lock(_fsMutex, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
-      if (lock.isLocked()) _currentFile.flush();
+      if (!lock.isLocked()) {
+        LOGW("FS mutex timeout during final upload flush");
+        return ESP_FAIL;
+      }
+      _currentFile.flush();
     }
 
-    closeFile();
+    if (!closeFile()) {
+      return ESP_FAIL;
+    }
 
     // ATOMIC RENAME: Replace .tmp with real file only on full success
     if (!_tmpFilePath.empty() && !_finalFilePath.empty() && _fs) {
         const char* tmpPath = _tmpFilePath.c_str();
         const char* finalPath = _finalFilePath.c_str();
         SYSTEM::ScopeLock lock(_fsMutex, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
-        if (lock.isLocked()) {
-            if (_fs->rename(tmpPath, finalPath)) {
-                _isSuccess = true; // Success! Destructor won't delete the file.
-                UploadHooks::handleFileUploaded(_fs, finalPath, _totalBytesWritten);
-                LOGI("File successfully finalized: %s", finalPath);
-            } else {
-                LOGE("Failed to rename %s to %s", tmpPath, finalPath);
-                return ESP_FAIL;
-            }
+        if (!lock.isLocked()) {
+            LOGW("FS mutex timeout during upload finalize");
+            return ESP_FAIL;
+        }
+
+        if (_fs->rename(tmpPath, finalPath)) {
+            _isSuccess = true; // Success! Destructor won't delete the file.
+            UploadHooks::handleFileUploaded(_fs, finalPath, _totalBytesWritten);
+            LOGI("File successfully finalized: %s", finalPath);
+        } else {
+            LOGE("Failed to rename %s to %s", tmpPath, finalPath);
+            return ESP_FAIL;
         }
     }
   }
@@ -141,7 +150,7 @@ esp_err_t UploadSession::handleChunk(PsychicRequest* request,
   return ESP_OK;
 }
 
-void UploadSession::closeFile() {
+bool UploadSession::closeFile() {
   if (_currentFile) {
     SYSTEM::ScopeLock lock(_fsMutex, pdMS_TO_TICKS(API::FS_MUTEX_TIMEOUT_MS));
     if (lock.isLocked()) {
@@ -149,6 +158,8 @@ void UploadSession::closeFile() {
       _currentFile = File();
     } else {
       LOGW("closeFile: FS mutex timeout");
+      return false;
     }
   }
+  return true;
 }
