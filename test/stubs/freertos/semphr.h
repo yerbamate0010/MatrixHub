@@ -2,6 +2,7 @@
 #include <Arduino.h> // for SemaphoreHandle_t typedef
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <mutex>
 #include <unordered_set>
 
@@ -22,6 +23,19 @@ struct MutexSemaphoreState {
 struct RecursiveMutexSemaphoreState {
     std::recursive_timed_mutex mutex;
 };
+
+inline TickType_t lastSemaphoreTakeTimeout = 0;
+inline uint32_t semaphoreTakeCount = 0;
+
+inline void resetSemaphoreTakeStats() {
+    lastSemaphoreTakeTimeout = 0;
+    semaphoreTakeCount = 0;
+}
+
+inline void recordSemaphoreTake(TickType_t timeout) {
+    lastSemaphoreTakeTimeout = timeout;
+    semaphoreTakeCount++;
+}
 
 inline std::unordered_set<SemaphoreHandle_t>& binarySemaphores() {
     static std::unordered_set<SemaphoreHandle_t> handles;
@@ -55,6 +69,7 @@ inline std::chrono::milliseconds toDuration(TickType_t ticks) {
 }
 
 inline void resetSemaphoreStubs() {
+    resetSemaphoreTakeStats();
     for (SemaphoreHandle_t handle : binarySemaphores()) {
         delete static_cast<BinarySemaphoreState*>(handle);
     }
@@ -83,6 +98,7 @@ inline SemaphoreHandle_t xSemaphoreCreateMutexStatic(StaticSemaphore_t* buffer) 
 }
 
 inline int xSemaphoreTake(SemaphoreHandle_t s, uint32_t t) {
+    TEST_STUBS::FREERTOS::recordSemaphoreTake(t);
     if (!TEST_STUBS::FREERTOS::isBinarySemaphoreHandle(s)) {
         if (TEST_STUBS::FREERTOS::isMutexSemaphoreHandle(s)) {
             auto* state = static_cast<TEST_STUBS::FREERTOS::MutexSemaphoreState*>(s);
@@ -178,6 +194,7 @@ inline int xSemaphoreTakeRecursive(SemaphoreHandle_t s, uint32_t t) {
         return xSemaphoreTake(s, t);
     }
 
+    TEST_STUBS::FREERTOS::recordSemaphoreTake(t);
     auto* state = static_cast<TEST_STUBS::FREERTOS::RecursiveMutexSemaphoreState*>(s);
     if (t == portMAX_DELAY) {
         state->mutex.lock();

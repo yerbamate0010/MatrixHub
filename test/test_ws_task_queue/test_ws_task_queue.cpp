@@ -97,6 +97,27 @@ void test_enqueue_queue_full_releases_pool_slot() {
     TEST_ASSERT_TRUE(queue.disable());
 }
 
+void test_enqueue_uses_brief_lifecycle_lock_wait() {
+    WsPayloadPool pool("test");
+    TEST_ASSERT_TRUE(pool.init(1, 16));
+
+    WsTaskQueue queue("test", [](WsMessage&) {}, &pool);
+    queue.enable(2, 4096);
+
+    uint8_t* slot = nullptr;
+    int16_t slotIndex = -1;
+    TEST_ASSERT_TRUE(pool.acquireSlot(8, &slot, &slotIndex));
+
+    TEST_STUBS::FREERTOS::resetSemaphoreTakeStats();
+    WsMessage msg = {slot, 8, HTTPD_WS_TYPE_BINARY, false, slotIndex, {0}, 0};
+    TEST_ASSERT_TRUE(queue.enqueue(msg));
+    TEST_ASSERT_EQUAL(pdMS_TO_TICKS(50), TEST_STUBS::FREERTOS::lastSemaphoreTakeTimeout);
+    TEST_ASSERT_EQUAL_UINT32(1, TEST_STUBS::FREERTOS::semaphoreTakeCount);
+
+    TEST_STUBS::FREERTOS::taskState = eSuspended;
+    TEST_ASSERT_TRUE(queue.disable());
+}
+
 void test_disable_drains_pending_messages_and_releases_slot() {
     WsPayloadPool pool("test");
     TEST_ASSERT_TRUE(pool.init(1, 16));
@@ -164,6 +185,7 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_enable_uses_configured_ws_priority_and_core);
     RUN_TEST(test_enqueue_queue_full_releases_pool_slot);
+    RUN_TEST(test_enqueue_uses_brief_lifecycle_lock_wait);
     RUN_TEST(test_disable_drains_pending_messages_and_releases_slot);
     RUN_TEST(test_broadcast_task_processes_message_and_releases_resources);
     return UNITY_END();

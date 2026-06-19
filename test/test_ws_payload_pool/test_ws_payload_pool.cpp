@@ -66,6 +66,18 @@ void test_pool_rejects_oversized_payload() {
     TEST_ASSERT_FALSE(pool.acquireSlot(9, &slot, &idx));
 }
 
+void test_pool_acquire_uses_brief_lock_wait() {
+    WsPayloadPool pool("test");
+    TEST_ASSERT_TRUE(pool.init(1, 16));
+
+    uint8_t* slot = nullptr;
+    int16_t idx = -1;
+    TEST_STUBS::FREERTOS::resetSemaphoreTakeStats();
+    TEST_ASSERT_TRUE(pool.acquireSlot(8, &slot, &idx));
+    TEST_ASSERT_EQUAL(pdMS_TO_TICKS(10), TEST_STUBS::FREERTOS::lastSemaphoreTakeTimeout);
+    TEST_ASSERT_EQUAL_UINT32(1, TEST_STUBS::FREERTOS::semaphoreTakeCount);
+}
+
 void test_release_message_resources_returns_slot_to_pool() {
     WsPayloadPool pool("test");
     TEST_ASSERT_TRUE(pool.init(1, 16));
@@ -90,6 +102,7 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_pool_acquire_release_and_reuse_slot);
     RUN_TEST(test_pool_rejects_oversized_payload);
+    RUN_TEST(test_pool_acquire_uses_brief_lock_wait);
     RUN_TEST(test_release_message_resources_returns_slot_to_pool);
     return UNITY_END();
 }

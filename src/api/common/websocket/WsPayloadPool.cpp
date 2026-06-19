@@ -13,6 +13,7 @@ namespace API {
 namespace WEBSOCKET {
 
 namespace {
+constexpr TickType_t kPayloadAcquireLockTimeout = pdMS_TO_TICKS(10);
 constexpr TickType_t kPayloadPoolLockTimeout = pdMS_TO_TICKS(100);
 }
 
@@ -80,7 +81,7 @@ bool WsPayloadPool::acquireSlot(size_t len, uint8_t** slotPtr, int16_t* slotInde
         return false;
     }
 
-    SYSTEM::ScopeLock lock(_lock, 0); // No block
+    SYSTEM::ScopeLock lock(_lock, kPayloadAcquireLockTimeout);
     if (!lock.isLocked()) {
         logDrop("payload pool lock busy", len);
         return false;

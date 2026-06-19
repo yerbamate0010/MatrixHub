@@ -10,6 +10,7 @@
 namespace {
 
 constexpr TickType_t kLifecycleLockTimeout = pdMS_TO_TICKS(1000);
+constexpr TickType_t kEnqueueLockTimeout = pdMS_TO_TICKS(50);
 
 bool waitForTaskSuspended(TaskHandle_t taskHandle, SemaphoreHandle_t cleanupSem, TickType_t waitTicks) {
     if (taskHandle == nullptr) {
@@ -77,7 +78,7 @@ bool WsTaskQueue::isEnabled() const {
 }
 
 bool WsTaskQueue::enqueue(const WsMessage& msg) {
-    SYSTEM::ScopeLock queueLock(_lifecycleLock, 0);
+    SYSTEM::ScopeLock queueLock(_lifecycleLock, kEnqueueLockTimeout);
     if (!queueLock.isLocked()) {
         if (_pool) {
             _pool->releaseMessageResources(msg);
