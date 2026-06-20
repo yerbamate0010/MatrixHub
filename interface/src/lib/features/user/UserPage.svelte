@@ -3,6 +3,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { Spinner } from '$lib/components';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { FormInput, FormButton } from '$lib/components/shared/forms';
 	import UserListItem from './components/UserListItem.svelte';
 	import { useUserManagement } from './useUserManagement.svelte';
@@ -10,7 +11,6 @@
 	import AddUser from '~icons/tabler/user-plus';
 	import Users from '~icons/tabler/users';
 	import Lock from '~icons/tabler/lock';
-	import Save from '~icons/tabler/device-floppy';
 	import Warning from '~icons/tabler/alert-triangle';
 	import Magic from '~icons/tabler/wand';
 	import { i18n } from '$lib/i18n.svelte';
@@ -61,7 +61,15 @@
 			{/if}
 		</BaseCard>
 
-		<BaseCard title={m.user_security_title({ locale: i18n.languageTag })} icon={Lock}>
+		<SettingsCard
+			title={m.user_security_title({ locale: i18n.languageTag })}
+			icon={Lock}
+			hasChanges={userManagement.isDirty}
+			loading={managementState.isLoading}
+			saving={managementState.isSaving}
+			onSave={() => userManagement.saveSettings(managementState.securitySettings)}
+			dirtySourceId="user-security-settings"
+		>
 			{#if managementState.isLoading}
 				<div class="flex justify-center items-center py-8">
 					<Spinner />
@@ -98,16 +106,7 @@
 						</ContentBox>
 					</ContentBox>
 				</div>
-				<div class="mt-4 flex justify-end">
-					<FormButton
-						label={m.action_save({ locale: i18n.languageTag })}
-						icon={Save}
-						onclick={() => userManagement.saveSettings(managementState.securitySettings)}
-						loading={managementState.isSaving}
-						disabled={!userManagement.isDirty}
-					/>
-				</div>
 			{/if}
-		</BaseCard>
+		</SettingsCard>
 	</GridLayout>
 </PageWrapper>

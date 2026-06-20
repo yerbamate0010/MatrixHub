@@ -1,5 +1,5 @@
 <script lang="ts">
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import type {
 		CsiAlarmBand,
 		CsiAlarmSettings,
@@ -8,10 +8,8 @@
 	import Bell from '~icons/tabler/bell-ringing';
 	import Plus from '~icons/tabler/plus';
 	import Refresh from '~icons/tabler/refresh';
-	import Save from '~icons/tabler/device-floppy';
 	import Target from '~icons/tabler/target';
 	import Trash from '~icons/tabler/trash';
-	import X from '~icons/tabler/x';
 	import * as m from '$lib/paraglide/messages.js';
 
 	interface Props {
@@ -90,7 +88,16 @@
 	}
 </script>
 
-<BaseCard title={m.csi_alarm_title()} icon={Bell}>
+<SettingsCard
+	title={m.csi_alarm_title()}
+	icon={Bell}
+	{hasChanges}
+	{saving}
+	disabled={!isAdmin}
+	{onSave}
+	{onReset}
+	dirtySourceId="csi-alarm-settings"
+>
 	{#snippet actions()}
 		<div class="flex items-center gap-2">
 			<div class="badge badge-sm {stateClass}">{stateLabel}</div>
@@ -337,25 +344,4 @@
 			</label>
 		</div>
 	</details>
-
-	<div class="mt-4 flex flex-wrap justify-end gap-2">
-		<button
-			type="button"
-			class="btn btn-sm btn-ghost"
-			disabled={!isAdmin || !hasChanges || saving}
-			onclick={onReset}
-		>
-			<X class="h-4 w-4" />
-			{m.alarms_form_cancel()}
-		</button>
-		<button
-			type="button"
-			class="btn btn-sm btn-primary"
-			disabled={!isAdmin || !hasChanges || saving}
-			onclick={onSave}
-		>
-			<Save class="h-4 w-4" />
-			{saving ? m.common_loading() : m.csi_alarm_save()}
-		</button>
-	</div>
-</BaseCard>
+</SettingsCard>

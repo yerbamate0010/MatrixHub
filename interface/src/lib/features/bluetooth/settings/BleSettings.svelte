@@ -2,10 +2,9 @@
 	import { Spinner } from '$lib/components';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormToggle, FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle } from '$lib/components/shared/forms';
 	import Settings from '~icons/tabler/settings';
-	import Save from '~icons/tabler/device-floppy';
 	import type { BleSettings } from '$lib/types/connectivity/ble';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
@@ -47,7 +46,14 @@
 	]);
 </script>
 
-<BaseCard title={m.ble_settings_title({ locale: i18n.languageTag })} icon={Settings}>
+<SettingsCard
+	title={m.ble_settings_title({ locale: i18n.languageTag })}
+	icon={Settings}
+	{hasChanges}
+	{saving}
+	onSave={savedSettings ? onSave : undefined}
+	dirtySourceId="ble-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton label={m.ble_help_title({ locale })} onclick={() => (helpOpen = true)} />
 	{/snippet}
@@ -59,16 +65,6 @@
 				description={scannerDesc}
 				bind:checked={localEnabled}
 			/>
-
-			<div class="flex justify-end mt-1">
-				<FormButton
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					disabled={!hasChanges}
-					loading={saving}
-					onclick={onSave}
-				/>
-			</div>
 		</div>
 	{:else}
 		<div class="flex justify-center items-center py-8">
@@ -84,4 +80,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

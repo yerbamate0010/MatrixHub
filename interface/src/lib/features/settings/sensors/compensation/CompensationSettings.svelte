@@ -1,19 +1,17 @@
 <script lang="ts">
 	import Temperature from '~icons/tabler/temperature';
-	import Save from '~icons/tabler/device-floppy';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { useSystemStatusReadModel } from '$lib/features/system/status/useSystemStatusReadModel.svelte';
 	import { Spinner } from '$lib/components';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormRange, FormButton, FormToggle } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormRange, FormToggle } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 
-	let { compState, showSaveButton = true } = $props<{
+	let { compState } = $props<{
 		compState: ReturnType<
 			typeof import('./useCompensationSettings.svelte').useCompensationSettings
 		>;
-		showSaveButton?: boolean;
 	}>();
 
 	const statusModel = useSystemStatusReadModel();
@@ -23,9 +21,22 @@
 		event.preventDefault();
 		void compState.saveSettings();
 	}
+
+	function handleSave() {
+		void compState.saveSettings();
+	}
 </script>
 
-<BaseCard title={m.comp_title({ locale: i18n.languageTag })} icon={Temperature} class="h-full">
+<SettingsCard
+	title={m.comp_title({ locale: i18n.languageTag })}
+	icon={Temperature}
+	class="h-full"
+	hasChanges={compState.hasChanges}
+	loading={compState.loading}
+	saving={compState.saving}
+	onSave={handleSave}
+	dirtySourceId="compensation-settings"
+>
 	{#if compState.loading}
 		<div class="flex justify-center items-center py-8">
 			<Spinner />
@@ -105,18 +116,6 @@
 					suffix="°C"
 				/>
 			</ContentBox>
-
-			{#if showSaveButton}
-				<div class="mt-auto flex justify-end pt-4">
-					<FormButton
-						type="submit"
-						label={m.action_save({ locale: i18n.languageTag })}
-						icon={Save}
-						loading={compState.saving}
-						disabled={!compState.hasChanges || compState.saving}
-					/>
-				</div>
-			{/if}
 		</form>
 	{/if}
-</BaseCard>
+</SettingsCard>

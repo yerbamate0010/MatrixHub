@@ -1,13 +1,12 @@
 <script lang="ts">
 	import Network from '~icons/tabler/network';
-	import Save from '~icons/tabler/device-floppy';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { Spinner } from '$lib/components';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormToggle, FormInput, FormSelect, FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle, FormInput, FormSelect } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 
 	let { udpState } = $props<{
@@ -16,6 +15,10 @@
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
+		udpState.saveSettings();
+	}
+
+	function handleSave() {
 		udpState.saveSettings();
 	}
 
@@ -72,7 +75,15 @@
 	]);
 </script>
 
-<BaseCard title={m.udp_title({ locale: i18n.languageTag })} icon={Network}>
+<SettingsCard
+	title={m.udp_title({ locale: i18n.languageTag })}
+	icon={Network}
+	hasChanges={udpState.hasChanges}
+	loading={udpState.loading}
+	saving={udpState.saving}
+	onSave={handleSave}
+	dirtySourceId="udp-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton label={m.udp_help_title({ locale })} onclick={() => (helpOpen = true)} />
 	{/snippet}
@@ -147,16 +158,6 @@
 					onchange={(e) => udpState.setInterval(Number((e.target as HTMLSelectElement).value))}
 				/>
 			</ContentBox>
-
-			<div class="flex justify-end mt-4">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					loading={udpState.saving}
-					disabled={!udpState.hasChanges}
-				/>
-			</div>
 		</form>
 	{/if}
 
@@ -168,4 +169,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

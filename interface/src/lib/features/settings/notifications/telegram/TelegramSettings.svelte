@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { Spinner } from '$lib/components';
 	import Telegram from '~icons/tabler/brand-telegram';
-	import Save from '~icons/tabler/device-floppy';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -59,7 +57,15 @@
 	});
 </script>
 
-<BaseCard title={m.telegram_title({ locale: i18n.languageTag })} icon={Telegram}>
+<SettingsCard
+	title={m.telegram_title({ locale: i18n.languageTag })}
+	icon={Telegram}
+	hasChanges={telegramState.hasChanges}
+	loading={telegramState.loading}
+	saving={telegramState.saving}
+	onSave={handleSubmit}
+	dirtySourceId="telegram-settings"
+>
 	{#if telegramState.loading}
 		<div class="flex justify-center items-center py-8">
 			<Spinner />
@@ -81,17 +87,7 @@
 				/>
 
 				<TelegramInstructions />
-
-				<div class="flex justify-end mt-4">
-					<FormButton
-						type="submit"
-						label={m.action_save({ locale: i18n.languageTag })}
-						icon={Save}
-						loading={telegramState.saving}
-						disabled={!telegramState.hasChanges}
-					/>
-				</div>
 			</form>
 		</div>
 	{/if}
-</BaseCard>
+</SettingsCard>

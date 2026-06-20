@@ -1,5 +1,4 @@
 <script lang="ts">
-	import DeviceFloppy from '~icons/tabler/device-floppy';
 	import Activity from '~icons/tabler/activity';
 	import Copy from '~icons/tabler/copy';
 	import PlayerPause from '~icons/tabler/player-pause';
@@ -7,7 +6,7 @@
 	import Trash from '~icons/tabler/trash';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { FormSelect, FormButton } from '$lib/components/shared/forms';
 	import { useLiveTailManagement } from './useLiveTailManagement.svelte';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
@@ -61,9 +60,14 @@
 </script>
 
 {#if isAdmin}
-	<BaseCard
+	<SettingsCard
 		title={`${m.livetail_card_title({ locale: i18n.languageTag })} ${m.livetail_admin_suffix({ locale: i18n.languageTag })}`}
 		icon={Activity}
+		hasChanges={liveTail.isDirty}
+		loading={!liveTail.isLoggingConfigLoaded}
+		saving={liveTail.savingConfig}
+		onSave={liveTail.saveLoggingSettings}
+		dirtySourceId="live-tail-settings"
 	>
 		{#snippet actions()}
 			<div class="flex gap-1">
@@ -131,7 +135,7 @@
 			<div class="shrink-0">
 				<div class="divider my-2">{m.livetail_settings_title({ locale: i18n.languageTag })}</div>
 
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-2 items-end">
 					<div class="form-control">
 						<FormSelect
 							id="log-level"
@@ -158,18 +162,8 @@
 							{m.livetail_fixed({ locale: i18n.languageTag })}
 						</div>
 					</div>
-
-					<div class="flex justify-end gap-2">
-						<FormButton
-							label={m.action_save({ locale: i18n.languageTag })}
-							icon={DeviceFloppy}
-							loading={liveTail.savingConfig}
-							disabled={!liveTail.isLoggingConfigLoaded || !liveTail.isDirty}
-							onclick={() => liveTail.saveLoggingSettings()}
-						/>
-					</div>
 				</div>
 			</div>
 		</div>
-	</BaseCard>
+	</SettingsCard>
 {/if}

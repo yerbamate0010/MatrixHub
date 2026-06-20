@@ -3,9 +3,8 @@
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
 	import Message from '~icons/tabler/message';
-	import Save from '~icons/tabler/device-floppy';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton, FormToggle } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle } from '$lib/components/shared/forms';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -17,6 +16,11 @@
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
+		if (!pushoverState.hasChanges) return;
+		pushoverState.saveSettings();
+	}
+
+	function handleSave() {
 		if (!pushoverState.hasChanges) return;
 		pushoverState.saveSettings();
 	}
@@ -43,7 +47,15 @@
 	]);
 </script>
 
-<BaseCard title={m.pushover_title({ locale: i18n.languageTag })} icon={Message}>
+<SettingsCard
+	title={m.pushover_title({ locale: i18n.languageTag })}
+	icon={Message}
+	hasChanges={pushoverState.hasChanges}
+	loading={pushoverState.loading}
+	saving={pushoverState.saving}
+	onSave={handleSave}
+	dirtySourceId="pushover-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton
 			label={m.pushover_help_title({ locale })}
@@ -74,16 +86,6 @@
 				updateSetting={pushoverState.updateSetting}
 				errors={pushoverState.errors}
 			/>
-
-			<div class="flex justify-end mt-2">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					loading={pushoverState.saving}
-					disabled={!pushoverState.hasChanges}
-				/>
-			</div>
 		</form>
 	{/if}
 
@@ -95,4 +97,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

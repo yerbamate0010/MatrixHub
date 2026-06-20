@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { FormButton, FormInput, FormSelect, FormToggle } from '$lib/components/shared/forms';
 	import { CardHeader } from '$lib/components/common';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
@@ -8,7 +9,6 @@
 	import Settings from '~icons/tabler/settings';
 	import Plus from '~icons/tabler/plus';
 	import Help from '~icons/tabler/help'; // Help Icon
-	import DeviceFloppy from '~icons/tabler/device-floppy';
 	import InfoCircle from '~icons/tabler/info-circle';
 	import * as m from '$lib/paraglide/messages.js';
 	import MacroList from './MacroList.svelte';
@@ -78,7 +78,16 @@
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 		<!-- Settings (Mobile: 1st, Desktop: 2nd) -->
 		<div class="order-1 md:order-2 h-full">
-			<BaseCard title={m.settings_title()} icon={Settings} class="h-full" hideTitleOnTiny={false}>
+			<SettingsCard
+				title={m.settings_title()}
+				icon={Settings}
+				class="h-full"
+				hideTitleOnTiny={false}
+				hasChanges={controller.hasSettingsChanges}
+				saving={controller.settingsSaving}
+				onSave={controller.confirmSaveSettings}
+				dirtySourceId="macro-settings"
+			>
 				<div class="flex flex-col gap-1 h-full" in:fade>
 					<FormToggle
 						label={m.macros_enabled_aria()}
@@ -112,19 +121,8 @@
 							disabled={localSettings.boot_script === '' || controller.settingsSaving}
 						/>
 					</ContentBox>
-
-					<div class="flex justify-end mt-auto pt-2">
-						<FormButton
-							variant="primary"
-							label={m.action_save()}
-							icon={DeviceFloppy}
-							onclick={controller.confirmSaveSettings}
-							disabled={controller.settingsSaving || !controller.hasSettingsChanges}
-							loading={controller.settingsSaving}
-						/>
-					</div>
 				</div>
-			</BaseCard>
+			</SettingsCard>
 		</div>
 
 		<!-- Macros (Mobile: 2nd, Desktop: 1st) -->

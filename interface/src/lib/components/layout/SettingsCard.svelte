@@ -7,6 +7,7 @@
 	import BaseCard from './BaseCard.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
 	import { unsavedChanges } from '$lib/stores/unsavedChanges.svelte';
+	import { formVariants } from '$lib/styles/design-system';
 	import * as m from '$lib/paraglide/messages.js';
 	import ArrowBackUp from '~icons/tabler/arrow-back-up';
 	import DeviceFloppy from '~icons/tabler/device-floppy';
@@ -15,6 +16,7 @@
 		title = undefined,
 		icon: Icon = undefined,
 		iconClass = 'w-6 h-6',
+		actions = undefined,
 		children = undefined,
 		class: className = '',
 		bleed = false,
@@ -27,12 +29,13 @@
 		onSave = undefined,
 		onReset = undefined,
 		dirtySourceId = undefined,
-		saveLabel = m.action_save(),
-		discardLabel = m.action_discard()
+		saveLabel = undefined,
+		discardLabel = undefined
 	}: {
 		title?: string;
 		icon?: Component;
 		iconClass?: string;
+		actions?: Snippet;
 		children?: Snippet;
 		class?: string;
 		bleed?: boolean;
@@ -86,35 +89,39 @@
 	}
 </script>
 
-<BaseCard {title} icon={Icon} {iconClass} class={className} {bleed} {hideTitleOnTiny}>
-	{@render children?.()}
-
-	{#if error}
-		<p class="sr-only" aria-live="assertive">{error}</p>
-	{/if}
-
-	{#if showActions}
-		<div class="mt-4 flex justify-end gap-2 px-1">
-			{#if onReset}
-				<FormButton
-					variant="ghost"
-					size="sm"
-					icon={ArrowBackUp}
-					ariaLabel={discardLabel}
-					title={discardLabel}
-					disabled={resetDisabled}
-					onclick={handleReset}
-				/>
-			{/if}
-			{#if onSave}
-				<FormButton
-					onclick={handleSave}
-					disabled={saveDisabled}
-					loading={saving || saveInFlight}
-					label={saveLabel}
-					icon={DeviceFloppy}
-				/>
-			{/if}
+<BaseCard {title} icon={Icon} {iconClass} {actions} class={className} {bleed} {hideTitleOnTiny}>
+	<div class="flex h-full min-h-0 flex-col">
+		<div class="min-w-0">
+			{@render children?.()}
 		</div>
-	{/if}
+
+		{#if error}
+			<p class="sr-only" aria-live="assertive">{error}</p>
+		{/if}
+
+		{#if showActions}
+			<div class={`${formVariants.actions} px-1`}>
+				{#if onReset}
+					<FormButton
+						variant="ghost"
+						size="sm"
+						icon={ArrowBackUp}
+						ariaLabel={discardLabel ?? m.action_discard()}
+						title={discardLabel ?? m.action_discard()}
+						disabled={resetDisabled}
+						onclick={handleReset}
+					/>
+				{/if}
+				{#if onSave}
+					<FormButton
+						onclick={handleSave}
+						disabled={saveDisabled}
+						loading={saving || saveInFlight}
+						label={saveLabel ?? m.action_save()}
+						icon={DeviceFloppy}
+					/>
+				{/if}
+			</div>
+		{/if}
+	</div>
 </BaseCard>

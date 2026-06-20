@@ -2,8 +2,8 @@
 	import { Spinner } from '$lib/components';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormToggle, FormButton, FormInput } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle, FormInput } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import StatusRow from '$lib/components/layout/StatusRow.svelte';
 	import { slide } from 'svelte/transition';
@@ -11,7 +11,6 @@
 	import PowerIcon from '~icons/tabler/power';
 	import Timer from '~icons/tabler/hourglass';
 	import Interval from '~icons/tabler/repeat';
-	import Save from '~icons/tabler/device-floppy';
 	import Cpu from '~icons/tabler/cpu';
 	import Thermometer from '~icons/tabler/temperature';
 	import type { PowerStatus } from '$lib/types/system/power';
@@ -130,6 +129,10 @@
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
+		handleSave();
+	}
+
+	function handleSave() {
 		clampInactivityOnBlur();
 		clampGraceOnBlur();
 		onSave();
@@ -186,7 +189,16 @@
 	const helpLinks = $derived(createFeatureLinks(powerHelpLinkIds, locale));
 </script>
 
-<BaseCard title={m.power_config_title({ locale: i18n.languageTag })} icon={PowerIcon}>
+<SettingsCard
+	title={m.power_config_title({ locale: i18n.languageTag })}
+	icon={PowerIcon}
+	{hasChanges}
+	{loading}
+	{saving}
+	disabled={hasValidationErrors}
+	onSave={!loading && !error && status ? handleSave : undefined}
+	dirtySourceId="power-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton label={m.power_help_title({ locale })} onclick={() => (helpOpen = true)} />
 	{/snippet}
@@ -325,15 +337,6 @@
 					valueClass="text-sm text-warning font-semibold"
 				/>
 			{/if}
-			<div class="flex justify-end mt-4">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					disabled={!hasChanges || saving || hasValidationErrors}
-					loading={saving}
-				/>
-			</div>
 		</form>
 	{/if}
 
@@ -345,4 +348,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

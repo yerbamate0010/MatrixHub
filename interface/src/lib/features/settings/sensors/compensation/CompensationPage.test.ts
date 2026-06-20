@@ -267,23 +267,22 @@ describe('CompensationPage', () => {
 		expect(screen.queryByText('Live Preview')).toBeNull();
 	});
 
-	it('shows save only in the preview card on desktop when both cards are visible', async () => {
+	it('shows save in both cards when both cards are visible', async () => {
 		mockPageCompState.loading = false;
 		mockPageCompState.canPreview = true;
-		setViewportWidth(1024);
 
 		render(CompensationPage);
 
 		expect(
-			within(getCardByTitle('Compensation Settings')).queryByRole('button', { name: 'Save' })
-		).toBeNull();
+			within(getCardByTitle('Compensation Settings')).getByRole('button', { name: 'Save' })
+		).toBeTruthy();
 		expect(
 			within(getCardByTitle('Live Preview')).getByRole('button', { name: 'Save' })
 		).toBeTruthy();
-		expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(1);
+		expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(2);
 	});
 
-	it('shows save in both cards on mobile when cards stack vertically', async () => {
+	it('keeps save placement independent from viewport width', async () => {
 		mockPageCompState.loading = false;
 		mockPageCompState.canPreview = true;
 		setViewportWidth(390);
@@ -351,8 +350,7 @@ describe('CompensationPage', () => {
 
 		render(CompensationPreview, {
 			props: {
-				compState: compState as unknown as CompensationState,
-				showSaveButton: true
+				compState: compState as unknown as CompensationState
 			}
 		});
 

@@ -13,11 +13,10 @@
 	import ArrowUp from '~icons/tabler/arrow-up';
 	import ArrowDown from '~icons/tabler/arrow-down';
 	import Scan from '~icons/tabler/radar-2';
-	import Save from '~icons/tabler/device-floppy';
 	import AlertTriangle from '~icons/tabler/alert-triangle';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
 	import StatusRow from '$lib/components/layout/StatusRow.svelte';
 
@@ -60,10 +59,14 @@
 	);
 </script>
 
-<BaseCard
+<SettingsCard
 	title={m.wifi_sta_saved_networks({ locale: i18n.languageTag })}
 	icon={Router}
 	class="h-full"
+	hasChanges={isDirty}
+	disabled={saveBlocked}
+	onSave={onApply}
+	dirtySourceId="wifi-saved-networks"
 >
 	{#snippet actions()}
 		<div class="flex gap-x-2">
@@ -190,15 +193,5 @@
 				</div>
 			{/if}
 		</div>
-
-		<div class="mt-4 flex justify-end">
-			<FormButton
-				label={m.action_save({ locale: i18n.languageTag })}
-				icon={Save}
-				type="button"
-				disabled={!isDirty || saveBlocked}
-				onclick={onApply}
-			/>
-		</div>
 	</div>
-</BaseCard>
+</SettingsCard>

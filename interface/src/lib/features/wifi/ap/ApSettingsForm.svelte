@@ -2,8 +2,8 @@
 	import { Spinner } from '$lib/components';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormInput, FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormInput } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import type { ApSettings } from '$lib/types/connectivity/ap';
 	import {
@@ -17,7 +17,6 @@
 
 	// Icons
 	import AP from '~icons/tabler/access-point';
-	import Save from '~icons/tabler/device-floppy';
 
 	interface Props {
 		settings: ApSettings | null;
@@ -72,7 +71,14 @@
 	]);
 </script>
 
-<BaseCard title={m.ap_settings_title({ locale: i18n.languageTag })} icon={AP}>
+<SettingsCard
+	title={m.ap_settings_title({ locale: i18n.languageTag })}
+	icon={AP}
+	hasChanges={isDirty}
+	loading={loading || !settings}
+	onSave={settings ? validateAndSubmit : undefined}
+	dirtySourceId="wifi-ap-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton label={m.wifi_ap_help_title({ locale })} onclick={() => (helpOpen = true)} />
 	{/snippet}
@@ -147,15 +153,6 @@
 				<ApNetworkFields bind:settings errors={formErrors} />
 			</div>
 		</form>
-
-		<div class="mt-4 flex justify-end">
-			<FormButton
-				label={m.action_save({ locale: i18n.languageTag })}
-				icon={Save}
-				onclick={validateAndSubmit}
-				disabled={!isDirty}
-			/>
-		</div>
 	{/if}
 
 	<FeatureHelpModal
@@ -166,4 +163,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

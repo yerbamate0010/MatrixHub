@@ -7,12 +7,12 @@
 	import Mouse from '~icons/tabler/mouse';
 	import Rotate from '~icons/tabler/rotate-clockwise';
 	import Target from '~icons/tabler/target';
-	import Save from '~icons/tabler/device-floppy';
 	import Refresh from '~icons/tabler/refresh';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { AdminAccessGate, GridLayout } from '$lib/components/layout';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import StatusRow from '$lib/components/layout/StatusRow.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { Spinner } from '$lib/components';
@@ -82,7 +82,8 @@
 	}
 
 	function enabledLabel(value: boolean | null | undefined) {
-		if (value === null || value === undefined) return m.imu_state_unknown({ locale: i18n.languageTag });
+		if (value === null || value === undefined)
+			return m.imu_state_unknown({ locale: i18n.languageTag });
 		return value
 			? m.imu_state_enabled({ locale: i18n.languageTag })
 			: m.imu_state_disabled({ locale: i18n.languageTag });
@@ -194,31 +195,47 @@
 					<ContentBox>
 						<div class="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
 							<div>
-								<div class="text-xs opacity-60">{m.imu_alarm_state({ locale: i18n.languageTag })}</div>
-								<div class={alarm?.triggered ? 'font-semibold text-error' : 'font-semibold text-success'}>
+								<div class="text-xs opacity-60">
+									{m.imu_alarm_state({ locale: i18n.languageTag })}
+								</div>
+								<div
+									class={alarm?.triggered
+										? 'font-semibold text-error'
+										: 'font-semibold text-success'}
+								>
 									{alarm?.triggered
 										? m.imu_alarm_triggered({ locale: i18n.languageTag })
 										: m.imu_alarm_clear({ locale: i18n.languageTag })}
 								</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">{m.imu_alarm_reason({ locale: i18n.languageTag })}</div>
+								<div class="text-xs opacity-60">
+									{m.imu_alarm_reason({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{alarmReasonLabel(alarm?.reason)}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">{m.imu_current_tilt({ locale: i18n.languageTag })}</div>
+								<div class="text-xs opacity-60">
+									{m.imu_current_tilt({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(alarm?.tilt_deg, 1, '°')}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">{m.imu_current_accel_delta({ locale: i18n.languageTag })}</div>
+								<div class="text-xs opacity-60">
+									{m.imu_current_accel_delta({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(alarm?.accel_delta_g, 3, ' g')}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">{m.imu_alarm_trigger_hold({ locale: i18n.languageTag })}</div>
+								<div class="text-xs opacity-60">
+									{m.imu_alarm_trigger_hold({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{alarm?.trigger_hold_elapsed_ms ?? 0} ms</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">{m.imu_alarm_clear_hold({ locale: i18n.languageTag })}</div>
+								<div class="text-xs opacity-60">
+									{m.imu_alarm_clear_hold({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{alarm?.clear_hold_elapsed_ms ?? 0} ms</div>
 							</div>
 						</div>
@@ -274,7 +291,17 @@
 			</div>
 		</BaseCard>
 
-		<BaseCard title={m.imu_settings({ locale: i18n.languageTag })} icon={Gauge} class="h-full">
+		<SettingsCard
+			title={m.imu_settings({ locale: i18n.languageTag })}
+			icon={Gauge}
+			class="h-full"
+			hasChanges={imu.hasChanges}
+			loading={imu.loading}
+			saving={imu.saving}
+			onSave={imu.saveSettings}
+			onReset={imu.resetSettings}
+			dirtySourceId="imu-settings"
+		>
 			{#if imu.loading}
 				<div class="flex items-center justify-center py-8">
 					<Spinner />
@@ -299,7 +326,10 @@
 						description={m.imu_alarm_monitor_desc({ locale: i18n.languageTag })}
 						checked={imu.settings.alarm_monitor_enabled}
 						onchange={(event) =>
-							imu.updateSetting('alarm_monitor_enabled', (event.target as HTMLInputElement).checked)}
+							imu.updateSetting(
+								'alarm_monitor_enabled',
+								(event.target as HTMLInputElement).checked
+							)}
 					/>
 					<ContentBox>
 						<FormRange
@@ -356,26 +386,9 @@
 							suffix="ms"
 						/>
 					</ContentBox>
-					<div class="flex justify-end gap-2 pt-2">
-						<FormButton
-							variant="ghost"
-							icon={Refresh}
-							ariaLabel={m.action_discard({ locale: i18n.languageTag })}
-							title={m.action_discard({ locale: i18n.languageTag })}
-							disabled={!imu.hasChanges || imu.saving}
-							onclick={imu.resetSettings}
-						/>
-						<FormButton
-							type="submit"
-							icon={Save}
-							label={m.action_save({ locale: i18n.languageTag })}
-							loading={imu.saving}
-							disabled={!imu.hasChanges || imu.saving}
-						/>
-					</div>
 				</form>
 			{/if}
-		</BaseCard>
+		</SettingsCard>
 
 		<BaseCard title={m.imu_calibration({ locale: i18n.languageTag })} icon={Target} class="h-full">
 			<div class="space-y-2">

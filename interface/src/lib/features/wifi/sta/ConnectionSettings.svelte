@@ -1,10 +1,9 @@
 <script lang="ts">
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
-	import Save from '~icons/tabler/device-floppy';
 	import Settings from '~icons/tabler/settings';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton, FormInput, FormSelect } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormInput, FormSelect } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { WifiHostnameSchema } from '$lib/features/wifi/wifiValidation';
 	import { i18n } from '$lib/i18n.svelte';
@@ -105,10 +104,14 @@
 	]);
 </script>
 
-<BaseCard
+<SettingsCard
 	title={m.wifi_connection_title({ locale: i18n.languageTag })}
 	icon={Settings}
 	class="h-full"
+	hasChanges={isDirty}
+	disabled={saveBlocked}
+	onSave={onApply}
+	dirtySourceId="wifi-connection-settings"
 >
 	{#snippet actions()}
 		<HelpTriggerButton
@@ -152,18 +155,6 @@
 				options={wifiModes.map((mode) => ({ value: mode.id, label: mode.text }))}
 			/>
 		</ContentBox>
-
-		{#if onApply}
-			<div class="mt-4 flex justify-end md:hidden">
-				<FormButton
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					type="button"
-					disabled={!isDirty || saveBlocked}
-					onclick={onApply}
-				/>
-			</div>
-		{/if}
 	</div>
 
 	<FeatureHelpModal
@@ -174,4 +165,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

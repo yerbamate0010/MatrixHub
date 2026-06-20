@@ -5,13 +5,11 @@
 	import { validateNtpSettings, formatTimezoneFromLabel, getBrowserTime } from './ntpFormUtils';
 	import NtpServerFields from './NtpServerFields.svelte';
 	import NtpManualTimeFields from './NtpManualTimeFields.svelte';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 
 	// Icons
 	import Clock from '~icons/tabler/clock';
-	import Save from '~icons/tabler/device-floppy';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 
@@ -93,7 +91,13 @@
 	]);
 </script>
 
-<BaseCard title={m.ntp_settings_title({ locale: i18n.languageTag })} icon={Clock}>
+<SettingsCard
+	title={m.ntp_settings_title({ locale: i18n.languageTag })}
+	icon={Clock}
+	hasChanges={isDirty}
+	onSave={validateAndSubmit}
+	dirtySourceId="ntp-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton label={m.ntp_help_title({ locale })} onclick={() => (helpOpen = true)} />
 	{/snippet}
@@ -161,16 +165,6 @@
 		{:else}
 			<NtpManualTimeFields bind:manualTimeInput onUseBrowserTime={useBrowserTime} />
 		{/if}
-
-		<div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
-			<FormButton
-				label={m.action_save({ locale: i18n.languageTag })}
-				icon={Save}
-				onclick={validateAndSubmit}
-				disabled={!isDirty}
-				class="btn-primary w-full sm:w-auto"
-			/>
-		</div>
 	</form>
 
 	<FeatureHelpModal
@@ -181,4 +175,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

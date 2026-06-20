@@ -1,9 +1,8 @@
 <script lang="ts">
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton, FormSelect, FormToggle, FormRange } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormSelect, FormToggle, FormRange } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import Activity from '~icons/tabler/activity';
-	import DeviceFloppy from '~icons/tabler/device-floppy';
 	import * as m from '$lib/paraglide/messages.js';
 	import type { AirMouseState } from '../airMouseState.svelte';
 	import { fade } from 'svelte/transition';
@@ -26,7 +25,16 @@
 	];
 </script>
 
-<BaseCard title={m.jiggler_title()} icon={Activity} class="h-full" hideTitleOnTiny={false}>
+<SettingsCard
+	title={m.jiggler_title()}
+	icon={Activity}
+	class="h-full"
+	hideTitleOnTiny={false}
+	hasChanges={form.hasChanges}
+	saving={form.saving}
+	onSave={form.confirmSave}
+	dirtySourceId="airmouse-jiggler-settings"
+>
 	<div class="flex flex-col gap-1" in:fade>
 		<FormToggle
 			label={m.jiggler_title()}
@@ -100,16 +108,5 @@
 				</div>
 			{/if}
 		</div>
-
-		<div class="flex justify-end pt-2">
-			<FormButton
-				variant="primary"
-				label={m.action_save()}
-				icon={DeviceFloppy}
-				onclick={form.confirmSave}
-				disabled={form.saving || !form.hasChanges}
-				loading={form.saving}
-			/>
-		</div>
 	</div>
-</BaseCard>
+</SettingsCard>

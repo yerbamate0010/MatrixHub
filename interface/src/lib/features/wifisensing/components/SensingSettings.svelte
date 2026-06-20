@@ -2,11 +2,10 @@
 	import { Spinner } from '$lib/components';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormToggle, FormButton, FormRange } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle, FormRange } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import Settings from '~icons/tabler/settings';
-	import Save from '~icons/tabler/device-floppy';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import {
@@ -60,10 +59,14 @@
 	const helpLinks = $derived(createFeatureLinks(wifiSensingHelpLinkIds, locale));
 </script>
 
-<BaseCard
+<SettingsCard
 	title={m.sensing_settings_title({ locale: i18n.languageTag })}
 	icon={Settings}
 	class="h-full"
+	{hasChanges}
+	{saving}
+	onSave={savedSettings ? onSave : undefined}
+	dirtySourceId="wifi-sensing-settings"
 >
 	{#snippet actions()}
 		<HelpTriggerButton label={m.sensing_help_title({ locale })} onclick={() => (helpOpen = true)} />
@@ -102,17 +105,6 @@
 					step={1}
 				/>
 			</ContentBox>
-
-			<!-- Save Button -->
-			<div class="flex justify-end mt-1">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					loading={saving}
-					disabled={!hasChanges || saving}
-				/>
-			</div>
 		</form>
 	{:else}
 		<div class="flex justify-center items-center py-8">
@@ -128,4 +120,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

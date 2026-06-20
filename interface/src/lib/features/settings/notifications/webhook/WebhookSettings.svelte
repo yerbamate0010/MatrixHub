@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { Spinner } from '$lib/components';
 	import AP from '~icons/tabler/access-point';
-	import Save from '~icons/tabler/device-floppy';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton, FormToggle, FormInput } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle, FormInput } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
@@ -17,9 +16,22 @@
 		if (!webhookState.hasChanges) return;
 		webhookState.saveSettings();
 	}
+
+	function handleSave() {
+		if (!webhookState.hasChanges) return;
+		webhookState.saveSettings();
+	}
 </script>
 
-<BaseCard title={m.webhook_title({ locale: i18n.languageTag })} icon={AP}>
+<SettingsCard
+	title={m.webhook_title({ locale: i18n.languageTag })}
+	icon={AP}
+	hasChanges={webhookState.hasChanges}
+	loading={webhookState.loading}
+	saving={webhookState.saving}
+	onSave={handleSave}
+	dirtySourceId="webhook-settings"
+>
 	{#if webhookState.loading}
 		<div class="flex justify-center items-center py-8">
 			<Spinner />
@@ -92,16 +104,6 @@
 					maxlength={255}
 				/>
 			</ContentBox>
-
-			<div class="flex justify-end mt-2">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					loading={webhookState.saving}
-					disabled={!webhookState.hasChanges}
-				/>
-			</div>
 		</form>
 	{/if}
-</BaseCard>
+</SettingsCard>

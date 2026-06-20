@@ -35,6 +35,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	menu_status: () => 'Status',
 	menu_logs: () => 'Logs',
 	menu_compensation: () => 'Compensation',
+	menu_imu: () => 'IMU',
 	menu_usb_features: () => 'USB Features',
 	menu_mouse_jiggler: () => 'Mouse Jiggler',
 	menu_keyboard: () => 'Keyboard',
@@ -148,6 +149,7 @@ describe('createMenuStructure', () => {
 			'Logs',
 			'Time',
 			'Compensation',
+			'IMU',
 			'Power',
 			'Matrix LED',
 			'Users',
@@ -243,6 +245,7 @@ describe('createMenuStructure', () => {
 		expect(hrefs).toContain('/usb-features/jiggler');
 		expect(hrefs).toContain('/usb-features/keyboard');
 		expect(hrefs).toContain('/usb-features/macros');
+		expect(hrefs).toContain('/settings/sensors/imu');
 	});
 
 	it('marks WiFi as active and highlights Shelly when the Shelly page is open', () => {

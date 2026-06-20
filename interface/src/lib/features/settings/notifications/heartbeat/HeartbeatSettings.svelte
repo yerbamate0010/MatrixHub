@@ -1,13 +1,12 @@
 <script lang="ts">
 	import Heart from '~icons/tabler/heart-rate-monitor';
-	import Save from '~icons/tabler/device-floppy';
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { Spinner } from '$lib/components';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormToggle, FormInput, FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
+	import { FormToggle, FormInput } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 
 	let { heartbeatState } = $props<{
@@ -16,6 +15,10 @@
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
+		heartbeatState.saveSettings();
+	}
+
+	function handleSave() {
 		heartbeatState.saveSettings();
 	}
 
@@ -56,7 +59,15 @@
 	]);
 </script>
 
-<BaseCard title={m.heartbeat_title({ locale: i18n.languageTag })} icon={Heart}>
+<SettingsCard
+	title={m.heartbeat_title({ locale: i18n.languageTag })}
+	icon={Heart}
+	hasChanges={heartbeatState.hasChanges}
+	loading={heartbeatState.loading}
+	saving={heartbeatState.saving}
+	onSave={handleSave}
+	dirtySourceId="heartbeat-settings"
+>
 	{#snippet actions()}
 		<HelpTriggerButton
 			label={m.heartbeat_help_title({ locale })}
@@ -127,16 +138,6 @@
 					{/if}
 				</ContentBox>
 			{/each}
-
-			<div class="flex justify-end mt-4">
-				<FormButton
-					type="submit"
-					label={m.action_save({ locale: i18n.languageTag })}
-					icon={Save}
-					loading={heartbeatState.saving}
-					disabled={!heartbeatState.hasChanges}
-				/>
-			</div>
 		</form>
 	{/if}
 
@@ -148,4 +149,4 @@
 		sections={helpSections}
 		links={helpLinks}
 	/>
-</BaseCard>
+</SettingsCard>

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Spinner } from '$lib/components';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
 	import Mouse from '~icons/tabler/mouse';
-	import Save from '~icons/tabler/device-floppy';
 	import HandClick from '~icons/tabler/hand-click';
 	import Pointer from '~icons/tabler/pointer';
 	import Help from '~icons/tabler/help';
@@ -85,11 +85,15 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 	<!-- Left card: Click settings -->
 	<div class="order-2 md:order-1 h-full">
-		<BaseCard
+		<SettingsCard
 			title={m.airmouse_click_title()}
 			icon={HandClick}
 			class="h-full"
 			hideTitleOnTiny={false}
+			hasChanges={form.hasChanges}
+			saving={form.saving}
+			onSave={mouseState.status ? form.confirmSave : undefined}
+			dirtySourceId="airmouse-click-settings"
 		>
 			{#snippet actions()}
 				<FormButton
@@ -118,16 +122,20 @@
 					<Spinner />
 				</div>
 			{/if}
-		</BaseCard>
+		</SettingsCard>
 	</div>
 
 	<!-- Right card: Cursor settings -->
 	<div class="order-1 md:order-2 h-full">
-		<BaseCard
+		<SettingsCard
 			title={m.airmouse_cursor_title()}
 			icon={Pointer}
 			class="h-full"
 			hideTitleOnTiny={false}
+			hasChanges={form.hasChanges}
+			saving={form.saving}
+			onSave={mouseState.status ? form.confirmSave : undefined}
+			dirtySourceId="airmouse-cursor-settings"
 		>
 			{#snippet actions()}
 				<FormButton
@@ -144,32 +152,19 @@
 			{/snippet}
 
 			{#if mouseState.status}
-				<div class="flex flex-col gap-1 h-full">
-					<AirMouseSettings
-						bind:settings={form.settings}
-						scripts={mouseState.scripts}
-						{mouseState}
-						section="cursor"
-						showHeader={false}
-					/>
-
-					<div class="flex justify-end mt-auto pt-2">
-						<FormButton
-							variant="primary"
-							label={m.action_save()}
-							icon={Save}
-							onclick={form.confirmSave}
-							disabled={form.saving || !form.hasChanges}
-							loading={form.saving}
-						/>
-					</div>
-				</div>
+				<AirMouseSettings
+					bind:settings={form.settings}
+					scripts={mouseState.scripts}
+					{mouseState}
+					section="cursor"
+					showHeader={false}
+				/>
 			{:else}
 				<div class="flex justify-center items-center py-8">
 					<Spinner />
 				</div>
 			{/if}
-		</BaseCard>
+		</SettingsCard>
 	</div>
 </div>
 

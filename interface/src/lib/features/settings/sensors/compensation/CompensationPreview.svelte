@@ -3,19 +3,16 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { useSystemStatusReadModel } from '$lib/features/system/status/useSystemStatusReadModel.svelte';
 	import Eye from '~icons/tabler/eye';
-	import Save from '~icons/tabler/device-floppy';
 
 	import { Spinner } from '$lib/components';
-	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { calculateCompensationPreview } from './compensationModel';
 
-	let { compState, showSaveButton = true } = $props<{
+	let { compState } = $props<{
 		compState: ReturnType<
 			typeof import('./useCompensationSettings.svelte').useCompensationSettings
 		>;
-		showSaveButton?: boolean;
 	}>();
 
 	const statusModel = useSystemStatusReadModel();
@@ -27,7 +24,16 @@
 	}
 </script>
 
-<BaseCard title={m.comp_preview_title({ locale: i18n.languageTag })} icon={Eye} class="h-full">
+<SettingsCard
+	title={m.comp_preview_title({ locale: i18n.languageTag })}
+	icon={Eye}
+	class="h-full"
+	hasChanges={compState.hasChanges}
+	loading={compState.loading}
+	saving={compState.saving}
+	onSave={handleSave}
+	dirtySourceId="compensation-preview"
+>
 	{#if compState.loading}
 		<div class="flex justify-center items-center py-8">
 			<Spinner />
@@ -143,19 +149,6 @@
 					</div>
 				</div>
 			</ContentBox>
-
-			{#if showSaveButton}
-				<div class="mt-auto flex justify-end pt-4">
-					<FormButton
-						type="button"
-						label={m.action_save({ locale: i18n.languageTag })}
-						icon={Save}
-						loading={compState.saving}
-						disabled={!compState.hasChanges || compState.saving}
-						onclick={handleSave}
-					/>
-				</div>
-			{/if}
 		</div>
 	{/if}
-</BaseCard>
+</SettingsCard>
