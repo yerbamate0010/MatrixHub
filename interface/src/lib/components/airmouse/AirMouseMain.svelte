@@ -83,50 +83,7 @@
 </BaseCard>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-	<!-- Left card: Click settings -->
-	<div class="order-2 md:order-1 h-full">
-		<SettingsCard
-			title={m.airmouse_click_title()}
-			icon={HandClick}
-			class="h-full"
-			hideTitleOnTiny={false}
-			hasChanges={form.hasChanges}
-			saving={form.saving}
-			onSave={mouseState.status ? form.confirmSave : undefined}
-			dirtySourceId="airmouse-click-settings"
-		>
-			{#snippet actions()}
-				<FormButton
-					variant="icon"
-					size="sm"
-					icon={Help}
-					ariaLabel={m.airmouse_click_help_btn()}
-					title={m.airmouse_click_help_btn()}
-					onclick={(e) => {
-						e.stopPropagation();
-						showClickHelp = true;
-					}}
-				/>
-			{/snippet}
-
-			{#if mouseState.status}
-				<AirMouseSettings
-					bind:settings={form.settings}
-					scripts={mouseState.scripts}
-					{mouseState}
-					section="click"
-					showHeader={false}
-				/>
-			{:else}
-				<div class="flex justify-center items-center py-8">
-					<Spinner />
-				</div>
-			{/if}
-		</SettingsCard>
-	</div>
-
-	<!-- Right card: Cursor settings -->
-	<div class="order-1 md:order-2 h-full">
+	<div class="h-full">
 		<SettingsCard
 			title={m.airmouse_cursor_title()}
 			icon={Pointer}
@@ -135,7 +92,7 @@
 			hasChanges={form.hasChanges}
 			saving={form.saving}
 			onSave={mouseState.status ? form.confirmSave : undefined}
-			dirtySourceId="airmouse-cursor-settings"
+			dirtySourceId="airmouse-click-settings"
 		>
 			{#snippet actions()}
 				<FormButton
@@ -157,6 +114,47 @@
 					scripts={mouseState.scripts}
 					{mouseState}
 					section="cursor"
+					showHeader={false}
+				/>
+			{:else}
+				<div class="flex justify-center items-center py-8">
+					<Spinner />
+				</div>
+			{/if}
+		</SettingsCard>
+	</div>
+
+	<div class="h-full">
+		<SettingsCard
+			title={m.airmouse_click_title()}
+			icon={HandClick}
+			class="h-full"
+			hideTitleOnTiny={false}
+			hasChanges={form.hasChanges}
+			saving={form.saving}
+			onSave={mouseState.status ? form.confirmSave : undefined}
+			dirtySourceId="airmouse-cursor-settings"
+		>
+			{#snippet actions()}
+				<FormButton
+					variant="icon"
+					size="sm"
+					icon={Help}
+					ariaLabel={m.airmouse_click_help_btn()}
+					title={m.airmouse_click_help_btn()}
+					onclick={(e) => {
+						e.stopPropagation();
+						showClickHelp = true;
+					}}
+				/>
+			{/snippet}
+
+			{#if mouseState.status}
+				<AirMouseSettings
+					bind:settings={form.settings}
+					scripts={mouseState.scripts}
+					{mouseState}
+					section="click"
 					showHeader={false}
 				/>
 			{:else}
