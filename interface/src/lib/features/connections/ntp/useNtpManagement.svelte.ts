@@ -150,6 +150,11 @@ export function useNtpManagement(deps: NtpManagementDeps = {}) {
 		return true;
 	}
 
+	function resetSettings() {
+		settingsState.resetSettings();
+		manualTimeInput = settingsState.settings.enabled ? '' : resolveBrowserTime();
+	}
+
 	return {
 		get status() {
 			return status;
@@ -180,6 +185,7 @@ export function useNtpManagement(deps: NtpManagementDeps = {}) {
 		},
 		load,
 		refreshStatus,
-		saveSettings
+		saveSettings,
+		resetSettings
 	};
 }

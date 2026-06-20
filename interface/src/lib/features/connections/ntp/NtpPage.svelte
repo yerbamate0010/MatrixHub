@@ -48,6 +48,7 @@
 					bind:settings={ntp.settings}
 					bind:manualTimeInput={ntp.manualTimeInput}
 					onSubmit={ntp.saveSettings}
+					onReset={ntp.resetSettings}
 					isDirty={ntp.isDirty}
 				/>
 			{:else if !ntp.settingsError}

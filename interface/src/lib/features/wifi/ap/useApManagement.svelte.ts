@@ -55,6 +55,7 @@ export function useApManagement(apiOptions: ApiClientOptions, canManage = true) 
 		},
 		loadInitialData,
 		fetchStatus: apStatus.refresh,
-		saveSettings: apSettings.saveSettings
+		saveSettings: apSettings.saveSettings,
+		resetSettings: apSettings.resetSettings
 	};
 }

@@ -54,14 +54,14 @@
 <style>
 	/* Dark Theme Overrides for Simple Keyboard */
 	:global(.my-dark-theme) {
-		background-color: transparent !important;
+		background-color: transparent;
 		color: white;
 	}
 
 	:global(.my-dark-theme .hg-button) {
-		background: rgba(255, 255, 255, 0.08) !important;
-		color: white !important;
-		border-bottom: 2px solid rgba(0, 0, 0, 0.5) !important;
+		background: rgba(255, 255, 255, 0.08);
+		color: white;
+		border-bottom: 2px solid rgba(0, 0, 0, 0.5);
 		border-top: none;
 		border-left: none;
 		border-right: none;
@@ -76,7 +76,7 @@
 	}
 
 	:global(.my-dark-theme .hg-button:active) {
-		background: rgba(255, 255, 255, 0.2) !important;
+		background: rgba(255, 255, 255, 0.2);
 		transform: translateY(2px);
 	}
 
@@ -85,8 +85,8 @@
 		flex-grow: 4;
 	}
 	:global(.hg-button[data-skbtnuid*='enter']) {
-		background: rgba(var(--color-good-rgb), 0.15) !important;
-		color: var(--color-good) !important;
+		background: rgba(var(--color-good-rgb), 0.15);
+		color: var(--color-good);
 	}
 
 	/* Active Indicator (Green Dot - MacBook Style) */
@@ -105,14 +105,14 @@
 
 	/* Keyboard Keys Specific Active Style (Bg + Border) */
 	:global(.key-active-dot) {
-		background: rgba(var(--color-good-rgb), 0.1) !important;
-		border-color: var(--color-good) !important;
+		background: rgba(var(--color-good-rgb), 0.1);
+		border-color: var(--color-good);
 	}
 
 	:global(.key-capture-pressed) {
-		background: rgba(var(--color-good-rgb), 0.22) !important;
-		border-bottom-color: rgba(var(--color-good-rgb), 0.8) !important;
-		box-shadow: inset 0 0 0 1px rgba(var(--color-good-rgb), 0.35) !important;
+		background: rgba(var(--color-good-rgb), 0.22);
+		border-bottom-color: rgba(var(--color-good-rgb), 0.8);
+		box-shadow: inset 0 0 0 1px rgba(var(--color-good-rgb), 0.35);
 		transform: translateY(2px);
 	}
 </style>

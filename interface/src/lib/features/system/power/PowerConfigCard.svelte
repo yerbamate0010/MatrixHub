@@ -33,6 +33,7 @@
 		hasChanges: boolean;
 		saving: boolean;
 		onSave: () => void;
+		onReset: () => void;
 	}
 
 	let {
@@ -45,7 +46,8 @@
 		localGraceAfterBootMs = $bindable(),
 		hasChanges,
 		saving,
-		onSave
+		onSave,
+		onReset
 	}: Props = $props();
 
 	const statIconClass = 'h-6 w-6 flex-none text-base-content/70';
@@ -138,6 +140,12 @@
 		onSave();
 	}
 
+	function handleReset() {
+		editingInactivity = false;
+		editingGrace = false;
+		onReset();
+	}
+
 	function formatTemperature(value: number | null | undefined): string {
 		return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(1)} °C` : '--';
 	}
@@ -197,6 +205,7 @@
 	{saving}
 	disabled={hasValidationErrors}
 	onSave={!loading && !error && status ? handleSave : undefined}
+	onReset={handleReset}
 	dirtySourceId="power-settings"
 >
 	{#snippet actions()}

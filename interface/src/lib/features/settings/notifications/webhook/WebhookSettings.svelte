@@ -30,6 +30,7 @@
 	loading={webhookState.loading}
 	saving={webhookState.saving}
 	onSave={handleSave}
+	onReset={webhookState.resetSettings}
 	dirtySourceId="webhook-settings"
 >
 	{#if webhookState.loading}

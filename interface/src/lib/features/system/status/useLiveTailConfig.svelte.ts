@@ -51,6 +51,11 @@ export function useLiveTailConfig(getApi: () => SystemApiService) {
 		}
 	}
 
+	function resetLoggingSettings() {
+		loggingConfig = { level: originalLoggingConfig.level };
+		error = null;
+	}
+
 	function applyLoggingLevel(level: string | undefined) {
 		const normalized = normalizeLoggingLevel(level);
 		const shouldKeepLocalDraft =
@@ -92,6 +97,7 @@ export function useLiveTailConfig(getApi: () => SystemApiService) {
 			return levels;
 		},
 		refreshLoggingConfig,
-		saveLoggingSettings
+		saveLoggingSettings,
+		resetLoggingSettings
 	};
 }

@@ -229,6 +229,11 @@ export function useUserManagement(
 		}
 	}
 
+	function resetSettings(): void {
+		state.securitySettings = parseStoredSecuritySettings(originalSettingsStr);
+		state.error = null;
+	}
+
 	function openDeleteConfirmation(index: number): void {
 		const currentUser = state.securitySettings.users[index];
 		if (!currentUser) return;
@@ -313,6 +318,7 @@ export function useUserManagement(
 		},
 		loadSettings,
 		saveSettings,
+		resetSettings,
 		openDeleteConfirmation,
 		openEditModal,
 		openNewUserModal,

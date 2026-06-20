@@ -92,7 +92,8 @@
 			hasChanges={form.hasChanges}
 			saving={form.saving}
 			onSave={mouseState.status ? form.confirmSave : undefined}
-			dirtySourceId="airmouse-click-settings"
+			onReset={form.reset}
+			dirtySourceId="airmouse-cursor-settings"
 		>
 			{#snippet actions()}
 				<FormButton
@@ -133,7 +134,8 @@
 			hasChanges={form.hasChanges}
 			saving={form.saving}
 			onSave={mouseState.status ? form.confirmSave : undefined}
-			dirtySourceId="airmouse-cursor-settings"
+			onReset={form.reset}
+			dirtySourceId="airmouse-click-settings"
 		>
 			{#snippet actions()}
 				<FormButton

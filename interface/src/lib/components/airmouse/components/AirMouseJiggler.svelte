@@ -33,6 +33,7 @@
 	hasChanges={form.hasChanges}
 	saving={form.saving}
 	onSave={form.confirmSave}
+	onReset={form.reset}
 	dirtySourceId="airmouse-jiggler-settings"
 >
 	<div class="flex flex-col gap-1" in:fade>

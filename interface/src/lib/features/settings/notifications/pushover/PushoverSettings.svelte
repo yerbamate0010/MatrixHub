@@ -54,6 +54,7 @@
 	loading={pushoverState.loading}
 	saving={pushoverState.saving}
 	onSave={handleSave}
+	onReset={pushoverState.resetSettings}
 	dirtySourceId="pushover-settings"
 >
 	{#snippet actions()}

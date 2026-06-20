@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import { FormButton, FormInput } from '$lib/components/shared/forms';
 	import { AdminAccessGate } from '$lib/components/layout';
 	import LoadingCard from '$lib/components/layout/LoadingCard.svelte';
 	import Terminal from '~icons/tabler/terminal-2';
@@ -217,15 +217,10 @@
 							>
 								<span class="whitespace-nowrap">{consoleState.currentPrompt}</span>
 							</div>
-							<label for="usb-terminal-command" class="label pb-1">
-								<span class="label-text text-xs uppercase opacity-70">
-									{m.usb_terminal_command_label({ locale: i18n.languageTag })}
-								</span>
-							</label>
-							<input
+							<FormInput
 								id="usb-terminal-command"
 								type="text"
-								class="input input-bordered w-full"
+								label={m.usb_terminal_command_label({ locale: i18n.languageTag })}
 								placeholder={m.usb_terminal_command_placeholder({ locale: i18n.languageTag })}
 								value={consoleState.command}
 								oninput={(event) =>

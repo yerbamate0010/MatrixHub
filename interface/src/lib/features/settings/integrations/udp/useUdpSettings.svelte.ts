@@ -178,6 +178,7 @@ export function useUdpSettings(deps: UdpSettingsDeps = {}) {
 		},
 		loadSettings: hook.loadSettings,
 		saveSettings: hook.saveSettings,
+		resetSettings: hook.resetSettings,
 		updateSetting: (key: keyof UdpSettings, value: UdpSettings[keyof UdpSettings]) => {
 			if (key === 'host' && typeof value === 'string') {
 				hook.updateSetting(key, sanitizeHost(value));

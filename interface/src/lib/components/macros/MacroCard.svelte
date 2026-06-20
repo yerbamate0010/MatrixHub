@@ -61,10 +61,10 @@
 
 {#if controller.loading}
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		<div class="order-1 md:order-2 h-full">
+		<div class="h-full">
 			<LoadingCard title={m.settings_title()} icon={Settings} loading={true} />
 		</div>
-		<div class="order-2 md:order-1 h-full">
+		<div class="h-full">
 			<LoadingCard title={m.macros_title()} icon={Terminal2} loading={true} />
 		</div>
 	</div>
@@ -76,8 +76,7 @@
 	{/if}
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		<!-- Settings (Mobile: 1st, Desktop: 2nd) -->
-		<div class="order-1 md:order-2 h-full">
+		<div class="h-full">
 			<SettingsCard
 				title={m.settings_title()}
 				icon={Settings}
@@ -86,6 +85,7 @@
 				hasChanges={controller.hasSettingsChanges}
 				saving={controller.settingsSaving}
 				onSave={controller.confirmSaveSettings}
+				onReset={controller.resetSettings}
 				dirtySourceId="macro-settings"
 			>
 				<div class="flex flex-col gap-1 h-full" in:fade>
@@ -125,8 +125,7 @@
 			</SettingsCard>
 		</div>
 
-		<!-- Macros (Mobile: 2nd, Desktop: 1st) -->
-		<div class="order-2 md:order-1 h-full">
+		<div class="h-full">
 			<BaseCard class="h-full">
 				<!-- Title is "Macros" -->
 				<CardHeader title={m.macros_title()} icon={Terminal2} actions={headerActions} />

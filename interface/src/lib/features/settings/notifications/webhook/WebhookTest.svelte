@@ -5,7 +5,7 @@
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import { FormButton, FormTextarea } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import WorkerStats from '$lib/components/notifications/WorkerStats.svelte';
 
@@ -23,24 +23,16 @@
 
 <BaseCard title={m.webhook_test_title({ locale: i18n.languageTag })} icon={Webhook} class="h-full">
 	<ContentBox>
-		<label class="form-control w-full">
-			<div class="label pt-0">
-				<span class="label-text font-bold"
-					>{m.webhook_test_label({ locale: i18n.languageTag })}</span
-				>
-				<span class="label-text-alt opacity-70"
-					>{m.webhook_test_desc_max({ locale: i18n.languageTag })}</span
-				>
-			</div>
-			<textarea
-				class="textarea textarea-bordered w-full font-mono text-sm"
-				rows="3"
-				maxlength="1024"
-				placeholder={m.webhook_test_placeholder({ locale: i18n.languageTag })}
-				bind:value={testState.testText}
-				disabled={testState.sending}
-			></textarea>
-		</label>
+		<FormTextarea
+			label={m.webhook_test_label({ locale: i18n.languageTag })}
+			help={m.webhook_test_desc_max({ locale: i18n.languageTag })}
+			class="font-mono text-sm"
+			rows={3}
+			maxlength={1024}
+			placeholder={m.webhook_test_placeholder({ locale: i18n.languageTag })}
+			bind:value={testState.testText}
+			disabled={testState.sending}
+		/>
 	</ContentBox>
 
 	<div class="flex items-center gap-3 mt-4">

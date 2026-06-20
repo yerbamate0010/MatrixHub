@@ -10,7 +10,7 @@ import type {
 import { toUserRequestErrorMessage } from '$lib/utils';
 import * as m from '$lib/paraglide/messages.js';
 
-export const DEFAULT_CSI_ALARM_SETTINGS: CsiAlarmSettings = {
+const DEFAULT_CSI_ALARM_SETTINGS: CsiAlarmSettings = {
 	enabled: false,
 	bands: [],
 	baseline_frames: 150,

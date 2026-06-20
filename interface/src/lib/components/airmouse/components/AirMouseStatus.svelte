@@ -76,7 +76,7 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 items-stretch" in:fade>
 	<!-- Delta G Stats -->
-	<ContentBox class="p-3 flex flex-col justify-center">
+	<ContentBox paddingClass="p-3" class="flex flex-col justify-center">
 		<div class="flex justify-between items-center">
 			<span class="text-xs opacity-70">{m.airmouse_delta_g_label()}</span>
 			<span
@@ -110,7 +110,7 @@
 	</ContentBox>
 
 	<!-- Tap Force Bar -->
-	<ContentBox class="p-3 flex flex-col justify-center">
+	<ContentBox paddingClass="p-3" class="flex flex-col justify-center">
 		<div class="flex justify-between text-[10px] opacity-70 mb-1">
 			<span class="opacity-60">{m.airmouse_click_source()}</span>
 			<span class="truncate max-w-[140px] text-right">{clickSourceLabel}</span>

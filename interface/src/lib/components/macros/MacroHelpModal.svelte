@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
+	import DataTable from '$lib/components/shared/tables/DataTable.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 
 	let {
@@ -46,7 +47,7 @@
 	widthClass="max-w-2xl"
 >
 	<div class="overflow-x-auto">
-		<table class="table table-sm md:table-md w-full">
+		<DataTable size="md">
 			<thead>
 				<tr>
 					<th class="w-1/3">{m.macros_help_syntax()}</th>
@@ -63,7 +64,7 @@
 					</tr>
 				{/each}
 			</tbody>
-		</table>
+		</DataTable>
 	</div>
 
 	{#snippet actions()}

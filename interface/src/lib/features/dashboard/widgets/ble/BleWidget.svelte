@@ -50,7 +50,7 @@
 			<div class="flex flex-col gap-2">
 				{#each controller.sensors as sensor (sensor.config.mac)}
 					{@const data = sensor.data}
-					<ContentBox class="!px-3 !py-2">
+					<ContentBox paddingClass="px-3 py-2">
 						<!-- Sensor name -->
 						<div class="flex items-center justify-between gap-2 mb-1 min-w-0">
 							<span class="font-medium text-sm truncate flex-1"

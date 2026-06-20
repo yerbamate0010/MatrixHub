@@ -3,22 +3,14 @@
 	import { browser } from '$app/environment';
 	import { semantic } from '$lib/styles/design-system';
 	import { createHtmlId } from '$lib/utils/dom/htmlId';
+	import type { HTMLTextareaAttributes } from 'svelte/elements';
 
-	interface Props {
+	interface Props extends HTMLTextareaAttributes {
 		label?: string;
-		id?: string;
 		value?: string;
-		placeholder?: string;
-		rows?: number;
-		required?: boolean;
-		disabled?: boolean;
-		readonly?: boolean;
 		error?: string;
 		help?: string;
-		minlength?: number;
-		maxlength?: number;
 		ariaLabel?: string;
-		name?: string;
 		class?: string;
 	}
 
@@ -37,7 +29,13 @@
 		maxlength,
 		ariaLabel,
 		name,
-		class: className = ''
+		class: className = '',
+		oninput,
+		onchange,
+		onkeydown,
+		onfocus,
+		onblur,
+		...restProps
 	}: Props = $props();
 
 	let fallbackId = $state('');
@@ -60,9 +58,26 @@
 		`textarea textarea-bordered w-full ${hasError ? 'border-error border-2' : ''} ${className}`
 	);
 
-	const handleInput = (e: Event) => {
-		const target = e.target as HTMLTextAreaElement;
+	const handleInput = (e: Event & { currentTarget: HTMLTextAreaElement }) => {
+		const target = e.currentTarget;
 		value = target?.value ?? '';
+		oninput?.(e);
+	};
+
+	const handleChange = (e: Event & { currentTarget: HTMLTextAreaElement }) => {
+		onchange?.(e);
+	};
+
+	const handleKeydown = (e: KeyboardEvent & { currentTarget: HTMLTextAreaElement }) => {
+		onkeydown?.(e);
+	};
+
+	const handleFocus = (e: FocusEvent & { currentTarget: HTMLTextAreaElement }) => {
+		onfocus?.(e);
+	};
+
+	const handleBlur = (e: FocusEvent & { currentTarget: HTMLTextAreaElement }) => {
+		onblur?.(e);
 	};
 </script>
 
@@ -84,7 +99,12 @@
 		aria-label={ariaLabel || label}
 		class={textareaClasses}
 		{value}
+		{...restProps}
 		oninput={handleInput}
+		onchange={handleChange}
+		onkeydown={handleKeydown}
+		onfocus={handleFocus}
+		onblur={handleBlur}
 	></textarea>
 
 	{#if error}

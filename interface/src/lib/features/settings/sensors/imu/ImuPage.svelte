@@ -193,7 +193,7 @@
 			{:else}
 				<div class="space-y-3">
 					<div class="grid grid-cols-2 gap-2 xl:grid-cols-5">
-						<ContentBox class="p-3">
+						<ContentBox paddingClass="p-3">
 							<div class="text-[11px] font-semibold uppercase tracking-wide opacity-60">
 								{m.imu_running({ locale: i18n.languageTag })}
 							</div>
@@ -203,7 +203,7 @@
 								{yesNo(status?.running)}
 							</div>
 						</ContentBox>
-						<ContentBox class="p-3">
+						<ContentBox paddingClass="p-3">
 							<div class="text-[11px] font-semibold uppercase tracking-wide opacity-60">
 								{m.imu_sample({ locale: i18n.languageTag })}
 							</div>
@@ -214,7 +214,7 @@
 							</div>
 							<div class="text-xs opacity-60">{sampleAgeLabel(status?.sample_age_ms)}</div>
 						</ContentBox>
-						<ContentBox class="p-3">
+						<ContentBox paddingClass="p-3">
 							<div class="text-[11px] font-semibold uppercase tracking-wide opacity-60">
 								{m.imu_alarm_state({ locale: i18n.languageTag })}
 							</div>
@@ -225,7 +225,7 @@
 							</div>
 							<div class="text-xs opacity-60">{alarmReasonLabel(alarm?.reason)}</div>
 						</ContentBox>
-						<ContentBox class="p-3">
+						<ContentBox paddingClass="p-3">
 							<div class="text-[11px] font-semibold uppercase tracking-wide opacity-60">
 								{m.imu_calibration({ locale: i18n.languageTag })}
 							</div>
@@ -238,7 +238,7 @@
 								{vectorLabel(imu.settings.orientation_baseline)}
 							</div>
 						</ContentBox>
-						<ContentBox class="col-span-2 p-3 xl:col-span-1">
+						<ContentBox paddingClass="p-3" class="col-span-2 xl:col-span-1">
 							<div class="text-[11px] font-semibold uppercase tracking-wide opacity-60">
 								{m.imu_last_error({ locale: i18n.languageTag })}
 							</div>
@@ -251,7 +251,7 @@
 						</ContentBox>
 					</div>
 
-					<ContentBox title={m.imu_measurements({ locale: i18n.languageTag })} class="p-3">
+					<ContentBox title={m.imu_measurements({ locale: i18n.languageTag })} paddingClass="p-3">
 						<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm md:grid-cols-3">
 							<div>
 								<div class="text-xs opacity-60">
@@ -314,7 +314,7 @@
 						</div>
 					</ContentBox>
 
-					<ContentBox title={m.imu_consumers({ locale: i18n.languageTag })} class="p-3">
+					<ContentBox title={m.imu_consumers({ locale: i18n.languageTag })} paddingClass="p-3">
 						{#if consumerSettings.errorMessage}
 							<div class="mb-2 text-sm text-warning">{consumerSettings.errorMessage}</div>
 						{/if}
@@ -415,7 +415,7 @@
 						imu.saveSettings();
 					}}
 				>
-					<ContentBox title={m.imu_settings({ locale: i18n.languageTag })} class="p-3">
+					<ContentBox title={m.imu_settings({ locale: i18n.languageTag })} paddingClass="p-3">
 						<div class="space-y-2">
 							<FormToggle
 								label={m.imu_live_monitor({ locale: i18n.languageTag })}
@@ -440,59 +440,84 @@
 						</div>
 					</ContentBox>
 
-					<ContentBox title={m.imu_thresholds({ locale: i18n.languageTag })} class="p-3">
+					<ContentBox title={m.imu_thresholds({ locale: i18n.languageTag })} paddingClass="p-3">
 						<div class="grid gap-3">
 							<FormRange
 								id="imu_tilt_threshold"
 								label={m.imu_tilt_threshold({ locale: i18n.languageTag })}
-								bind:value={imu.settings.tilt_threshold_deg}
+								value={imu.settings.tilt_threshold_deg}
 								min={1}
 								max={90}
 								step={1}
 								suffix="°"
+								oninput={(event) =>
+									imu.updateSetting(
+										'tilt_threshold_deg',
+										(event.currentTarget as HTMLInputElement).valueAsNumber
+									)}
 							/>
 							<FormRange
 								id="imu_tilt_hysteresis"
 								label={m.imu_tilt_hysteresis({ locale: i18n.languageTag })}
-								bind:value={imu.settings.tilt_hysteresis_deg}
+								value={imu.settings.tilt_hysteresis_deg}
 								min={0}
 								max={30}
 								step={1}
 								suffix="°"
+								oninput={(event) =>
+									imu.updateSetting(
+										'tilt_hysteresis_deg',
+										(event.currentTarget as HTMLInputElement).valueAsNumber
+									)}
 							/>
 							<FormRange
 								id="imu_accel_delta"
 								label={m.imu_accel_delta_threshold({ locale: i18n.languageTag })}
-								bind:value={imu.settings.accel_delta_threshold_g}
+								value={imu.settings.accel_delta_threshold_g}
 								min={0.01}
 								max={2}
 								step={0.01}
 								suffix="g"
+								oninput={(event) =>
+									imu.updateSetting(
+										'accel_delta_threshold_g',
+										(event.currentTarget as HTMLInputElement).valueAsNumber
+									)}
 							/>
 							<FormRange
 								id="imu_tilt_hold"
 								label={m.imu_tilt_hold({ locale: i18n.languageTag })}
-								bind:value={imu.settings.tilt_hold_ms}
+								value={imu.settings.tilt_hold_ms}
 								min={100}
 								max={10000}
 								step={50}
 								valueFormatter={(value) => durationSecondsLabel(value, 2)}
 								valueClass="w-16"
+								oninput={(event) =>
+									imu.updateSetting(
+										'tilt_hold_ms',
+										(event.currentTarget as HTMLInputElement).valueAsNumber
+									)}
 							/>
 							<FormRange
 								id="imu_tilt_clear_hold"
 								label={m.imu_tilt_clear_hold({ locale: i18n.languageTag })}
-								bind:value={imu.settings.tilt_clear_hold_ms}
+								value={imu.settings.tilt_clear_hold_ms}
 								min={100}
 								max={15000}
 								step={50}
 								valueFormatter={(value) => durationSecondsLabel(value, 2)}
 								valueClass="w-16"
+								oninput={(event) =>
+									imu.updateSetting(
+										'tilt_clear_hold_ms',
+										(event.currentTarget as HTMLInputElement).valueAsNumber
+									)}
 							/>
 						</div>
 					</ContentBox>
 
-					<ContentBox title={m.imu_calibration({ locale: i18n.languageTag })} class="p-3">
+					<ContentBox title={m.imu_calibration({ locale: i18n.languageTag })} paddingClass="p-3">
 						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
 							<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 								<div>

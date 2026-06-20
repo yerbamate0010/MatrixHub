@@ -66,6 +66,7 @@
 	loading={heartbeatState.loading}
 	saving={heartbeatState.saving}
 	onSave={handleSave}
+	onReset={heartbeatState.resetSettings}
 	dirtySourceId="heartbeat-settings"
 >
 	{#snippet actions()}
@@ -82,7 +83,7 @@
 	{:else}
 		<form onsubmit={handleSubmit} class="flex flex-col gap-1">
 			{#each heartbeatState.settings.slots as slot, index (index)}
-				<ContentBox class="p-3">
+				<ContentBox paddingClass="p-3">
 					<div class="flex items-center gap-2 mb-2">
 						<FormToggle
 							bind:checked={slot.enabled}
@@ -91,7 +92,7 @@
 								{ index: index + 1 },
 								{ locale: i18n.languageTag }
 							)}
-							class="!p-0 !min-h-0"
+							class="p-0 min-h-0"
 							plain={true}
 						/>
 						<div class="flex-1">

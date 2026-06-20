@@ -197,6 +197,14 @@ export function useAirMouseSettingsForm(getMouseState: () => AirMouseSettingsFor
 		});
 	}
 
+	function reset() {
+		const status = getMouseState().status;
+		if (!status) return;
+		syncLocalSettings(settings, createAirMouseLocalSettings(status));
+		settingsSynced = true;
+		forceStatusSync = false;
+	}
+
 	let form = $state({
 		settings,
 		get saving() {
@@ -209,7 +217,8 @@ export function useAirMouseSettingsForm(getMouseState: () => AirMouseSettingsFor
 			return requiresRestart;
 		},
 		save,
-		confirmSave
+		confirmSave,
+		reset
 	});
 
 	return form;

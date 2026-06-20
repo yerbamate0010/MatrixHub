@@ -42,7 +42,7 @@
 	}: Props = $props();
 </script>
 
-<ContentBox class="!px-4 !py-3">
+<ContentBox paddingClass="px-4 py-3">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div class="flex flex-wrap items-center gap-2">
 			<FormButton
@@ -63,7 +63,7 @@
 				<FormButton
 					variant="ghost"
 					size="xs"
-					class="!min-h-0 !h-8 !px-3"
+					class="min-h-0 h-8 px-3"
 					onclick={() => onSelectBreadcrumb(crumb.path)}
 					disabled={isLoading}
 				>

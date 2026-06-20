@@ -11,6 +11,7 @@
 	import Target from '~icons/tabler/target';
 	import Trash from '~icons/tabler/trash';
 	import * as m from '$lib/paraglide/messages.js';
+	import { FormInput, FormSelect } from '$lib/components/shared/forms';
 
 	interface Props {
 		settings: CsiAlarmSettings;
@@ -207,47 +208,42 @@
 	</div>
 
 	<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-		<label class="form-control">
-			<span class="label-text text-xs">{m.csi_alarm_sensitivity()}</span>
-			<select
-				class="select select-bordered select-sm"
-				value={settings.sensitivity}
-				disabled={!isAdmin}
-				onchange={updateSensitivity}
-			>
-				<option value="0">{m.csi_alarm_sensitivity_low()}</option>
-				<option value="1">{m.csi_alarm_sensitivity_medium()}</option>
-				<option value="2">{m.csi_alarm_sensitivity_high()}</option>
-			</select>
-		</label>
-		<label class="form-control">
-			<span class="label-text text-xs">{m.csi_alarm_enter_threshold()}</span>
-			<input
-				type="number"
-				class="input input-bordered input-sm"
-				step="0.1"
-				min="1"
-				max="100"
-				bind:value={settings.enter_threshold}
-				readonly
-				aria-readonly="true"
-				disabled={!isAdmin}
-			/>
-		</label>
-		<label class="form-control">
-			<span class="label-text text-xs">{m.csi_alarm_clear_threshold()}</span>
-			<input
-				type="number"
-				class="input input-bordered input-sm"
-				step="0.1"
-				min="0.5"
-				max={settings.enter_threshold}
-				bind:value={settings.clear_threshold}
-				readonly
-				aria-readonly="true"
-				disabled={!isAdmin}
-			/>
-		</label>
+		<FormSelect
+			label={m.csi_alarm_sensitivity()}
+			size="sm"
+			value={settings.sensitivity}
+			disabled={!isAdmin}
+			onchange={updateSensitivity}
+			options={[
+				{ value: 0, label: m.csi_alarm_sensitivity_low() },
+				{ value: 1, label: m.csi_alarm_sensitivity_medium() },
+				{ value: 2, label: m.csi_alarm_sensitivity_high() }
+			]}
+		/>
+		<FormInput
+			label={m.csi_alarm_enter_threshold()}
+			type="number"
+			sizeVariant="sm"
+			step="0.1"
+			min="1"
+			max="100"
+			bind:value={settings.enter_threshold}
+			readonly
+			aria-readonly="true"
+			disabled={!isAdmin}
+		/>
+		<FormInput
+			label={m.csi_alarm_clear_threshold()}
+			type="number"
+			sizeVariant="sm"
+			step="0.1"
+			min="0.5"
+			max={settings.enter_threshold}
+			bind:value={settings.clear_threshold}
+			readonly
+			aria-readonly="true"
+			disabled={!isAdmin}
+		/>
 		<label class="flex items-end gap-2 rounded-md border border-base-300/60 px-3 py-2">
 			<input
 				type="checkbox"
@@ -262,86 +258,72 @@
 	<details class="mt-4">
 		<summary class="cursor-pointer text-sm font-semibold">{m.csi_alarm_advanced()}</summary>
 		<div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_top_k()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					min="1"
-					max="32"
-					bind:value={settings.top_k}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_baseline_frames()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					min="30"
-					max="1000"
-					bind:value={settings.baseline_frames}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_hold_ms()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					min="100"
-					max="10000"
-					bind:value={settings.hold_ms}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_clear_hold_ms()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					min="100"
-					max="30000"
-					bind:value={settings.clear_hold_ms}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_min_noise()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					step="0.1"
-					min="0.1"
-					max="1000"
-					bind:value={settings.min_noise}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_min_energy()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					step="0.1"
-					min="0"
-					max="10000"
-					bind:value={settings.min_energy}
-					disabled={!isAdmin}
-				/>
-			</label>
-			<label class="form-control">
-				<span class="label-text text-xs">{m.csi_alarm_noisy_threshold()}</span>
-				<input
-					type="number"
-					class="input input-bordered input-sm"
-					step="0.1"
-					min={settings.enter_threshold}
-					max="500"
-					bind:value={settings.noisy_threshold}
-					disabled={!isAdmin}
-				/>
-			</label>
+			<FormInput
+				label={m.csi_alarm_top_k()}
+				type="number"
+				sizeVariant="sm"
+				min="1"
+				max="32"
+				bind:value={settings.top_k}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_baseline_frames()}
+				type="number"
+				sizeVariant="sm"
+				min="30"
+				max="1000"
+				bind:value={settings.baseline_frames}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_hold_ms()}
+				type="number"
+				sizeVariant="sm"
+				min="100"
+				max="10000"
+				bind:value={settings.hold_ms}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_clear_hold_ms()}
+				type="number"
+				sizeVariant="sm"
+				min="100"
+				max="30000"
+				bind:value={settings.clear_hold_ms}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_min_noise()}
+				type="number"
+				sizeVariant="sm"
+				step="0.1"
+				min="0.1"
+				max="1000"
+				bind:value={settings.min_noise}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_min_energy()}
+				type="number"
+				sizeVariant="sm"
+				step="0.1"
+				min="0"
+				max="10000"
+				bind:value={settings.min_energy}
+				disabled={!isAdmin}
+			/>
+			<FormInput
+				label={m.csi_alarm_noisy_threshold()}
+				type="number"
+				sizeVariant="sm"
+				step="0.1"
+				min={settings.enter_threshold}
+				max="500"
+				bind:value={settings.noisy_threshold}
+				disabled={!isAdmin}
+			/>
 		</div>
 	</details>
 </SettingsCard>

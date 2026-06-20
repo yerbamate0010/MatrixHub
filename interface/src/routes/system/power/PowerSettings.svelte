@@ -27,6 +27,7 @@
 		hasChanges={powerState.hasChanges}
 		saving={powerState.saving}
 		onSave={powerState.saveSettings}
+		onReset={powerState.resetSettings}
 	/>
 
 	<PowerActionsCard

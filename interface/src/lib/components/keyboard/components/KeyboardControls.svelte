@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages';
-	import { FormButton } from '$lib/components/shared/forms';
+	import { FormButton, FormTextarea } from '$lib/components/shared/forms';
 
 	interface Props {
 		textQueue: string;
@@ -32,13 +32,15 @@
 </script>
 
 <div class="flex gap-2 items-stretch">
-	<textarea
-		class="textarea textarea-bordered flex-1 font-mono resize-none text-base h-20"
-		bind:value={textQueue}
-		onkeydown={onKeydown}
-		disabled={captureMode}
-		{placeholder}
-	></textarea>
+	<div class="flex-1">
+		<FormTextarea
+			class="h-20 resize-none font-mono text-base"
+			bind:value={textQueue}
+			onkeydown={onKeydown}
+			disabled={captureMode}
+			{placeholder}
+		/>
+	</div>
 
 	<div class="grid grid-cols-2 grid-rows-2 gap-2 min-w-[168px] w-[168px]">
 		<FormButton

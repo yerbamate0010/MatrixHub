@@ -15,9 +15,17 @@
 		hasChanges: boolean;
 		saving: boolean;
 		onSave: () => void;
+		onReset: () => void;
 	}
 
-	let { savedSettings, localEnabled = $bindable(), hasChanges, saving, onSave }: Props = $props();
+	let {
+		savedSettings,
+		localEnabled = $bindable(),
+		hasChanges,
+		saving,
+		onSave,
+		onReset
+	}: Props = $props();
 
 	let scannerDesc = $derived(
 		localEnabled
@@ -52,6 +60,7 @@
 	{hasChanges}
 	{saving}
 	onSave={savedSettings ? onSave : undefined}
+	{onReset}
 	dirtySourceId="ble-settings"
 >
 	{#snippet actions()}

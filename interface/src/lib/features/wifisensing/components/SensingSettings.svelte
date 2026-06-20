@@ -23,6 +23,7 @@
 		hasChanges: boolean;
 		saving: boolean;
 		onSave: () => void;
+		onReset: () => void;
 	}
 
 	let {
@@ -32,7 +33,8 @@
 		localThreshold = $bindable(),
 		hasChanges,
 		saving,
-		onSave
+		onSave,
+		onReset
 	}: Props = $props();
 
 	function handleSubmit(event: Event) {
@@ -66,6 +68,7 @@
 	{hasChanges}
 	{saving}
 	onSave={savedSettings ? onSave : undefined}
+	{onReset}
 	dirtySourceId="wifi-sensing-settings"
 >
 	{#snippet actions()}

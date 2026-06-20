@@ -99,6 +99,7 @@ export function useWifiManagement(apiOptions: ApiClientOptions, canManage = true
 		loadInitialData,
 		fetchStatus: wifiStatus.refresh,
 		saveSettings: wifiSettings.saveSettings,
+		resetSettings: wifiSettings.resetSettings,
 		updateHostname,
 		updateMode,
 		updateNetworks

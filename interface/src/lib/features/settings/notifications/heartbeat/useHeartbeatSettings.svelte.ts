@@ -209,6 +209,7 @@ export function useHeartbeatSettings(deps: HeartbeatSettingsDeps = {}) {
 		},
 		loadSettings: hook.loadSettings,
 		saveSettings: hook.saveSettings,
+		resetSettings: hook.resetSettings,
 		setSlotUrl,
 		setSlotUrlRaw,
 		setSlotName,

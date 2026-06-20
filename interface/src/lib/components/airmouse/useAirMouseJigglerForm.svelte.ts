@@ -178,6 +178,14 @@ export function useAirMouseJigglerForm(
 		});
 	}
 
+	function reset() {
+		const status = getMouseState().status;
+		if (!status?.jiggler) return;
+		syncLocalSettings(settings, createLocalSettings(status));
+		settingsSynced = true;
+		forceStatusSync = false;
+	}
+
 	return {
 		settings,
 		get saving() {
@@ -190,6 +198,7 @@ export function useAirMouseJigglerForm(
 			return requiresRestart;
 		},
 		save,
-		confirmSave
+		confirmSave,
+		reset
 	};
 }

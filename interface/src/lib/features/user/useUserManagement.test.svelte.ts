@@ -224,6 +224,42 @@ describe('useUserManagement', () => {
 		cleanup();
 	});
 
+	it('resets security draft to the last loaded settings', async () => {
+		const { useUserManagement } = await import('./useUserManagement.svelte');
+
+		let management: ReturnType<typeof useUserManagement>;
+
+		const cleanup = $effect.root(() => {
+			management = useUserManagement({} as never, {
+				createSecurityApi: () => ({
+					getSecuritySettings: vi.fn().mockResolvedValue({
+						jwt_secret: 'saved-secret',
+						jwt_secret_configured: true,
+						users: [{ username: 'alice', password: 'pwd', admin: true }]
+					}),
+					saveSecuritySettings: vi.fn()
+				})
+			});
+		});
+
+		await management!.loadSettings();
+		management!.state.securitySettings.jwt_secret = 'draft-secret';
+		management!.state.securitySettings.users[0].admin = false;
+
+		expect(management!.isDirty).toBe(true);
+
+		management!.resetSettings();
+
+		expect(management!.state.securitySettings).toEqual({
+			jwt_secret: 'saved-secret',
+			jwt_secret_configured: true,
+			users: [{ username: 'alice', password: 'pwd', admin: true }]
+		});
+		expect(management!.isDirty).toBe(false);
+
+		cleanup();
+	});
+
 	it('auto-loads security settings once per shouldLoad cycle', async () => {
 		const { useUserManagement } = await import('./useUserManagement.svelte');
 		const getSecuritySettings = vi.fn().mockResolvedValue({

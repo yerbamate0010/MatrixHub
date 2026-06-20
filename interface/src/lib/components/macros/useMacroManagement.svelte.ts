@@ -302,6 +302,13 @@ export function useMacroManagement(deps: MacroManagementDeps = {}) {
 		return localSettings.enabled !== settings.enabled;
 	}
 
+	function resetSettings() {
+		localSettings.enabled = settings.enabled;
+		localSettings.boot_script = settings.boot_script;
+		localSettings.boot_delay = settings.boot_delay;
+		settingsSynced = true;
+	}
+
 	function confirmSaveSettings() {
 		if (!hasSettingsChanges) return;
 
@@ -426,6 +433,7 @@ export function useMacroManagement(deps: MacroManagementDeps = {}) {
 		handleEdit,
 		saveScript,
 		saveSettings,
+		resetSettings,
 		confirmSaveSettings,
 		runScript,
 		stopScript,

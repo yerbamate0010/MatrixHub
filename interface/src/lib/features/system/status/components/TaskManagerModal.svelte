@@ -3,6 +3,7 @@
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import { useTaskManager } from '../useTaskManager.svelte';
+	import DataTable from '$lib/components/shared/tables/DataTable.svelte';
 
 	import Refresh from '~icons/tabler/refresh';
 	import Activity from '~icons/tabler/activity';
@@ -175,7 +176,7 @@
 
 		{#if taskManager.hasDetails && taskManager.tasksData.tasks}
 			<div class="rounded-box max-h-[60vh] overflow-x-auto bg-base-200 scrollbar-thin">
-				<table class="table table-pin-rows table-xs w-full">
+				<DataTable size="xs" pinRows>
 					<thead>
 						<tr>
 							<th>{m.task_manager_col_name({ locale: i18n.languageTag })}</th>
@@ -228,7 +229,7 @@
 							</tr>
 						{/each}
 					</tbody>
-				</table>
+				</DataTable>
 			</div>
 		{/if}
 	{/if}

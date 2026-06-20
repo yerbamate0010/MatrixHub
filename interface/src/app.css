@@ -59,7 +59,7 @@
 	--shadow-color: 59 130 246;
 	box-shadow:
 		0 1px 2px rgb(15 23 42 / 0.08),
-		0 0 0 1px rgb(var(--shadow-color) / 0.12) !important;
+		0 0 0 1px rgb(var(--shadow-color) / 0.12);
 	transition:
 		box-shadow 0.2s ease,
 		border-color 0.2s ease;
@@ -68,7 +68,7 @@
 .card-shadow-base:hover {
 	box-shadow:
 		0 4px 12px rgb(15 23 42 / 0.1),
-		0 0 0 1px rgb(var(--shadow-color) / 0.18) !important;
+		0 0 0 1px rgb(var(--shadow-color) / 0.18);
 }
 
 .card-shadow-error {
@@ -110,8 +110,8 @@
 
 .btn,
 .file-selector-button {
-	transition-duration: var(--animation-btn) !important;
-	animation-duration: var(--animation-btn) !important;
+	transition-duration: var(--animation-btn);
+	animation-duration: var(--animation-btn);
 }
 
 .input,
@@ -121,8 +121,8 @@
 .toggle,
 .range,
 .textarea {
-	transition-duration: var(--animation-input) !important;
-	animation-duration: var(--animation-input) !important;
+	transition-duration: var(--animation-input);
+	animation-duration: var(--animation-input);
 }
 
 /* Keep the app background calm; data and controls carry the visual weight. */
@@ -133,5 +133,5 @@ body {
 
 .drawer,
 .drawer-content {
-	background-color: transparent !important;
+	background-color: transparent;
 }

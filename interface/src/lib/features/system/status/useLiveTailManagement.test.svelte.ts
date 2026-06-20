@@ -123,6 +123,37 @@ describe('useLiveTailManagement', () => {
 		cleanup?.();
 	});
 
+	it('resets edited logging config to the loaded level', async () => {
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const liveTail = useLiveTailManagement();
+				liveTail.init();
+
+				void vi
+					.waitFor(() => {
+						expect(liveTail.loggingConfig.level).toBe('warn');
+						expect(liveTail.isLoggingConfigLoaded).toBe(true);
+					})
+					.then(() => {
+						liveTail.loggingConfig.level = 'debug';
+						expect(liveTail.isDirty).toBe(true);
+
+						liveTail.resetLoggingSettings();
+
+						expect(liveTail.loggingConfig.level).toBe('warn');
+						expect(liveTail.isDirty).toBe(false);
+						expect(mockApi.saveConfig).not.toHaveBeenCalled();
+						liveTail.destroy();
+						resolve();
+					});
+			});
+		});
+
+		cleanup?.();
+	});
+
 	it('starts delayed tail refresh and exposes fetched tail data', async () => {
 		vi.useFakeTimers();
 		let cleanup: (() => void) | undefined;

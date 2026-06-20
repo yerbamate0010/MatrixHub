@@ -35,6 +35,7 @@
 	loading={compState.loading}
 	saving={compState.saving}
 	onSave={handleSave}
+	onReset={compState.resetSettings}
 	dirtySourceId="compensation-settings"
 >
 	{#if compState.loading}

@@ -72,13 +72,9 @@
 		</BaseCard>
 	{/if}
 
-	<!-- Two columns: Status and Settings -->
-	<!-- Two columns: Status and Settings -->
-	<!-- Mobile: Settings first (to enable), then Status. Desktop: Status Left, Settings Right -->
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-		<!-- Settings (Mobile: 1st, Desktop: 2nd) -->
 		{#if sensing.isAdmin}
-			<div class="order-1 md:order-2 h-full">
+			<div class="h-full">
 				<SensingSettings
 					savedSettings={sensing.savedSettings}
 					bind:localEnabled={sensing.localEnabled}
@@ -87,12 +83,12 @@
 					hasChanges={sensing.hasChanges}
 					saving={sensing.saving}
 					onSave={sensing.saveSettings}
+					onReset={sensing.resetSettings}
 				/>
 			</div>
 		{/if}
 
-		<!-- Status (Mobile: 2nd, Desktop: 1st) -->
-		<div class="order-2 md:order-1 h-full">
+		<div class="h-full">
 			<LiveStatus
 				sensingData={sensing.sensingData}
 				isActive={sensing.isActive}

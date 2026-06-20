@@ -1,5 +1,25 @@
 import { browser } from '$app/environment';
 
+export const AVAILABLE_THEMES = [
+	'business',
+	'corporate',
+	'night',
+	'black',
+	'luxury',
+	'dracula',
+	'forest',
+	'coffee',
+	'dim',
+	'sunset',
+	'halloween',
+	'synthwave',
+	'light',
+	'nord',
+	'retro'
+] as const;
+
+type ThemeName = (typeof AVAILABLE_THEMES)[number];
+
 interface ThemeSettings {
 	theme: string;
 	borderRadius: string; // e.g., '0.5rem'
@@ -10,7 +30,7 @@ interface ThemeSettings {
 	focusScale?: string; // e.g. '0.95'
 }
 
-const DEFAULT_SETTINGS: ThemeSettings = {
+const DEFAULT_THEME_SETTINGS: ThemeSettings = {
 	theme: 'business',
 	borderRadius: '0.25rem', // Default for business
 	primaryColor: '', // Empty means use theme default
@@ -20,24 +40,53 @@ const DEFAULT_SETTINGS: ThemeSettings = {
 	focusScale: '0.95'
 };
 
+const THEME_STORAGE_KEY = 'theme_settings';
+
+function cloneSettings(settings: ThemeSettings): ThemeSettings {
+	return { ...settings };
+}
+
+function serializeSettings(settings: ThemeSettings): string {
+	return JSON.stringify(settings);
+}
+
+function normalizeSettings(candidate: Partial<ThemeSettings> | null | undefined): ThemeSettings {
+	const normalized = { ...DEFAULT_THEME_SETTINGS, ...(candidate ?? {}) };
+	if (!AVAILABLE_THEMES.includes(normalized.theme as ThemeName)) {
+		normalized.theme = DEFAULT_THEME_SETTINGS.theme;
+	}
+	return normalized;
+}
+
+function loadStoredSettings(): ThemeSettings {
+	if (!browser) {
+		return cloneSettings(DEFAULT_THEME_SETTINGS);
+	}
+
+	const stored = localStorage.getItem(THEME_STORAGE_KEY);
+	if (!stored) {
+		return cloneSettings(DEFAULT_THEME_SETTINGS);
+	}
+
+	try {
+		const parsed = JSON.parse(stored) as Partial<ThemeSettings>;
+		return normalizeSettings(parsed);
+	} catch {
+		return cloneSettings(DEFAULT_THEME_SETTINGS);
+	}
+}
+
 class ThemeStore {
-	settings = $state<ThemeSettings>(DEFAULT_SETTINGS);
+	settings = $state<ThemeSettings>(cloneSettings(DEFAULT_THEME_SETTINGS));
+	private savedSettings = $state<ThemeSettings>(cloneSettings(DEFAULT_THEME_SETTINGS));
 	private skipInitialEffect = true;
 
 	constructor() {
 		if (browser) {
-			const stored = localStorage.getItem('theme_settings');
-			if (stored) {
-				try {
-					this.settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
-				} catch {
-					// Invalid JSON, use defaults
-				}
-			}
-			const initialSettings = $state.snapshot(this.settings);
-			this.persist(initialSettings);
+			const initialSettings = loadStoredSettings();
+			this.settings = cloneSettings(initialSettings);
+			this.savedSettings = cloneSettings(initialSettings);
 			this.apply(initialSettings);
-			console.info('[ThemeStore] Loaded and applied settings:', initialSettings);
 		}
 
 		$effect.root(() => {
@@ -48,15 +97,18 @@ class ThemeStore {
 					return;
 				}
 
-				this.persist(settings);
 				this.apply(settings);
 			});
 		});
 	}
 
+	get hasChanges() {
+		return serializeSettings(this.settings) !== serializeSettings(this.savedSettings);
+	}
+
 	persist(settings: ThemeSettings = this.settings) {
 		if (browser) {
-			localStorage.setItem('theme_settings', JSON.stringify(settings));
+			localStorage.setItem(THEME_STORAGE_KEY, serializeSettings(settings));
 		}
 	}
 
@@ -113,6 +165,18 @@ class ThemeStore {
 
 	setFocusScale(scale: string) {
 		this.settings.focusScale = scale;
+	}
+
+	save() {
+		const snapshot = cloneSettings($state.snapshot(this.settings));
+		this.savedSettings = cloneSettings(snapshot);
+		this.persist(snapshot);
+	}
+
+	reset() {
+		const snapshot = cloneSettings($state.snapshot(this.savedSettings));
+		this.settings = cloneSettings(snapshot);
+		this.apply(snapshot);
 	}
 }
 

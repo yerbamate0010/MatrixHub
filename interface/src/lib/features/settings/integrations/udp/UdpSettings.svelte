@@ -82,6 +82,7 @@
 	loading={udpState.loading}
 	saving={udpState.saving}
 	onSave={handleSave}
+	onReset={udpState.resetSettings}
 	dirtySourceId="udp-settings"
 >
 	{#snippet actions()}

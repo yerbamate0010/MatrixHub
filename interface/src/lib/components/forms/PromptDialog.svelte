@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { type ModalProps } from 'svelte-modals';
 	import Modal from '$lib/components/Modal.svelte';
-	import FormButton from '$lib/components/shared/forms/FormButton.svelte';
+	import { FormButton, FormInput } from '$lib/components/shared/forms';
 	import { closeModal } from '$lib/utils/ui/modal';
 	import Cancel from '~icons/tabler/x';
 	import Check from '~icons/tabler/check';
@@ -92,9 +92,8 @@
 	{/if}
 
 	<!-- svelte-ignore a11y_autofocus -->
-	<input
+	<FormInput
 		type="text"
-		class="input input-bordered w-full"
 		{placeholder}
 		{maxlength}
 		bind:value

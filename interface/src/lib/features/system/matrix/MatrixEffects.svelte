@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
-	import { FormRange, FormSelect, FormToggle } from '$lib/components/shared/forms';
+	import { FormColorInput, FormRange, FormSelect, FormToggle } from '$lib/components/shared/forms';
 	import { Spinner } from '$lib/components/common';
 	import IconWand from '~icons/tabler/wand';
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
@@ -318,6 +318,7 @@
 	error={store.error}
 	onSave={store.saveSettingsNow}
 	onReset={store.resetSettings}
+	dirtySourceId="matrix-effects"
 >
 	<div class="flex w-full flex-col gap-1">
 		{#if store.loading}
@@ -449,34 +450,28 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 justify-end">
 							<span class="font-mono text-xs opacity-70">1: {hexColor}</span>
-							<input
-								type="color"
-								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
+							<FormColorInput
 								value={hexColor}
 								disabled={effectControlsDisabled}
-								aria-label={m.matrix_effect_color_primary({ locale: i18n.languageTag })}
+								ariaLabel={m.matrix_effect_color_primary({ locale: i18n.languageTag })}
 								oninput={handleColorChange}
 							/>
 						</div>
 						<div class="flex items-center gap-2 justify-end">
 							<span class="font-mono text-xs opacity-70">2: {hexColor2}</span>
-							<input
-								type="color"
-								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
+							<FormColorInput
 								value={hexColor2}
 								disabled={effectControlsDisabled}
-								aria-label={m.matrix_effect_color_secondary({ locale: i18n.languageTag })}
+								ariaLabel={m.matrix_effect_color_secondary({ locale: i18n.languageTag })}
 								oninput={handleColorChange2}
 							/>
 						</div>
 						<div class="flex items-center gap-2 justify-end">
 							<span class="font-mono text-xs opacity-70">3: {hexColor3}</span>
-							<input
-								type="color"
-								class="input input-bordered p-0 w-12 h-8 cursor-pointer"
+							<FormColorInput
 								value={hexColor3}
 								disabled={effectControlsDisabled}
-								aria-label={m.matrix_effect_color_tertiary({ locale: i18n.languageTag })}
+								ariaLabel={m.matrix_effect_color_tertiary({ locale: i18n.languageTag })}
 								oninput={handleColorChange3}
 							/>
 						</div>

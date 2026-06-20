@@ -23,9 +23,10 @@
 		loading: boolean;
 		isDirty: boolean;
 		onSave: (_settings: ApSettings) => void;
+		onReset: () => void;
 	}
 
-	let { settings = $bindable(), loading, isDirty, onSave }: Props = $props();
+	let { settings = $bindable(), loading, isDirty, onSave, onReset }: Props = $props();
 
 	let formField: HTMLFormElement | undefined = $state();
 	let formErrors = $state<WifiApFormErrors>(createWifiApFormErrors());
@@ -77,6 +78,7 @@
 	hasChanges={isDirty}
 	loading={loading || !settings}
 	onSave={settings ? validateAndSubmit : undefined}
+	{onReset}
 	dirtySourceId="wifi-ap-settings"
 >
 	{#snippet actions()}

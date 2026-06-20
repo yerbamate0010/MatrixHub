@@ -37,7 +37,7 @@
 		{:else}
 			<div class="flex flex-col gap-2 overflow-y-auto">
 				{#each controller.devices as device (device.id)}
-					<ContentBox class="!px-3 !py-2 flex items-center justify-between gap-2">
+					<ContentBox paddingClass="px-3 py-2" class="flex items-center justify-between gap-2">
 						<!-- Device info -->
 						<div class="flex items-center gap-2 min-w-0 flex-1">
 							{#if device.isOnline}

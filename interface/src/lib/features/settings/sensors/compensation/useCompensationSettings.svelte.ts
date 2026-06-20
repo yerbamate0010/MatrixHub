@@ -128,6 +128,7 @@ export function useCompensationSettings(deps: CompensationSettingsDeps = {}) {
 		},
 		loadSettings: hook.loadSettings,
 		saveSettings: hook.saveSettings,
+		resetSettings: hook.resetSettings,
 		updateSetting: hook.updateSetting,
 		compensateHumidity,
 		applyPreset,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SettingsCard from '$lib/components/layout/SettingsCard.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
-	import { FormButton, FormRange, FormToggle } from '$lib/components/shared/forms';
+	import { FormButton, FormColorInput, FormRange, FormToggle } from '$lib/components/shared/forms';
 	import { Spinner } from '$lib/components/common';
 	import IconPalette from '~icons/tabler/palette';
 	import IconMoodSmile from '~icons/tabler/mood-smile';
@@ -75,6 +75,7 @@
 	error={store.error}
 	onSave={store.saveSettingsNow}
 	onReset={store.resetSettings}
+	dirtySourceId="matrix-settings"
 >
 	<div class="flex w-full flex-col gap-1">
 		{#if store.loading}
@@ -167,12 +168,11 @@
 						<span class="font-bold text-sm">{m.matrix_menu_text_color()}</span>
 						<p class="text-xs text-base-content/70">{m.matrix_menu_text_color_desc()}</p>
 					</div>
-					<input
-						type="color"
-						class="input input-bordered p-0 w-12 h-8 cursor-pointer shrink-0"
+					<FormColorInput
+						class="shrink-0"
 						value={menuColorHex}
 						disabled={!canManage}
-						aria-label={m.matrix_menu_text_color()}
+						ariaLabel={m.matrix_menu_text_color()}
 						oninput={handleMenuColorChange}
 					/>
 				</div>

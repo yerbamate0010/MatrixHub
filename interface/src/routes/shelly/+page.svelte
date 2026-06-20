@@ -74,7 +74,7 @@
 		{/if}
 		<div class="flex flex-col gap-1">
 			{#if shellyState.loading}
-				<ContentBox class="py-8 flex items-center justify-center">
+				<ContentBox paddingClass="py-8" class="flex items-center justify-center">
 					<Spinner />
 				</ContentBox>
 			{:else}
@@ -87,7 +87,7 @@
 						onDelete={() => shellyDevices.removeDevice(dev.id)}
 					/>
 				{:else}
-					<ContentBox class="text-center py-8 text-base-content/50">
+					<ContentBox paddingClass="py-8" class="text-center text-base-content/50">
 						{m.shelly_empty_list({ locale: i18n.languageTag })}
 					</ContentBox>
 				{/each}

@@ -73,7 +73,7 @@
 </script>
 
 <ContentBox
-	class="border border-base-300 !p-3 flex flex-col gap-1 relative group hover:border-base-content/20 transition-colors"
+	class="border border-base-300 p-3 flex flex-col gap-1 relative group hover:border-base-content/20 transition-colors"
 >
 	<!-- Row 1: Header (Name, MAC, Delete) -->
 	<div class="flex justify-between items-start gap-2">

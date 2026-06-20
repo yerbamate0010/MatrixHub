@@ -25,7 +25,7 @@ export interface ImuConsumerState {
 	running: boolean;
 }
 
-export interface ImuSample {
+interface ImuSample {
 	ax: number;
 	ay: number;
 	az: number;

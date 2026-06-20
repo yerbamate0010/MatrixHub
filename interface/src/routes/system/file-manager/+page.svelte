@@ -137,7 +137,7 @@
 					</div>
 				</div>
 
-				<ContentBox class="border-warning/40 bg-warning/10 px-4 text-warning !py-3">
+				<ContentBox paddingClass="px-4 py-3" class="border-warning/40 bg-warning/10 text-warning">
 					<div class="flex items-start gap-3">
 						<AlertIcon class="mt-0.5 h-5 w-5" />
 						<span>The file manager feature is disabled on this device.</span>
@@ -194,7 +194,10 @@
 				<BaseCard title="Upload Files" icon={UploadIcon}>
 					<div class="space-y-4">
 						{#if isCurrentPathUploadBlocked}
-							<ContentBox class="border-warning/40 bg-warning/10 px-4 text-warning !py-3">
+							<ContentBox
+								paddingClass="px-4 py-3"
+								class="border-warning/40 bg-warning/10 text-warning"
+							>
 								<div class="flex items-start gap-3">
 									<AlertIcon class="mt-0.5 h-5 w-5" />
 									<span>

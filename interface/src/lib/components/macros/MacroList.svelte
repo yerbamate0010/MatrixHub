@@ -3,6 +3,7 @@
 	import type { MacroApiService, ScriptFile } from '$lib/services/api/integrations/MacroApiService';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
+	import DataTable from '$lib/components/shared/tables/DataTable.svelte';
 	import { confirm } from '$lib/utils/ui/dialogs';
 
 	// Icons
@@ -160,7 +161,7 @@
 
 	<!-- Script List -->
 	<div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
-		<table class="table w-full">
+		<DataTable size="">
 			<thead>
 				<tr>
 					<th>{m.macros_script_name()}</th>
@@ -218,6 +219,6 @@
 					{/each}
 				{/if}
 			</tbody>
-		</table>
+		</DataTable>
 	</div>
 </div>

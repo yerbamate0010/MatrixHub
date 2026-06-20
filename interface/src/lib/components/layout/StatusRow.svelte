@@ -5,7 +5,7 @@
 	let {
 		icon: Icon = undefined,
 		leading = undefined,
-		paddingClass = '!px-4 !py-2',
+		paddingClass = 'px-4 py-2',
 		iconClass = 'h-6 w-6 flex-none text-base-content/70',
 		iconSlot = undefined,
 		label = undefined,
@@ -37,7 +37,7 @@
 	} = $props();
 </script>
 
-<ContentBox class="flex items-center space-x-3 {paddingClass} {className}">
+<ContentBox {paddingClass} class="flex items-center space-x-3 {className}">
 	{#if leading}
 		<div class="flex items-center">
 			{@render leading()}

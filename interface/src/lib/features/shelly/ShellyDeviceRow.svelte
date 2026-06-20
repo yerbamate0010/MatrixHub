@@ -25,7 +25,7 @@
 	let { device, canManage, onToggle, onEdit, onDelete }: Props = $props();
 </script>
 
-<ContentBox class="shadow-sm border border-base-200 !p-3">
+<ContentBox paddingClass="p-3" class="shadow-sm border border-base-200">
 	<!-- Reduced padding -->
 	<!-- Header Row: Status, Name, IP, Actions -->
 	<div class="flex items-center gap-3">

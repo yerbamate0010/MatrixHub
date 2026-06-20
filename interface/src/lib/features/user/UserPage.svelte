@@ -68,6 +68,7 @@
 			loading={managementState.isLoading}
 			saving={managementState.isSaving}
 			onSave={() => userManagement.saveSettings(managementState.securitySettings)}
+			onReset={userManagement.resetSettings}
 			dirtySourceId="user-security-settings"
 		>
 			{#if managementState.isLoading}

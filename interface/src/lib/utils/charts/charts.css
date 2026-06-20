@@ -5,8 +5,8 @@
 
 /* Selection (Zoom) area — uses current theme's primary color */
 .u-select {
-	background: color-mix(in srgb, var(--color-primary), transparent 85%) !important;
-	border: 1px solid color-mix(in srgb, var(--color-primary), transparent 50%) !important;
+	background: color-mix(in srgb, var(--color-primary), transparent 85%);
+	border: 1px solid color-mix(in srgb, var(--color-primary), transparent 50%);
 }
 
 /* Responsive axis font sizes for small viewports */

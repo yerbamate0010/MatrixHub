@@ -67,6 +67,7 @@
 		loading={!liveTail.isLoggingConfigLoaded}
 		saving={liveTail.savingConfig}
 		onSave={liveTail.saveLoggingSettings}
+		onReset={liveTail.resetLoggingSettings}
 		dirtySourceId="live-tail-settings"
 	>
 		{#snippet actions()}

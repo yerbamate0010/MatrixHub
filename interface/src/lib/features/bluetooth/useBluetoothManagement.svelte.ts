@@ -95,6 +95,7 @@ export function useBluetoothManagement() {
 		set localEnabled(value: boolean) {
 			bleSettings.localEnabled = value;
 		},
+		resetSettings: bleSettings.resetSettings,
 		confirmSave
 	};
 }

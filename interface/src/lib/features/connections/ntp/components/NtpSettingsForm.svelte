@@ -17,6 +17,7 @@
 		settings: NTPSettings;
 		manualTimeInput: string;
 		onSubmit: () => void;
+		onReset: () => void;
 		isDirty: boolean;
 	}
 
@@ -24,6 +25,7 @@
 		settings = $bindable(),
 		manualTimeInput = $bindable(),
 		onSubmit,
+		onReset,
 		isDirty
 	}: Props = $props();
 
@@ -96,6 +98,7 @@
 	icon={Clock}
 	hasChanges={isDirty}
 	onSave={validateAndSubmit}
+	{onReset}
 	dirtySourceId="ntp-settings"
 >
 	{#snippet actions()}

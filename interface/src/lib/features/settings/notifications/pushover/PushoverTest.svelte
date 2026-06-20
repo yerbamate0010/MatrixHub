@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
-	import { FormButton } from '$lib/components/shared/forms';
+	import { FormButton, FormTextarea } from '$lib/components/shared/forms';
 	import Send from '~icons/tabler/send';
 	import * as m from '$lib/paraglide/messages.js';
 	import { i18n } from '$lib/i18n.svelte';
@@ -17,21 +17,14 @@
 
 <BaseCard title={m.pushover_test_title({ locale: i18n.languageTag })} icon={Send} class="h-full">
 	<ContentBox>
-		<label class="form-control w-full">
-			<div class="label pt-0">
-				<span class="label-text font-bold"
-					>{m.webhook_test_label({ locale: i18n.languageTag })}</span
-				>
-			</div>
-			<textarea
-				class="textarea textarea-bordered w-full"
-				rows="3"
-				maxlength="256"
-				placeholder={m.pushover_test_placeholder({ locale: i18n.languageTag })}
-				bind:value={testState.testText}
-				disabled={testState.sending}
-			></textarea>
-		</label>
+		<FormTextarea
+			label={m.webhook_test_label({ locale: i18n.languageTag })}
+			rows={3}
+			maxlength={256}
+			placeholder={m.pushover_test_placeholder({ locale: i18n.languageTag })}
+			bind:value={testState.testText}
+			disabled={testState.sending}
+		/>
 	</ContentBox>
 
 	<div class="flex items-center gap-3 mt-4">

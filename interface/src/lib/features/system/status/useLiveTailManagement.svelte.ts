@@ -57,6 +57,7 @@ export function useLiveTailManagement() {
 		copyToClipboard: stream.copyToClipboard,
 		refreshTail: stream.refreshTail,
 		refreshLoggingConfig: config.refreshLoggingConfig,
-		saveLoggingSettings: config.saveLoggingSettings
+		saveLoggingSettings: config.saveLoggingSettings,
+		resetLoggingSettings: config.resetLoggingSettings
 	};
 }

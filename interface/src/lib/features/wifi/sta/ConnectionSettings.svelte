@@ -18,6 +18,7 @@
 		isDirty?: boolean;
 		saveBlocked?: boolean;
 		onApply?: () => void;
+		onReset?: () => void;
 		onHostnameChange: (_value: string) => void;
 		onModeChange: (_value: WifiMode) => void;
 	}
@@ -28,6 +29,7 @@
 		isDirty = false,
 		saveBlocked = false,
 		onApply,
+		onReset,
 		onHostnameChange,
 		onModeChange
 	}: Props = $props();
@@ -111,6 +113,7 @@
 	hasChanges={isDirty}
 	disabled={saveBlocked}
 	onSave={onApply}
+	{onReset}
 	dirtySourceId="wifi-connection-settings"
 >
 	{#snippet actions()}

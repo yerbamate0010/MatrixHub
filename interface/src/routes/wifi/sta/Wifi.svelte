@@ -36,7 +36,7 @@
 	{/if}
 
 	<div class="contents md:flex md:flex-col md:gap-4">
-		<div class="order-3">
+		<div>
 			{#if state.statusLoading}
 				<LoadingCard
 					title={m.status_wifi_title({ locale: i18n.languageTag })}
@@ -49,7 +49,7 @@
 		</div>
 
 		{#if session.canManage}
-			<div class="order-2">
+			<div>
 				{#if state.settingsLoading}
 					<LoadingCard
 						title={m.wifi_connection_title({ locale: i18n.languageTag })}
@@ -63,6 +63,7 @@
 						isDirty={state.isSettingsDirty}
 						saveBlocked={state.isSaveBlocked}
 						onApply={wifiMgmt.saveSettings}
+						onReset={wifiMgmt.resetSettings}
 						onHostnameChange={wifiMgmt.updateHostname}
 						onModeChange={wifiMgmt.updateMode}
 					/>
@@ -72,7 +73,7 @@
 	</div>
 
 	{#if session.canManage}
-		<div class="order-1">
+		<div>
 			{#if state.settingsLoading}
 				<LoadingCard
 					title={m.wifi_sta_saved_networks({ locale: i18n.languageTag })}
@@ -86,6 +87,7 @@
 					isDirty={state.isSettingsDirty}
 					saveBlocked={state.isSaveBlocked}
 					onApply={wifiMgmt.saveSettings}
+					onReset={wifiMgmt.resetSettings}
 				/>
 			{/if}
 		</div>

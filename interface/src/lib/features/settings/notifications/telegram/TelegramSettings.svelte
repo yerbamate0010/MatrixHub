@@ -64,6 +64,7 @@
 	loading={telegramState.loading}
 	saving={telegramState.saving}
 	onSave={handleSubmit}
+	onReset={telegramState.resetSettings}
 	dirtySourceId="telegram-settings"
 >
 	{#if telegramState.loading}

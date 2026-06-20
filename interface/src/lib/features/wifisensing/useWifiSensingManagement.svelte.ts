@@ -33,6 +33,10 @@ export function useWifiSensingManagement() {
 		await settings.saveSettingsNow();
 	}
 
+	function resetSettings() {
+		settings.resetSettings();
+	}
+
 	return {
 		get sensingData() {
 			return status.sensingData;
@@ -91,6 +95,7 @@ export function useWifiSensingManagement() {
 		get hasUnsavedEnable() {
 			return settings.hasUnsavedEnable;
 		},
-		saveSettings
+		saveSettings,
+		resetSettings
 	};
 }

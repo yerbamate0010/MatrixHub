@@ -26,9 +26,17 @@
 		isDirty: boolean;
 		saveBlocked?: boolean;
 		onApply: () => void;
+		onReset: () => void;
 	}
 
-	let { networks, onNetworksChange, isDirty, saveBlocked = false, onApply }: Props = $props();
+	let {
+		networks,
+		onNetworksChange,
+		isDirty,
+		saveBlocked = false,
+		onApply,
+		onReset
+	}: Props = $props();
 
 	const listLogic = useNetworkList(
 		() => networks,
@@ -66,6 +74,7 @@
 	hasChanges={isDirty}
 	disabled={saveBlocked}
 	onSave={onApply}
+	{onReset}
 	dirtySourceId="wifi-saved-networks"
 >
 	{#snippet actions()}
@@ -112,7 +121,7 @@
 						{@const networkIssue = invalidNetworkIssues[index]}
 						<div transition:slide|local={{ duration: 200 }}>
 							<StatusRow
-								paddingClass="!p-2"
+								paddingClass="p-2"
 								label={network.ssid}
 								labelClass="font-bold truncate"
 								icon={Router}

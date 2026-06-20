@@ -58,6 +58,7 @@
 				loading={apState.loading}
 				isDirty={apState.isSettingsDirty}
 				onSave={apMgmt.saveSettings}
+				onReset={apMgmt.resetSettings}
 			/>
 		{/if}
 	</div>

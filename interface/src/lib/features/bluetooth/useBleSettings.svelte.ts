@@ -70,6 +70,14 @@ export function useBleSettings(getApi: () => BleApiService) {
 
 	const isAdmin = $derived(session.canManage);
 
+	function resetSettings() {
+		const savedSettings = bluetoothStore.settings;
+		if (!savedSettings) return;
+		localEnabled = savedSettings.enabled;
+		lastSyncedEnabled = savedSettings.enabled;
+		error = null;
+	}
+
 	return {
 		get savedSettings() {
 			return bluetoothStore.settings as BleSettings | null;
@@ -93,6 +101,7 @@ export function useBleSettings(getApi: () => BleApiService) {
 			return isAdmin;
 		},
 		fetchSettings,
-		saveSettingsNow
+		saveSettingsNow,
+		resetSettings
 	};
 }

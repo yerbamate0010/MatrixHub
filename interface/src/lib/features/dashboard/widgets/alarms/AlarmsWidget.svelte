@@ -40,7 +40,8 @@
 				{#each controller.rules as rule (rule.id)}
 					{@const isTriggered = rule.triggered && rule.enabled}
 					<ContentBox
-						class="!p-2 flex items-center gap-3 shadow-sm border-l-4 transition-all {isTriggered
+						paddingClass="p-2"
+						class="flex items-center gap-3 shadow-sm border-l-4 transition-all {isTriggered
 							? 'border-error'
 							: !rule.enabled
 								? 'border-base-300 opacity-60'

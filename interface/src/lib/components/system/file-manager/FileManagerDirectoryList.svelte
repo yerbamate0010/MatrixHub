@@ -3,6 +3,7 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { FormButton } from '$lib/components/shared/forms';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
+	import DataTable from '$lib/components/shared/tables/DataTable.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 	import type { FileEntry } from '$lib/services/fileManager';
@@ -56,7 +57,7 @@
 
 <div class="space-y-5">
 	{#if errorMessage}
-		<ContentBox class="border-error/40 bg-error/10 text-error px-4 !py-3">
+		<ContentBox paddingClass="px-4 py-3" class="border-error/40 bg-error/10 text-error">
 			<div class="flex items-start gap-3">
 				<AlertIcon class="mt-0.5 h-5 w-5" />
 				<span>{errorMessage}</span>
@@ -69,15 +70,15 @@
 			<Spinner />
 		</div>
 	{:else if entries.length === 0}
-		<ContentBox class="border-info/40 bg-info/10 text-info px-4 !py-3">
+		<ContentBox paddingClass="px-4 py-3" class="border-info/40 bg-info/10 text-info">
 			<div class="flex items-start gap-3">
 				<InfoIcon class="mt-0.5 h-5 w-5" />
 				<span>{m.file_manager_empty_directory({ locale: i18n.languageTag })}</span>
 			</div>
 		</ContentBox>
 	{:else}
-		<ContentBox class="overflow-hidden p-0">
-			<table class="table table-sm w-full">
+		<ContentBox paddingClass="p-0" class="overflow-hidden">
+			<DataTable>
 				<thead>
 					<tr class="text-xs uppercase tracking-wide text-base-content/60">
 						<th class="px-4 py-3 text-left"
@@ -153,7 +154,7 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table>
+			</DataTable>
 		</ContentBox>
 	{/if}
 </div>

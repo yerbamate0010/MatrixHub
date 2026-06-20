@@ -67,7 +67,10 @@
 	<!-- List of Saved Devices -->
 	<div class={scannerEnabled ? '' : 'pointer-events-none'}>
 		{#if !savedSettings?.sensors || savedSettings.sensors.length === 0}
-			<ContentBox class="text-center !p-8 opacity-50 border border-base-300 border-dashed">
+			<ContentBox
+				paddingClass="p-8"
+				class="text-center opacity-50 border border-base-300 border-dashed"
+			>
 				<p>{m.ble_no_paired({ locale: i18n.languageTag })}</p>
 				{#if canManage}
 					<FormButton
