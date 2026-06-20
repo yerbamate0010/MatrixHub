@@ -77,7 +77,9 @@
 
 	function freshLabel(value?: boolean) {
 		if (value === undefined) return '--';
-		return value ? 'fresh' : 'stale';
+		return value
+			? m.imu_sample_fresh({ locale: i18n.languageTag })
+			: m.imu_sample_stale({ locale: i18n.languageTag });
 	}
 
 	function enabledLabel(value: boolean | null | undefined) {
@@ -143,19 +145,33 @@
 			: m.imu_alarm_clear({ locale: i18n.languageTag });
 	}
 
+	function baselineValidityLabel(valid: boolean) {
+		return valid
+			? m.imu_baseline_valid({ locale: i18n.languageTag })
+			: m.imu_baseline_missing({ locale: i18n.languageTag });
+	}
+
+	function retryAtLabel(ms: number) {
+		return m.imu_retry_at({ ms: String(ms) }, { locale: i18n.languageTag });
+	}
+
+	function samplesLabel(count: number) {
+		return m.imu_samples({ count: String(count) }, { locale: i18n.languageTag });
+	}
+
 	function lastStartErrorLabel(value: string | undefined) {
 		if (!value) return '--';
 		return value;
 	}
 
-	function enabledBadgeClass(value: boolean | null | undefined) {
-		if (value === null || value === undefined) return 'badge-ghost';
-		return value ? 'badge-success' : 'badge-ghost';
+	function enabledTextClass(value: boolean | null | undefined) {
+		if (value === null || value === undefined) return 'text-base-content/70';
+		return value ? 'font-semibold text-success' : 'text-base-content/70';
 	}
 
-	function stateBadgeClass(value: boolean | undefined) {
-		if (value === undefined) return 'badge-ghost';
-		return value ? 'badge-info' : 'badge-ghost';
+	function stateTextClass(value: boolean | undefined) {
+		if (value === undefined) return 'text-base-content/70';
+		return value ? 'font-semibold text-info' : 'text-base-content/70';
 	}
 </script>
 
@@ -208,7 +224,7 @@
 							<div
 								class={`mt-1 text-sm font-semibold ${imu.settings.orientation_baseline_valid ? 'text-success' : 'text-warning'}`}
 							>
-								{imu.settings.orientation_baseline_valid ? 'valid' : 'missing'}
+								{baselineValidityLabel(imu.settings.orientation_baseline_valid)}
 							</div>
 							<div class="truncate text-xs opacity-60">
 								{vectorLabel(imu.settings.orientation_baseline)}
@@ -222,7 +238,7 @@
 								{lastStartErrorLabel(status?.last_start_error)}
 							</div>
 							{#if status?.retry_pending}
-								<div class="text-xs opacity-60">retry @ {status.next_retry_ms} ms</div>
+								<div class="text-xs opacity-60">{retryAtLabel(status.next_retry_ms)}</div>
 							{/if}
 						</ContentBox>
 					</div>
@@ -230,19 +246,27 @@
 					<ContentBox title={m.imu_measurements({ locale: i18n.languageTag })} class="p-3">
 						<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm md:grid-cols-3">
 							<div>
-								<div class="text-xs opacity-60">accel</div>
+								<div class="text-xs opacity-60">
+									{m.imu_metric_accel({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(metrics?.accel_magnitude_g, 3, ' g')}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">delta</div>
+								<div class="text-xs opacity-60">
+									{m.imu_metric_delta({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(metrics?.accel_delta_g, 3, ' g')}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">gyro</div>
+								<div class="text-xs opacity-60">
+									{m.imu_metric_gyro({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(metrics?.gyro_magnitude_dps, 1, ' dps')}</div>
 							</div>
 							<div>
-								<div class="text-xs opacity-60">tilt</div>
+								<div class="text-xs opacity-60">
+									{m.imu_metric_tilt({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{numberLabel(metrics?.tilt_deg, 1, '°')}</div>
 							</div>
 							<div>
@@ -270,7 +294,9 @@
 								<div class="font-mono">{alarm?.clear_hold_elapsed_ms ?? 0} ms</div>
 							</div>
 							<div class="col-span-2 md:col-span-1">
-								<div class="text-xs opacity-60">baseline</div>
+								<div class="text-xs opacity-60">
+									{m.imu_metric_baseline({ locale: i18n.languageTag })}
+								</div>
 								<div class="font-mono">{vectorLabel(metrics?.orientation_baseline)}</div>
 							</div>
 						</div>
@@ -284,6 +310,7 @@
 							{#each consumerRows as row (row.key)}
 								{@const Icon = row.icon}
 								<div
+									data-testid={`imu-consumer-${row.key}`}
 									class="grid gap-2 py-2 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
 								>
 									<div class="flex min-w-0 items-center gap-3">
@@ -292,15 +319,30 @@
 										</div>
 										<div class="min-w-0">
 											<div class="truncate text-sm font-semibold">{row.label}</div>
-											<div class="mt-1 flex flex-wrap gap-1">
-												<span class={`badge badge-sm ${enabledBadgeClass(row.configured)}`}>
-													{enabledLabel(row.configured)}
+											<div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+												<span>
+													<span class="opacity-60">
+														{m.imu_consumer_configured({ locale: i18n.languageTag })}:
+													</span>
+													<span class={enabledTextClass(row.configured)}>
+														{enabledLabel(row.configured)}
+													</span>
 												</span>
-												<span class={`badge badge-sm ${stateBadgeClass(row.data?.desired)}`}>
-													{desiredStateLabel(row.data?.desired)}
+												<span>
+													<span class="opacity-60">
+														{m.imu_consumer_desired({ locale: i18n.languageTag })}:
+													</span>
+													<span class={stateTextClass(row.data?.desired)}>
+														{desiredStateLabel(row.data?.desired)}
+													</span>
 												</span>
-												<span class={`badge badge-sm ${stateBadgeClass(row.data?.running)}`}>
-													{runningStateLabel(row.data?.running)}
+												<span>
+													<span class="opacity-60">
+														{m.imu_consumer_running({ locale: i18n.languageTag })}:
+													</span>
+													<span class={stateTextClass(row.data?.running)}>
+														{runningStateLabel(row.data?.running)}
+													</span>
 												</span>
 											</div>
 										</div>
@@ -440,20 +482,24 @@
 						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
 							<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 								<div>
-									<div class="text-xs opacity-60">baseline</div>
+									<div class="text-xs opacity-60">
+										{m.imu_metric_baseline({ locale: i18n.languageTag })}
+									</div>
 									<div
 										class={imu.settings.orientation_baseline_valid
 											? 'font-semibold text-success'
 											: 'font-semibold text-warning'}
 									>
-										{imu.settings.orientation_baseline_valid ? 'valid' : 'missing'}
+										{baselineValidityLabel(imu.settings.orientation_baseline_valid)}
 									</div>
 									<div class="font-mono text-xs opacity-70">
 										{vectorLabel(imu.settings.orientation_baseline)}
 									</div>
 								</div>
 								<div>
-									<div class="text-xs opacity-60">revision</div>
+									<div class="text-xs opacity-60">
+										{m.imu_metric_revision({ locale: i18n.languageTag })}
+									</div>
 									<div class="font-mono">{imu.settings.calibration_revision}</div>
 									<div class="font-mono text-xs opacity-70">
 										{imu.settings.baseline_calibrated_at} ms
@@ -490,8 +536,10 @@
 										: m.imu_calibration_failed({ locale: i18n.languageTag })}
 								</div>
 								<div class="text-xs opacity-70">
-									{imu.calibrationResult.status} · {imu.calibrationResult.sample_count}
-									samples · {numberLabel(imu.calibrationResult.accel_magnitude_variance, 4)}
+									{imu.calibrationResult.status} · {samplesLabel(
+										imu.calibrationResult.sample_count
+									)} ·
+									{numberLabel(imu.calibrationResult.accel_magnitude_variance, 4)}
 								</div>
 							</div>
 						{/if}
