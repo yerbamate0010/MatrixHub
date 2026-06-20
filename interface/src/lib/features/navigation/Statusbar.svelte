@@ -21,7 +21,7 @@
 <div
 	class="navbar bg-base-300 sticky top-0 z-10 min-h-12 w-full gap-2 px-2 drop-shadow-lg sm:px-3 lg:min-h-16"
 >
-	<div class="flex min-w-0 flex-1 items-center justify-left">
+	<div class="flex min-w-0 flex-1 items-center justify-start">
 		<label
 			for="main-menu"
 			class="btn btn-ghost btn-circle btn-sm drawer-button shrink-0 lg:hidden"
@@ -46,8 +46,8 @@
 		<div
 			class="tooltip tooltip-bottom flex h-8 w-8 items-center justify-center"
 			data-tip={statusbar.connectionTooltip}
+			role="img"
 			aria-label={statusbar.connectionTooltip}
-			title={statusbar.connectionTooltip}
 		>
 			{#if statusbar.connectionStatus === 'connected'}
 				<CloudCheck class={`h-5 w-5 ${statusbar.connectionClass}`} />
@@ -70,7 +70,12 @@
 		{#if statusbar.status.isConnected || statusbar.status.isApMode}
 			<div class="flex items-center justify-center">
 				{#if statusbar.status.isApMode}
-					<div class="tooltip tooltip-bottom" data-tip={m.statusbar_ap_mode()}>
+					<div
+						class="tooltip tooltip-bottom"
+						data-tip={m.statusbar_ap_mode()}
+						role="img"
+						aria-label={m.statusbar_ap_mode()}
+					>
 						<RssiIndicator
 							showDBm={false}
 							rssi_dbm={statusbar.status.rssi < -90 ? -50 : statusbar.status.rssi}
@@ -91,6 +96,8 @@
 			<div
 				class="flex items-center justify-center tooltip tooltip-bottom"
 				data-tip={m.status_wifi_disconnected()}
+				role="img"
+				aria-label={m.status_wifi_disconnected()}
 			>
 				<WiFiOff class="h-5 w-5 text-error" />
 			</div>

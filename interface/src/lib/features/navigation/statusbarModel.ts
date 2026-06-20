@@ -1,6 +1,5 @@
 import type { SystemStatus } from '$lib/types/system/systemStatus';
 import type { ConnectionStatus } from '$lib/stores/connectionState.svelte';
-import type { MenuItem } from './menuConfig';
 
 const VALID_EPOCH_MS = 1_000_000_000_000;
 
@@ -49,20 +48,4 @@ export function getStatusbarConnectionClass(status: ConnectionStatus) {
 		default:
 			return 'text-error';
 	}
-}
-
-export function resolveStatusbarTitle(
-	menu: MenuItem[],
-	pathname: string,
-	fallbackTitle: string
-): string {
-	for (const item of menu) {
-		if (item.href === pathname) return item.title;
-		if (item.submenu) {
-			const subItem = item.submenu.find((entry) => entry.href === pathname);
-			if (subItem) return subItem.title;
-		}
-	}
-
-	return fallbackTitle;
 }

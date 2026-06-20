@@ -2,10 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	createStatusbarClock,
 	getStatusbarConnectionClass,
-	getStatusbarTempColor,
-	resolveStatusbarTitle
+	getStatusbarTempColor
 } from './statusbarModel';
-import type { MenuItem } from './menuConfig';
 
 describe('statusbarModel', () => {
 	it('formats clock from device timestamp plus local drift', () => {
@@ -38,27 +36,6 @@ describe('statusbarModel', () => {
 			date: '18.03.2026',
 			clock: `${String(fallbackDate.getHours()).padStart(2, '0')}:${String(fallbackDate.getMinutes()).padStart(2, '0')}`
 		});
-	});
-
-	it('resolves nested menu titles and falls back cleanly', () => {
-		const menu = [
-			{
-				title: 'Top',
-				icon: {} as MenuItem['icon'],
-				feature: true,
-				submenu: [
-					{
-						title: 'Nested',
-						icon: {} as MenuItem['icon'],
-						href: '/nested',
-						feature: true
-					}
-				]
-			}
-		] satisfies MenuItem[];
-
-		expect(resolveStatusbarTitle(menu, '/nested', 'Fallback')).toBe('Nested');
-		expect(resolveStatusbarTitle(menu, '/missing', 'Fallback')).toBe('Fallback');
 	});
 
 	it('maps temperature to adaptive color-mix style', () => {
