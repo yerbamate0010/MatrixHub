@@ -7,6 +7,7 @@
 	import { ALARM_SOURCES } from '$lib/types/domain/alarms';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import { getBooleanAlarmConditionLabel } from '$lib/features/alarms/alarmLabels';
 	import BaseWidget from '$lib/components/layout/BaseWidget.svelte';
 	import ContentBox from '$lib/components/layout/ContentBox.svelte';
 	import { useAlarmsWidgetManagement } from './useAlarmsWidgetManagement.svelte';
@@ -64,17 +65,21 @@
 								</span>
 							</div>
 							<div class="text-[10px] opacity-70 flex items-center gap-1 min-w-0">
-								<span class="truncate">
-									{controller.getSourceLabel(rule.source)}
-								</span>
-								{#if rule.current_value !== undefined}
-									<span class="font-mono font-bold shrink-0"
-										>{rule.current_value.toFixed(rule.source === 'co2' ? 0 : 1)}</span
-									>
+								{#if ALARM_SOURCES[rule.source]?.booleanLike}
+									<span class="truncate">{getBooleanAlarmConditionLabel(rule.source)}</span>
+								{:else}
+									<span class="truncate">
+										{controller.getSourceLabel(rule.source)}
+									</span>
+									{#if rule.current_value !== undefined}
+										<span class="font-mono font-bold shrink-0"
+											>{rule.current_value.toFixed(rule.source === 'co2' ? 0 : 1)}</span
+										>
+									{/if}
+									<span class="shrink-0">{rule.operator === 'above' ? '>' : '<'}</span>
+									<span class="shrink-0">{rule.threshold}</span>
+									<span class="shrink-0">{ALARM_SOURCES[rule.source]?.unit}</span>
 								{/if}
-								<span class="shrink-0">{rule.operator === 'above' ? '>' : '<'}</span>
-								<span class="shrink-0">{rule.threshold}</span>
-								<span class="shrink-0">{ALARM_SOURCES[rule.source]?.unit}</span>
 							</div>
 						</div>
 

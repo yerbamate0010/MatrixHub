@@ -16,7 +16,8 @@ export type AlarmSource =
 	| 'ble_humidity'
 	| 'ble_battery'
 	| 'ble_rssi'
-	| 'wifi_csi_motion';
+	| 'wifi_csi_motion'
+	| 'imu_tamper';
 
 /** Comparison operator */
 export type AlarmOperator = 'above' | 'below';
@@ -67,7 +68,8 @@ export const ALARM_SOURCES: Record<
 	ble_humidity: { unit: '%', icon: 'bluetooth' },
 	ble_battery: { unit: '%', icon: 'bluetooth' },
 	ble_rssi: { unit: 'dBm', icon: 'bluetooth' },
-	wifi_csi_motion: { unit: '', icon: 'wifi', booleanLike: true }
+	wifi_csi_motion: { unit: '', icon: 'wifi', booleanLike: true },
+	imu_tamper: { unit: '', icon: 'activity', booleanLike: true }
 };
 
 /** Display metadata for severity levels */

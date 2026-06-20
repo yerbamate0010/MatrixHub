@@ -28,6 +28,7 @@
 
 	const status = $derived(imu.status);
 	const metrics = $derived(status?.metrics ?? null);
+	const alarm = $derived(status?.alarm ?? null);
 	const consumerRows = $derived.by(() => {
 		const consumers = status?.consumers;
 		return [
@@ -111,6 +112,25 @@
 		if (!vector) return '--';
 		return `${vector.x.toFixed(3)}, ${vector.y.toFixed(3)}, ${vector.z.toFixed(3)}`;
 	}
+
+	function alarmReasonLabel(reason: string | undefined) {
+		switch (reason) {
+			case 'tilt':
+				return m.imu_alarm_reason_tilt({ locale: i18n.languageTag });
+			case 'shock':
+				return m.imu_alarm_reason_shock({ locale: i18n.languageTag });
+			case 'stale':
+				return m.imu_alarm_reason_stale({ locale: i18n.languageTag });
+			case 'no_baseline':
+				return m.imu_alarm_reason_no_baseline({ locale: i18n.languageTag });
+			case 'unavailable':
+				return m.imu_alarm_reason_unavailable({ locale: i18n.languageTag });
+			case 'none':
+				return m.imu_alarm_reason_none({ locale: i18n.languageTag });
+			default:
+				return '--';
+		}
+	}
 </script>
 
 <AdminAccessGate allow={canManage}>
@@ -168,6 +188,38 @@
 							<div class="col-span-2">
 								<div class="text-xs opacity-60">baseline</div>
 								<div class="font-mono">{vectorLabel(metrics?.orientation_baseline)}</div>
+							</div>
+						</div>
+					</ContentBox>
+					<ContentBox>
+						<div class="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+							<div>
+								<div class="text-xs opacity-60">{m.imu_alarm_state({ locale: i18n.languageTag })}</div>
+								<div class={alarm?.triggered ? 'font-semibold text-error' : 'font-semibold text-success'}>
+									{alarm?.triggered
+										? m.imu_alarm_triggered({ locale: i18n.languageTag })
+										: m.imu_alarm_clear({ locale: i18n.languageTag })}
+								</div>
+							</div>
+							<div>
+								<div class="text-xs opacity-60">{m.imu_alarm_reason({ locale: i18n.languageTag })}</div>
+								<div class="font-mono">{alarmReasonLabel(alarm?.reason)}</div>
+							</div>
+							<div>
+								<div class="text-xs opacity-60">{m.imu_current_tilt({ locale: i18n.languageTag })}</div>
+								<div class="font-mono">{numberLabel(alarm?.tilt_deg, 1, '°')}</div>
+							</div>
+							<div>
+								<div class="text-xs opacity-60">{m.imu_current_accel_delta({ locale: i18n.languageTag })}</div>
+								<div class="font-mono">{numberLabel(alarm?.accel_delta_g, 3, ' g')}</div>
+							</div>
+							<div>
+								<div class="text-xs opacity-60">{m.imu_alarm_trigger_hold({ locale: i18n.languageTag })}</div>
+								<div class="font-mono">{alarm?.trigger_hold_elapsed_ms ?? 0} ms</div>
+							</div>
+							<div>
+								<div class="text-xs opacity-60">{m.imu_alarm_clear_hold({ locale: i18n.languageTag })}</div>
+								<div class="font-mono">{alarm?.clear_hold_elapsed_ms ?? 0} ms</div>
 							</div>
 						</div>
 					</ContentBox>
@@ -352,12 +404,20 @@
 						</div>
 					</ContentBox>
 				{/if}
-				<div class="flex justify-end pt-2">
+				<div class="flex justify-end gap-2 pt-2">
+					<FormButton
+						variant="ghost"
+						icon={Refresh}
+						label={m.imu_reset_orientation({ locale: i18n.languageTag })}
+						loading={imu.resettingBaseline}
+						disabled={imu.calibrating || imu.resettingBaseline}
+						onclick={imu.resetOrientationBaseline}
+					/>
 					<FormButton
 						icon={Target}
 						label={m.imu_calibrate_orientation({ locale: i18n.languageTag })}
 						loading={imu.calibrating}
-						disabled={imu.calibrating}
+						disabled={imu.calibrating || imu.resettingBaseline}
 						onclick={imu.calibrateOrientation}
 					/>
 				</div>

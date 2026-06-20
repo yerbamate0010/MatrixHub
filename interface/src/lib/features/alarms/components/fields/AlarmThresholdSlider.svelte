@@ -3,6 +3,7 @@
 	import { ALARM_SOURCES } from '$lib/types/domain/alarms';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import { getBooleanAlarmConditionLabel } from '$lib/features/alarms/alarmLabels';
 
 	let {
 		threshold = $bindable(),
@@ -33,7 +34,7 @@
 	</span>
 	{#if ALARM_SOURCES[source].booleanLike}
 		<div class="rounded-md border border-base-300/60 bg-base-100/40 px-3 py-2 text-sm font-medium">
-			{m.alarm_boolean_csi_motion_detected({ locale: i18n.languageTag })}
+			{getBooleanAlarmConditionLabel(source)}
 		</div>
 	{:else}
 		<div class="flex items-center gap-2">

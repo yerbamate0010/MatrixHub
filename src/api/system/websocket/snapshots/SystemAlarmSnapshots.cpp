@@ -53,6 +53,7 @@ void sendAlarmsSnapshot(const SnapshotContext& ctx) {
         inputData.temperature = snap.temp;
         inputData.humidity = snap.humid;
         inputData.wifiVariance = wifiStats.variance;
+        inputData.imuTamper = ctx.alarmService ? ctx.alarmService->getLastImuTamperValue() : NAN;
 
         const uint32_t nowMs = millis();
         const size_t statusLimit = std::min(rulesCopy.size(), statesCopy.size());

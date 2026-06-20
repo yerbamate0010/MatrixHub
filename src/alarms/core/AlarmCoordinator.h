@@ -44,7 +44,10 @@ public:
      * @brief Main evaluation loop.
      * @return Number of notifications sent/pending
      */
-    uint8_t process(const SensorSnapshot& sensors, float wifiVariance, float wifiCsiMotion = NAN);
+    uint8_t process(const SensorSnapshot& sensors,
+                    float wifiVariance,
+                    float wifiCsiMotion = NAN,
+                    float imuTamper = NAN);
     
     // LED Latching logic helpers (exposed if needed by Service to clear LED on reload)
     void clearLatchedLed();
@@ -90,7 +93,10 @@ private:
     SemaphoreHandle_t _processMutex = nullptr;
     StaticSemaphore_t _processMutexStorage;
 
-    AlarmInputData buildInputData(const SensorSnapshot& sensors, float wifiVariance, float wifiCsiMotion) const;
+    AlarmInputData buildInputData(const SensorSnapshot& sensors,
+                                  float wifiVariance,
+                                  float wifiCsiMotion,
+                                  float imuTamper) const;
     EvaluationPassResult collectPendingEvents(const AlarmInputData& input, uint32_t now);
     uint8_t executePendingEvents(uint8_t pendingCount, const AlarmAggregateState& ledState);
     uint8_t executeShellyAction(const AlarmRule& rule, bool turnOn) const;

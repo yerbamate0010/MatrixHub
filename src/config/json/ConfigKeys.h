@@ -155,6 +155,14 @@ namespace Keys {
     constexpr const char* kGyroMagnitudeDps = "gyro_magnitude_dps";
     constexpr const char* kTiltDeg = "tilt_deg";
     constexpr const char* kBaselineValid = "baseline_valid";
+    constexpr const char* kAlarm = "alarm";
+    constexpr const char* kTriggered = "triggered";
+    constexpr const char* kPendingTrigger = "pending_trigger";
+    constexpr const char* kPendingClear = "pending_clear";
+    constexpr const char* kReason = "reason";
+    constexpr const char* kTriggerValue = "trigger_value";
+    constexpr const char* kTriggerHoldElapsedMs = "trigger_hold_elapsed_ms";
+    constexpr const char* kClearHoldElapsedMs = "clear_hold_elapsed_ms";
     constexpr const char* kConsumers = "consumers";
     constexpr const char* kMetrics = "metrics";
     constexpr const char* kSample = "sample";

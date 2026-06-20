@@ -131,6 +131,7 @@ esp_err_t AlarmsApiService::handleGetRules(PsychicRequest* request) {
         inputData.temperature = snap.temp;
         inputData.humidity = snap.humid;
         inputData.wifiVariance = wifiStats.variance;
+        inputData.imuTamper = _service ? _service->getLastImuTamperValue() : NAN;
 
         const uint32_t nowMs = millis();
         const size_t statusLimit = std::min(rulesCopy.size(), statesCopy.size());

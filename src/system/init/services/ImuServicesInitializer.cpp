@@ -3,6 +3,7 @@
 #include "../../../sensors/imu/ImuService.h"
 #include "../../../sensors/imu/ImuManager.h"
 #include "../../../sensors/imu/ImuRuntimeService.h"
+#include "../../../alarms/AlarmService.h"
 #include "../../logging/Logging.h"
 
 #undef LOG_TAG
@@ -14,7 +15,8 @@ void ImuServicesInitializer::initialize(State state) {
     state.imuRuntimeService = std::make_unique<IMU::ImuRuntimeService>(
         state.fs,
         state.imuService.get(),
-        state.imuManager.get());
+        state.imuManager.get(),
+        state.alarmService);
     state.imuRuntimeService->begin();
 
     LOGI("IMU services initialized (idle runtime)");

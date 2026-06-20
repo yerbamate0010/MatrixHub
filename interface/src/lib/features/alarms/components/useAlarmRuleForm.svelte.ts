@@ -57,6 +57,8 @@ function getSourceShortName(source: AlarmSource): string {
 			return 'Motion';
 		case 'wifi_csi_motion':
 			return 'CSI Motion';
+		case 'imu_tamper':
+			return 'IMU Tamper';
 		case 'ble_temperature':
 			return 'BLE Temp';
 		case 'ble_humidity':
@@ -90,7 +92,7 @@ function generateAutoName(draft: AlarmRuleDraft): string {
 	const actions = getActionTokens(draft.notify_channels, draft.shelly_device_ids ?? []);
 	const actionSuffix = actions.length > 0 ? ` (${actions.join(', ')})` : '';
 	const baseName = isBooleanLikeSource(draft.source)
-		? 'CSI motion detected'
+		? getBooleanSourceName(draft.source)
 		: `${getSourceShortName(draft.source)} ${op} ${draft.threshold}${unit}`;
 	const fullName = `${baseName}${actionSuffix}`;
 
@@ -112,12 +114,16 @@ function isBleSource(source: AlarmSource): boolean {
 }
 
 function getDefaultOperator(source: AlarmSource): AlarmOperator {
-	if (source === 'wifi_csi_motion') return 'above';
+	if (source === 'wifi_csi_motion' || source === 'imu_tamper') return 'above';
 	return source === 'ble_battery' || source === 'ble_rssi' ? 'below' : 'above';
 }
 
 function isBooleanLikeSource(source: AlarmSource): boolean {
-	return source === 'wifi_csi_motion';
+	return source === 'wifi_csi_motion' || source === 'imu_tamper';
+}
+
+function getBooleanSourceName(source: AlarmSource): string {
+	return source === 'imu_tamper' ? 'IMU tamper detected' : 'CSI motion detected';
 }
 
 function hasAnyActions(draft: AlarmRuleDraft): boolean {

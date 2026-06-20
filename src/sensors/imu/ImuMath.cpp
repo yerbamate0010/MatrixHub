@@ -68,4 +68,16 @@ const char* calibrationStatusToString(OrientationCalibrationStatus status) {
     }
 }
 
+const char* alarmReasonToString(ImuAlarmReason reason) {
+    switch (reason) {
+        case ImuAlarmReason::None: return "none";
+        case ImuAlarmReason::Tilt: return "tilt";
+        case ImuAlarmReason::Shock: return "shock";
+        case ImuAlarmReason::Stale: return "stale";
+        case ImuAlarmReason::NoBaseline: return "no_baseline";
+        case ImuAlarmReason::Unavailable: return "unavailable";
+        default: return "unknown";
+    }
+}
+
 }  // namespace IMU::MATH

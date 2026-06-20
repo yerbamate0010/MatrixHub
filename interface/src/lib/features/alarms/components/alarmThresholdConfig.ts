@@ -21,6 +21,7 @@ export function getThresholdConfig(source: AlarmSource): ThresholdConfig {
 		case 'wifi_motion':
 			return { min: 1, max: 20, step: 1, default: 10 };
 		case 'wifi_csi_motion':
+		case 'imu_tamper':
 			return { min: 0, max: 1, step: 0.5, default: 0.5 };
 		case 'ble_temperature':
 			return { min: -20, max: 60, step: 1, default: 25 };

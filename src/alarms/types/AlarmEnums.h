@@ -19,7 +19,8 @@ enum class AlarmSource : uint8_t {
     BleHumidity = 5,     // BLE thermometer humidity
     BleBattery = 6,      // BLE sensor battery percentage
     BleRssi = 7,         // BLE sensor signal strength
-    WifiCsiMotion = 8    // WiFi CSI motion boolean
+    WifiCsiMotion = 8,   // WiFi CSI motion boolean
+    ImuTamper = 9        // IMU tilt/shock tamper detector boolean
 };
 
 /** Comparison operator */

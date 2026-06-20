@@ -9,6 +9,10 @@
 	import { ALARM_SOURCES, MAX_ALARM_RULES, SEVERITY_CONFIG } from '$lib/types/domain/alarms';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import {
+		getAlarmSourceLabel,
+		getBooleanAlarmConditionLabel
+	} from '$lib/features/alarms/alarmLabels';
 	import BaseCard from '$lib/components/layout/BaseCard.svelte';
 	import { FormButton, FormToggle } from '$lib/components/shared/forms';
 	import StatusRow from '$lib/components/layout/StatusRow.svelte';
@@ -33,29 +37,6 @@
 					{ locale: i18n.languageTag }
 				)
 	);
-
-	function getSourceLabel(source: AlarmRule['source']) {
-		switch (source) {
-			case 'co2':
-				return m.source_co2({ locale: i18n.languageTag });
-			case 'temperature':
-				return m.source_temperature({ locale: i18n.languageTag });
-			case 'humidity':
-				return m.source_humidity({ locale: i18n.languageTag });
-			case 'wifi_motion':
-				return m.source_wifi_motion({ locale: i18n.languageTag });
-			case 'wifi_csi_motion':
-				return m.source_wifi_csi_motion({ locale: i18n.languageTag });
-			case 'ble_temperature':
-				return m.source_ble_temperature({ locale: i18n.languageTag });
-			case 'ble_humidity':
-				return m.source_ble_humidity({ locale: i18n.languageTag });
-			case 'ble_battery':
-				return m.source_ble_battery({ locale: i18n.languageTag });
-			case 'ble_rssi':
-				return m.source_ble_rssi({ locale: i18n.languageTag });
-		}
-	}
 
 	function getSeverityLabel(severity: AlarmRule['severity']) {
 		switch (severity) {
@@ -146,10 +127,10 @@
 							</span>
 							<span class="opacity-50">•</span>
 							{#if sourceInfo.booleanLike}
-								<span>{m.alarm_boolean_csi_motion_detected({ locale: i18n.languageTag })}</span>
+								<span>{getBooleanAlarmConditionLabel(rule.source)}</span>
 							{:else}
 								<span
-									>{getSourceLabel(rule.source)}
+									>{getAlarmSourceLabel(rule.source)}
 									{rule.operator === 'above' ? '>' : '<'}
 									{rule.threshold}{sourceInfo.unit}</span
 								>

@@ -14,7 +14,10 @@ import { Logger } from '$lib/services/core/Logger';
 type ImuErrors = Record<string, never>;
 
 type ImuSettingsDeps = {
-	api?: Pick<ImuApiService, 'getSettings' | 'updateSettings' | 'getStatus' | 'calibrateOrientation'>;
+	api?: Pick<
+		ImuApiService,
+		'getSettings' | 'updateSettings' | 'getStatus' | 'calibrateOrientation' | 'resetOrientationBaseline'
+	>;
 	feedback?: SettingsFeedback<ImuSettings>;
 	shouldLoad?: () => boolean;
 };
@@ -36,6 +39,7 @@ export function useImuSettings(deps: ImuSettingsDeps = {}) {
 	let status = $state<ImuStatus | null>(null);
 	let statusLoading = $state(false);
 	let calibrating = $state(false);
+	let resettingBaseline = $state(false);
 	let calibrationResult = $state<ImuCalibrationResult | null>(null);
 	let autoLoadArmed = true;
 	let statusAbort: AbortController | null = null;
@@ -97,6 +101,21 @@ export function useImuSettings(deps: ImuSettingsDeps = {}) {
 		}
 	}
 
+	async function resetOrientationBaseline() {
+		if (resettingBaseline) return;
+		resettingBaseline = true;
+		try {
+			await createApi().resetOrientationBaseline();
+			calibrationResult = null;
+			await settingsState.refreshSettings();
+			await refreshStatus();
+		} catch (error) {
+			Logger.error('IMU orientation baseline reset failed', error);
+		} finally {
+			resettingBaseline = false;
+		}
+	}
+
 	$effect(() => {
 		const shouldLoad = deps.shouldLoad?.();
 		if (shouldLoad === undefined) return;
@@ -151,6 +170,9 @@ export function useImuSettings(deps: ImuSettingsDeps = {}) {
 		get calibrating() {
 			return calibrating;
 		},
+		get resettingBaseline() {
+			return resettingBaseline;
+		},
 		get calibrationResult() {
 			return calibrationResult;
 		},
@@ -158,6 +180,7 @@ export function useImuSettings(deps: ImuSettingsDeps = {}) {
 		saveSettings: settingsState.saveSettings,
 		resetSettings: settingsState.resetSettings,
 		refreshStatus,
-		calibrateOrientation
+		calibrateOrientation,
+		resetOrientationBaseline
 	};
 }

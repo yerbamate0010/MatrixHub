@@ -15,6 +15,7 @@ namespace {
 constexpr const char* kSettingsPath = "/api/imu/settings";
 constexpr const char* kStatusPath = "/api/imu/status";
 constexpr const char* kCalibrateOrientationPath = "/api/imu/calibrate/orientation";
+constexpr const char* kResetOrientationBaselinePath = "/api/imu/reset/orientation-baseline";
 constexpr const char* kUnavailableError = "imu/unavailable";
 
 constexpr uint32_t consumerBit(IMU::Consumer consumer) {
@@ -39,6 +40,14 @@ void writeVector(Utils::JsonResponseWriter& w, const IMU::ImuVector3& v) {
     w.raw(","); w.key(CONFIG::Keys::kY); w.value(v.y, 4);
     w.raw(","); w.key(CONFIG::Keys::kZ); w.value(v.z, 4);
     w.raw("}");
+}
+
+void writeFiniteOrNull(Utils::JsonResponseWriter& w, float value, uint8_t decimals) {
+    if (std::isfinite(value)) {
+        w.value(value, decimals);
+    } else {
+        w.raw("null");
+    }
 }
 
 }  // namespace
@@ -80,6 +89,10 @@ void ImuApiService::begin() {
     _server->on(kCalibrateOrientationPath, HTTP_POST, wrapAdmin([this](PsychicRequest* request) {
         return handleCalibrateOrientation(request);
     }));
+
+    _server->on(kResetOrientationBaselinePath, HTTP_POST, wrapAdmin([this](PsychicRequest* request) {
+        return handleResetOrientationBaseline(request);
+    }));
 }
 
 esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
@@ -89,6 +102,7 @@ esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
 
     const IMU::ManagerStatus manager = _runtime->getManagerStatus();
     const IMU::ImuMetrics metrics = _runtime->getMetrics();
+    const IMU::ImuAlarmStatus alarm = _runtime->getAlarmStatus();
 
     char desiredConsumers[128];
     char runningConsumers[128];
@@ -140,6 +154,24 @@ esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
     writeConsumer(w, "ui_monitor", IMU::Consumer::UiMonitor, manager.desiredMask, manager.runningMask);
     w.raw("}");
 
+    w.raw(","); w.key(CONFIG::Keys::kAlarm);
+    w.raw("{");
+    w.key(CONFIG::Keys::kEnabled); w.value(alarm.enabled);
+    w.raw(","); w.key(CONFIG::Keys::kSampleFresh); w.value(alarm.sampleFresh);
+    w.raw(","); w.key(CONFIG::Keys::kBaselineValid); w.value(alarm.baselineValid);
+    w.raw(","); w.key(CONFIG::Keys::kTriggered); w.value(alarm.triggered);
+    w.raw(","); w.key(CONFIG::Keys::kPendingTrigger); w.value(alarm.pendingTrigger);
+    w.raw(","); w.key(CONFIG::Keys::kPendingClear); w.value(alarm.pendingClear);
+    w.raw(","); w.key(CONFIG::Keys::kReason); w.string(IMU::MATH::alarmReasonToString(alarm.reason));
+    w.raw(","); w.key(CONFIG::Keys::kTiltDeg); writeFiniteOrNull(w, alarm.currentTiltDeg, 2);
+    w.raw(","); w.key(CONFIG::Keys::kAccelDeltaG); w.value(alarm.accelDeltaG, 4);
+    w.raw(","); w.key(CONFIG::Keys::kTriggerValue); w.value(alarm.triggerValue, 1);
+    w.raw(","); w.key(CONFIG::Keys::kTriggerHoldElapsedMs);
+    w.value(static_cast<unsigned long>(alarm.triggerHoldElapsedMs));
+    w.raw(","); w.key(CONFIG::Keys::kClearHoldElapsedMs);
+    w.value(static_cast<unsigned long>(alarm.clearHoldElapsedMs));
+    w.raw("}");
+
     w.raw(","); w.key(CONFIG::Keys::kMetrics);
     w.raw("{");
     w.key(CONFIG::Keys::kAccelMagnitudeG); w.value(metrics.accelMagnitudeG, 4);
@@ -147,7 +179,7 @@ esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
     w.raw(","); w.key(CONFIG::Keys::kGyroMagnitudeDps); w.value(metrics.gyroMagnitudeDps, 2);
     w.raw(","); w.key(CONFIG::Keys::kBaselineValid); w.value(metrics.baselineValid);
     w.raw(","); w.key(CONFIG::Keys::kOrientationBaseline); writeVector(w, metrics.baseline);
-    w.raw(","); w.key(CONFIG::Keys::kTiltDeg); w.value(metrics.tiltDeg, 2);
+    w.raw(","); w.key(CONFIG::Keys::kTiltDeg); writeFiniteOrNull(w, metrics.tiltDeg, 2);
     w.raw(","); w.key(CONFIG::Keys::kSample);
     w.raw("{");
     w.key(CONFIG::Keys::kAx); w.value(metrics.sample.ax, 4);
@@ -179,6 +211,21 @@ esp_err_t ImuApiService::handleCalibrateOrientation(PsychicRequest* request) {
         baseline[CONFIG::Keys::kX] = result.baseline.x;
         baseline[CONFIG::Keys::kY] = result.baseline.y;
         baseline[CONFIG::Keys::kZ] = result.baseline.z;
+    });
+}
+
+esp_err_t ImuApiService::handleResetOrientationBaseline(PsychicRequest* request) {
+    if (!_runtime) {
+        return Response::error(request, 503, kUnavailableError);
+    }
+
+    if (!_runtime->resetOrientationBaseline()) {
+        return Response::error(request, 500, "imu/reset_failed");
+    }
+
+    return Response::success(request, [&](JsonVariant& root) {
+        root["ok"] = true;
+        root[CONFIG::Keys::kStatus] = "reset";
     });
 }
 

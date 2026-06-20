@@ -123,6 +123,10 @@ bool AlarmService::submitInput(const AlarmInputData& inputData) {
         _lastWifiCsiMotion = inputData.wifiCsiMotion;
         hasUpdates = true;
     }
+    if (!std::isnan(inputData.imuTamper)) {
+        _lastImuTamper = inputData.imuTamper;
+        hasUpdates = true;
+    }
 
     if (hasUpdates) {
         _lastSnapshot.timestamp_ms = millis();
@@ -132,6 +136,13 @@ bool AlarmService::submitInput(const AlarmInputData& inputData) {
     portEXIT_CRITICAL(&_snapshotLock);
 
     return hasUpdates;
+}
+
+float AlarmService::getLastImuTamperValue() const {
+    portENTER_CRITICAL(&_snapshotLock);
+    const float value = _lastImuTamper;
+    portEXIT_CRITICAL(&_snapshotLock);
+    return value;
 }
 
 uint8_t AlarmService::processPending() {
@@ -146,6 +157,7 @@ uint8_t AlarmService::processPending() {
         input.sensors = _lastSnapshot;
         input.wifiVariance = _lastWifiVariance;
         input.wifiCsiMotion = _lastWifiCsiMotion;
+        input.imuTamper = _lastImuTamper;
         _pendingEvaluation = false;
         hasPending = true;
     }
@@ -158,7 +170,7 @@ uint8_t AlarmService::processPending() {
     // All rule evaluation and side effects are centralized here on purpose.
     // This keeps producers lightweight and makes the execution model easier to
     // reason about than scattered synchronous alarm runs from multiple tasks.
-    return _coordinator.process(input.sensors, input.wifiVariance, input.wifiCsiMotion);
+    return _coordinator.process(input.sensors, input.wifiVariance, input.wifiCsiMotion, input.imuTamper);
 }
 
 } // namespace ALARMS

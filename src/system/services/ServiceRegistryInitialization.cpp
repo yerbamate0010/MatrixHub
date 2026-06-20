@@ -174,6 +174,7 @@ void ServiceRegistry::initializeImuServices() {
         _imuService,
         _imuManager,
         _imuRuntimeService,
+        _alarmService.get(),
         _framework ? _framework->getFS() : nullptr,
     });
 }

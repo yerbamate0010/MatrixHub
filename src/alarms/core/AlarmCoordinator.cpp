@@ -57,13 +57,15 @@ bool AlarmCoordinator::isAlarmLatched() const {
 
 AlarmInputData AlarmCoordinator::buildInputData(const ::SensorSnapshot& sensors,
                                                 float wifiVariance,
-                                                float wifiCsiMotion) const {
+                                                float wifiCsiMotion,
+                                                float imuTamper) const {
     AlarmInputData input;
     input.co2 = static_cast<float>(sensors.co2);
     input.temperature = sensors.temp;
     input.humidity = sensors.humid;
     input.wifiVariance = wifiVariance;
     input.wifiCsiMotion = wifiCsiMotion;
+    input.imuTamper = imuTamper;
     return input;
 }
 
@@ -73,6 +75,7 @@ float AlarmCoordinator::getValueForLogging(const AlarmRule& rule, const AlarmInp
     if (rule.source == AlarmSource::Humidity) return input.humidity;
     if (rule.source == AlarmSource::WifiMotion) return input.wifiVariance;
     if (rule.source == AlarmSource::WifiCsiMotion) return input.wifiCsiMotion;
+    if (rule.source == AlarmSource::ImuTamper) return input.imuTamper;
     if (rule.source == AlarmSource::BleTemperature) return input.bleTemp;
     if (rule.source == AlarmSource::BleHumidity) return input.bleHumid;
     if (rule.source == AlarmSource::BleBattery) return input.bleBattery;
@@ -227,7 +230,10 @@ uint8_t AlarmCoordinator::executeShellyAction(const AlarmRule& rule, bool turnOn
     return _shellyActionExecutor(rule, turnOn);
 }
 
-uint8_t AlarmCoordinator::process(const ::SensorSnapshot& sensors, float wifiVariance, float wifiCsiMotion) {
+uint8_t AlarmCoordinator::process(const ::SensorSnapshot& sensors,
+                                  float wifiVariance,
+                                  float wifiCsiMotion,
+                                  float imuTamper) {
     if (!_manager.isInitialized() || !_pendingEventsBuffer) return 0;
 
     // Protect the shared pending-events buffer, but keep the timeout short:
@@ -239,7 +245,7 @@ uint8_t AlarmCoordinator::process(const ::SensorSnapshot& sensors, float wifiVar
         return 0;
     }
 
-    const AlarmInputData input = buildInputData(sensors, wifiVariance, wifiCsiMotion);
+    const AlarmInputData input = buildInputData(sensors, wifiVariance, wifiCsiMotion, imuTamper);
     const EvaluationPassResult passResult = collectPendingEvents(input, millis());
 
     if (!passResult.ready) {

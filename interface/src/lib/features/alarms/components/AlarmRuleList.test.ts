@@ -36,7 +36,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	source_ble_battery: () => 'BLE Battery',
 	source_ble_rssi: () => 'BLE RSSI',
 	source_wifi_csi_motion: () => 'CSI Motion',
-	alarm_boolean_csi_motion_detected: () => 'CSI motion detected'
+	source_imu_tamper: () => 'IMU Tamper',
+	alarm_boolean_csi_motion_detected: () => 'CSI motion detected',
+	alarm_boolean_imu_tamper_detected: () => 'IMU tamper detected'
 }));
 
 function createRule(id: string): AlarmRule {
@@ -169,6 +171,31 @@ describe('AlarmRuleList', () => {
 		});
 
 		expect(screen.getByText('CSI motion detected')).toBeTruthy();
+		expect(screen.queryByText(/0\.5/)).toBeNull();
+	});
+
+	it('renders IMU tamper as IMU boolean text instead of reusing CSI copy', () => {
+		render(AlarmRuleList, {
+			props: {
+				rules: [
+					{
+						...createRule('imu'),
+						source: 'imu_tamper',
+						operator: 'above',
+						threshold: 0.5
+					}
+				],
+				canManage: true,
+				onEdit: vi.fn(),
+				onDelete: vi.fn(),
+				onToggle: vi.fn(),
+				onAdd: vi.fn(),
+				onInfo: vi.fn()
+			}
+		});
+
+		expect(screen.getByText('IMU tamper detected')).toBeTruthy();
+		expect(screen.queryByText('CSI motion detected')).toBeNull();
 		expect(screen.queryByText(/0\.5/)).toBeNull();
 	});
 });

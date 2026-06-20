@@ -2,6 +2,8 @@
 
 #include "ImuMath.h"
 #include "ImuService.h"
+#include "../../alarms/AlarmService.h"
+#include "../../alarms/types/AlarmInputData.h"
 #include "../../config/App.h"
 #include "../../config/json/ImuConfigJson.h"
 #include "../../core/config/ConfigManager.h"
@@ -33,11 +35,15 @@ bool readFreshSample(ImuService* service, ImuSample& sample) {
 
 }  // namespace
 
-ImuRuntimeService::ImuRuntimeService(FS* fs, ImuService* imuService, ImuManager* imuManager)
+ImuRuntimeService::ImuRuntimeService(FS* fs,
+                                     ImuService* imuService,
+                                     ImuManager* imuManager,
+                                     ALARMS::AlarmService* alarmService)
     : RtcStatefulService(&RTC::ConfigStore::imu),
       _fs(fs),
       _imuService(imuService),
-      _imuManager(imuManager) {
+      _imuManager(imuManager),
+      _alarmService(alarmService) {
     publishBaselineFromSettings(_state);
 }
 
@@ -64,6 +70,7 @@ void ImuRuntimeService::tick() {
     }
     _lastMetricUpdateMs = now;
     (void)updateMetricsFromCache(now);
+    updateAlarmDetector(now);
 }
 
 ImuMetrics ImuRuntimeService::getMetrics() const {
@@ -76,6 +83,18 @@ ImuMetrics ImuRuntimeService::getMetrics() const {
 
 ManagerStatus ImuRuntimeService::getManagerStatus() const {
     return _imuManager ? _imuManager->getStatus() : ManagerStatus{};
+}
+
+ImuAlarmStatus ImuRuntimeService::getAlarmStatus() const {
+    ImuAlarmStatus copy;
+    portENTER_CRITICAL(&_alarmStatusMux);
+    copy = _alarmStatus;
+    portEXIT_CRITICAL(&_alarmStatusMux);
+    return copy;
+}
+
+void ImuRuntimeService::setAlarmService(ALARMS::AlarmService* alarmService) {
+    _alarmService = alarmService;
 }
 
 void ImuRuntimeService::applyConsumerState() {
@@ -96,6 +115,18 @@ void ImuRuntimeService::applyConsumerState() {
     _imuManager->setConsumerActive(Consumer::UiMonitor, settings.uiMonitorEnabled);
     _imuManager->setConsumerActive(Consumer::Alarm, settings.alarmMonitorEnabled);
     publishBaselineFromSettings(settings);
+}
+
+ImuAlarmConfig ImuRuntimeService::alarmConfigFromSettings(const RTC::ImuData& settings) {
+    ImuAlarmConfig config;
+    config.enabled = settings.alarmMonitorEnabled;
+    config.baselineValid = settings.orientationBaselineValid;
+    config.tiltThresholdDeg = settings.tiltThresholdDeg;
+    config.tiltHysteresisDeg = settings.tiltHysteresisDeg;
+    config.tiltHoldMs = settings.tiltHoldMs;
+    config.tiltClearHoldMs = settings.tiltClearHoldMs;
+    config.accelDeltaThresholdG = settings.accelDeltaThresholdG;
+    return config;
 }
 
 void ImuRuntimeService::publishBaselineFromSettings(const RTC::ImuData& settings) {
@@ -152,6 +183,38 @@ bool ImuRuntimeService::updateMetricsFromCache(uint32_t nowMs) {
     _metrics = next;
     portEXIT_CRITICAL(&_metricsMux);
     return fresh;
+}
+
+void ImuRuntimeService::updateAlarmDetector(uint32_t nowMs) {
+    RTC::ImuData settings{};
+    bool loaded = false;
+    RTC::withConfig([&](const RTC::ConfigStore& cfg) {
+        settings = cfg.imu;
+        loaded = true;
+    });
+    if (!loaded) {
+        settings = getCachedStateCopy();
+    }
+
+    const ImuAlarmConfig config = alarmConfigFromSettings(settings);
+    const ImuMetrics metrics = getMetrics();
+    const ImuAlarmStatus status = _alarmDetector.update(config, metrics, nowMs);
+
+    portENTER_CRITICAL(&_alarmStatusMux);
+    _alarmStatus = status;
+    portEXIT_CRITICAL(&_alarmStatusMux);
+
+    publishAlarmValue(status);
+}
+
+void ImuRuntimeService::publishAlarmValue(const ImuAlarmStatus& status) {
+    if (!_alarmService) {
+        return;
+    }
+
+    ALARMS::AlarmInputData input;
+    input.imuTamper = status.triggerValue;
+    _alarmService->submitInput(input);
 }
 
 OrientationCalibrationResult ImuRuntimeService::calibrateOrientation() {
@@ -229,6 +292,24 @@ OrientationCalibrationResult ImuRuntimeService::calibrateOrientation() {
     }
     (void)updateMetricsFromCache(millis());
     return result;
+}
+
+bool ImuRuntimeService::resetOrientationBaseline() {
+    StateTransactionResult tx = updateAndPropagate(
+        [](RTC::ImuData& data) {
+            data.orientationBaselineValid = false;
+            data.orientationBaselineX = 0.0f;
+            data.orientationBaselineY = 0.0f;
+            data.orientationBaselineZ = 1.0f;
+            data.baselineCalibratedAt = 0;
+            data.calibrationRevision++;
+            return StateUpdateResult::CHANGED;
+        },
+        "imu/reset/orientation_baseline");
+    publishBaselineFromSettings(getCachedStateCopy());
+    _alarmDetector.reset();
+    updateAlarmDetector(millis());
+    return tx.outcome != StateUpdateResult::ERROR;
 }
 
 void ImuRuntimeService::readState(RTC::ImuData& settings, JsonObject& root) {

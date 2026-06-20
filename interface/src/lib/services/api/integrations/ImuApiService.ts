@@ -44,6 +44,21 @@ export interface ImuMetrics {
 	sample: ImuSample;
 }
 
+export interface ImuAlarmStatus {
+	enabled: boolean;
+	sample_fresh: boolean;
+	baseline_valid: boolean;
+	triggered: boolean;
+	pending_trigger: boolean;
+	pending_clear: boolean;
+	reason: 'none' | 'tilt' | 'shock' | 'stale' | 'no_baseline' | 'unavailable' | 'unknown';
+	tilt_deg: number | null;
+	accel_delta_g: number;
+	trigger_value: number;
+	trigger_hold_elapsed_ms: number;
+	clear_hold_elapsed_ms: number;
+}
+
 export interface ImuStatus {
 	initialized: boolean;
 	running: boolean;
@@ -64,6 +79,7 @@ export interface ImuStatus {
 		'airmouse_movement' | 'airmouse_click' | 'auto_rotate' | 'alarm' | 'ui_monitor',
 		ImuConsumerState
 	>;
+	alarm: ImuAlarmStatus;
 	metrics: ImuMetrics;
 }
 
@@ -74,6 +90,11 @@ export interface ImuCalibrationResult {
 	accel_magnitude_mean: number;
 	accel_magnitude_variance: number;
 	orientation_baseline: ImuVector3;
+}
+
+export interface ImuResetResult {
+	ok: boolean;
+	status: string;
 }
 
 export const DEFAULT_IMU_SETTINGS: ImuSettings = {
@@ -125,6 +146,14 @@ export class ImuApiService {
 			'/api/imu/calibrate/orientation',
 			{},
 			{ signal: AbortSignal.timeout(ImuApiService.CALIBRATE_TIMEOUT_MS) }
+		);
+	}
+
+	async resetOrientationBaseline(): Promise<ImuResetResult> {
+		return this.client.post<ImuResetResult>(
+			'/api/imu/reset/orientation-baseline',
+			{},
+			{ signal: AbortSignal.timeout(ImuApiService.UPDATE_TIMEOUT_MS) }
 		);
 	}
 }

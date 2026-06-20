@@ -123,6 +123,8 @@ public:
                 return sensors.wifiVariance;
             case AlarmSource::WifiCsiMotion:
                 return sensors.wifiCsiMotion;
+            case AlarmSource::ImuTamper:
+                return sensors.imuTamper;
             case AlarmSource::BleTemperature:
                 return sensors.bleTemp;
             case AlarmSource::BleHumidity:

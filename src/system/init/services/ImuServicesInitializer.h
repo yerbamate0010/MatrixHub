@@ -4,6 +4,7 @@
 #include <memory>
 
 class ImuService;
+namespace ALARMS { class AlarmService; }
 namespace IMU {
 class ImuManager;
 class ImuRuntimeService;
@@ -20,6 +21,7 @@ public:
         std::unique_ptr<ImuService>& imuService;
         std::unique_ptr<IMU::ImuManager>& imuManager;
         std::unique_ptr<IMU::ImuRuntimeService>& imuRuntimeService;
+        ALARMS::AlarmService* alarmService = nullptr;
         FS* fs = nullptr;
     };
 

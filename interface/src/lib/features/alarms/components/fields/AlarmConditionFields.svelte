@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { AlarmSource, AlarmOperator } from '$lib/types/domain/alarms';
 	import { ALARM_SOURCES } from '$lib/types/domain/alarms';
-	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import { i18n } from '$lib/i18n.svelte';
+	import { getAlarmSourceLabel } from '$lib/features/alarms/alarmLabels';
 
 	import { FormSelect } from '$lib/components/shared/forms';
 
@@ -18,35 +19,10 @@
 		onOperatorChange?: (operator: AlarmOperator) => void;
 	} = $props();
 
-	function getSourceLabel(source: string) {
-		switch (source) {
-			case 'co2':
-				return m.source_co2({ locale: i18n.languageTag });
-			case 'temperature':
-				return m.source_temperature({ locale: i18n.languageTag });
-			case 'humidity':
-				return m.source_humidity({ locale: i18n.languageTag });
-			case 'wifi_motion':
-				return m.source_wifi_motion({ locale: i18n.languageTag });
-			case 'wifi_csi_motion':
-				return m.source_wifi_csi_motion({ locale: i18n.languageTag });
-			case 'ble_temperature':
-				return m.source_ble_temperature({ locale: i18n.languageTag });
-			case 'ble_humidity':
-				return m.source_ble_humidity({ locale: i18n.languageTag });
-			case 'ble_battery':
-				return m.source_ble_battery({ locale: i18n.languageTag });
-			case 'ble_rssi':
-				return m.source_ble_rssi({ locale: i18n.languageTag });
-			default:
-				return source;
-		}
-	}
-
 	let sourceOptions = $derived(
 		Object.keys(ALARM_SOURCES).map((key) => ({
 			value: key,
-			label: getSourceLabel(key)
+			label: getAlarmSourceLabel(key as AlarmSource)
 		}))
 	);
 
@@ -54,7 +30,7 @@
 		{ value: 'above', label: m.alarms_operator_above({ locale: i18n.languageTag }) },
 		{ value: 'below', label: m.alarms_operator_below({ locale: i18n.languageTag }) }
 	]);
-	let booleanLikeSource = $derived(source === 'wifi_csi_motion');
+	let booleanLikeSource = $derived(source === 'wifi_csi_motion' || source === 'imu_tamper');
 
 	function handleSourceSelect(newSource: AlarmSource) {
 		source = newSource;

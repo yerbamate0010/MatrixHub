@@ -137,11 +137,37 @@ void test_deserialize_source_int_wifi_csi_motion() {
     TEST_ASSERT_EQUAL(ALARMS::AlarmSource::WifiCsiMotion, rule.source);
 }
 
-void test_deserialize_source_int_after_wifi_csi_motion_fails() {
+void test_deserialize_source_int_after_wifi_csi_motion_maps_to_imu_tamper() {
     JsonDocument doc;
     doc["id"] = "test";
     doc["name"] = "test";
     doc["source"] = static_cast<int>(ALARMS::AlarmSource::WifiCsiMotion) + 1;
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::ImuTamper, rule.source);
+}
+
+void test_deserialize_source_string_imu_tamper() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = "imu_tamper";
+
+    JsonObject obj = doc.as<JsonObject>();
+    ALARMS::AlarmRule rule;
+
+    TEST_ASSERT_TRUE(CONFIG::JSON::deserializeAlarmRule(obj, rule));
+    TEST_ASSERT_EQUAL(ALARMS::AlarmSource::ImuTamper, rule.source);
+}
+
+void test_deserialize_source_int_after_imu_tamper_fails() {
+    JsonDocument doc;
+    doc["id"] = "test";
+    doc["name"] = "test";
+    doc["source"] = static_cast<int>(ALARMS::AlarmSource::ImuTamper) + 1;
 
     JsonObject obj = doc.as<JsonObject>();
     ALARMS::AlarmRule rule;
@@ -268,7 +294,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_deserialize_source_int_ble_rssi);
     RUN_TEST(test_deserialize_source_string_wifi_csi_motion);
     RUN_TEST(test_deserialize_source_int_wifi_csi_motion);
-    RUN_TEST(test_deserialize_source_int_after_wifi_csi_motion_fails);
+    RUN_TEST(test_deserialize_source_int_after_wifi_csi_motion_maps_to_imu_tamper);
+    RUN_TEST(test_deserialize_source_string_imu_tamper);
+    RUN_TEST(test_deserialize_source_int_after_imu_tamper_fails);
     RUN_TEST(test_deserialize_operator_string_below);
     RUN_TEST(test_deserialize_severity_string_critical);
     RUN_TEST(test_deserialize_notify_channels_unknown_string_fails);

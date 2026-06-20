@@ -75,6 +75,16 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	widget_alarms_label_alarm: () => 'ALARM',
 	source_temperature: () => 'Temperature',
 	source_co2: () => 'CO2',
+	source_humidity: () => 'Humidity',
+	source_wifi_motion: () => 'WiFi Motion',
+	source_wifi_csi_motion: () => 'CSI Motion',
+	source_imu_tamper: () => 'IMU Tamper',
+	source_ble_temperature: () => 'BLE Temperature',
+	source_ble_humidity: () => 'BLE Humidity',
+	source_ble_battery: () => 'BLE Battery',
+	source_ble_rssi: () => 'BLE RSSI',
+	alarm_boolean_csi_motion_detected: () => 'CSI motion detected',
+	alarm_boolean_imu_tamper_detected: () => 'IMU tamper detected',
 	error_prefix: ({ error }: { error: string }) => `Error: ${error}`,
 	alarms_error_fetch: () => 'Failed to fetch',
 	alarms_error_load_timeout: () => 'Load timeout',
@@ -159,6 +169,37 @@ describe('AlarmsWidget', () => {
 		// Check values display
 		expect(screen.getByText('25.0')).toBeTruthy();
 		expect(screen.getByText('1200')).toBeTruthy(); // CO2 has 0 decimals
+	});
+
+	it('renders IMU tamper as a boolean condition in the widget', async () => {
+		render(AlarmsWidget);
+		systemEvents.set({
+			type: 'snapshot',
+			channel: 'alarms',
+			data: {
+				schema_version: 1,
+				rules: [
+					{
+						id: 'imu',
+						name: 'IMU Alarm',
+						enabled: true,
+						triggered: false,
+						source: 'imu_tamper',
+						threshold: 0.5,
+						operator: 'above',
+						current_value: 0
+					}
+				]
+			}
+		});
+
+		await waitFor(() => {
+			expect(screen.getByText('IMU Alarm')).toBeTruthy();
+			expect(screen.getByText('IMU tamper detected')).toBeTruthy();
+		});
+
+		expect(screen.queryByText('CSI motion detected')).toBeNull();
+		expect(screen.queryByText('0.5')).toBeNull();
 	});
 
 	it('should not render alarm badge for triggered rules', async () => {

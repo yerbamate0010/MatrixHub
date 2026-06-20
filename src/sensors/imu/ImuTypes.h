@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 
 namespace IMU {
@@ -32,6 +33,40 @@ struct ImuMetrics {
     bool baselineValid = false;
     ImuVector3 baseline;
     float tiltDeg = 0.0f;
+};
+
+enum class ImuAlarmReason : uint8_t {
+    None = 0,
+    Tilt,
+    Shock,
+    Stale,
+    NoBaseline,
+    Unavailable
+};
+
+struct ImuAlarmConfig {
+    bool enabled = false;
+    bool baselineValid = false;
+    float tiltThresholdDeg = 30.0f;
+    float tiltHysteresisDeg = 5.0f;
+    uint16_t tiltHoldMs = 750;
+    uint16_t tiltClearHoldMs = 1500;
+    float accelDeltaThresholdG = 0.35f;
+};
+
+struct ImuAlarmStatus {
+    bool enabled = false;
+    bool sampleFresh = false;
+    bool baselineValid = false;
+    bool triggered = false;
+    bool pendingTrigger = false;
+    bool pendingClear = false;
+    ImuAlarmReason reason = ImuAlarmReason::None;
+    float currentTiltDeg = NAN;
+    float accelDeltaG = 0.0f;
+    float triggerValue = 0.0f;
+    uint32_t triggerHoldElapsedMs = 0;
+    uint32_t clearHoldElapsedMs = 0;
 };
 
 enum class OrientationCalibrationStatus : uint8_t {

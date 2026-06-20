@@ -64,6 +64,7 @@ public:
      * central caller decide when the alarm pipeline should actually run.
      */
     bool submitInput(const AlarmInputData& input);
+    float getLastImuTamperValue() const;
 
     /**
      * @brief Execute one pending alarm evaluation pass, if new input arrived.
@@ -91,6 +92,7 @@ private:
         SensorSnapshot sensors;
         float wifiVariance = NAN;
         float wifiCsiMotion = NAN;
+        float imuTamper = NAN;
     };
 
     AlarmRuleManager _manager;
@@ -103,6 +105,7 @@ private:
     SensorSnapshot _lastSnapshot;
     float _lastWifiVariance = NAN;
     float _lastWifiCsiMotion = NAN;
+    float _lastImuTamper = NAN;
     // Dirty flag for the coalesced "latest state available" mailbox model.
     bool _pendingEvaluation = false;
 

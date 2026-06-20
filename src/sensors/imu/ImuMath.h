@@ -13,5 +13,6 @@ float tiltDegrees(const ImuVector3& baseline, const ImuVector3& current);
 bool isAccelMagnitudeStable(float magnitudeG);
 uint32_t elapsedMs(uint32_t nowMs, uint32_t thenMs);
 const char* calibrationStatusToString(OrientationCalibrationStatus status);
+const char* alarmReasonToString(ImuAlarmReason reason);
 
 }  // namespace IMU::MATH

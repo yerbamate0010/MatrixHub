@@ -25,6 +25,7 @@ public:
 private:
     esp_err_t handleStatus(PsychicRequest* request);
     esp_err_t handleCalibrateOrientation(PsychicRequest* request);
+    esp_err_t handleResetOrientationBaseline(PsychicRequest* request);
 
     IMU::ImuRuntimeService* _runtime = nullptr;
     std::unique_ptr<HttpEndpoint<RTC::ImuData>> _settingsEndpoint;
