@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import MatrixAlarmSettings from './MatrixAlarmSettings.svelte';
 import MatrixEffects from './MatrixEffects.svelte';
 import MatrixSettings from './MatrixSettings.svelte';
 import type { MatrixSettings as MatrixSettingsModel } from '$lib/services/api/core/MatrixApiService';
@@ -99,6 +100,8 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		common_loading: () => 'Loading',
 		settings_title: () => 'Settings',
 		matrix_title: () => 'Matrix LED Settings',
+		matrix_display_title: () => 'Matrix Display',
+		matrix_alarm_title: () => 'Matrix Alarms',
 		matrix_section_alarm: () => 'Alarm',
 		matrix_section_menu: () => 'Menu',
 		matrix_section_display: () => 'Display',
@@ -283,7 +286,7 @@ describe('Matrix cards', () => {
 
 	it('stages custom icons as a draft instead of saving from the modal', async () => {
 		const store = createMatrixStore();
-		render(MatrixSettings, { props: { store, canManage: true } });
+		render(MatrixAlarmSettings, { props: { store, canManage: true } });
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Edit Icons' }));
 		await fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Save' }));

@@ -3,18 +3,42 @@ import { createSettingsFeedback } from '$lib/utils/api/settingsFeedback';
 import { useSettings } from '$lib/utils/api/useSettings.svelte';
 import { i18n } from '$lib/i18n.svelte';
 import * as m from '$lib/paraglide/messages.js';
-import { DEFAULT_MATRIX_SETTINGS } from './matrixModel';
+import { DEFAULT_MATRIX_SETTINGS, type MatrixSettingsKey } from './matrixModel';
 
 type MatrixErrors = Record<string, never>;
 
 type MatrixSettingsDeps = {
 	shouldLoad?: () => boolean;
+	trackedKeys?: readonly MatrixSettingsKey[];
+	saveKeys?: readonly MatrixSettingsKey[];
 };
+
+function pickMatrixSettings(
+	settings: MatrixSettings,
+	keys: readonly MatrixSettingsKey[]
+): Partial<MatrixSettings> {
+	return Object.fromEntries(
+		keys.map((key) => [key, settings[key]] as const).filter(([, value]) => value !== undefined)
+	) as Partial<MatrixSettings>;
+}
+
+function matrixSettingsEqualByKeys(
+	keys: readonly MatrixSettingsKey[],
+	current: MatrixSettings,
+	saved: MatrixSettings
+) {
+	return (
+		JSON.stringify(pickMatrixSettings(current, keys)) ===
+		JSON.stringify(pickMatrixSettings(saved, keys))
+	);
+}
 
 export function useMatrixSettings(
 	apiFactory: () => MatrixApiService,
 	deps: MatrixSettingsDeps = {}
 ) {
+	const trackedKeys = deps.trackedKeys;
+	const saveKeys = deps.saveKeys ?? trackedKeys;
 	const feedback = createSettingsFeedback<MatrixSettings>({
 		loadErrorFallback: () => m.matrix_err_load({ locale: i18n.languageTag }),
 		saveErrorFallback: () => m.matrix_err_save({ locale: i18n.languageTag }),
@@ -29,8 +53,13 @@ export function useMatrixSettings(
 				return await apiFactory().getSettings();
 			},
 			save: async (settings) => {
-				return await apiFactory().updateSettings(settings);
+				return await apiFactory().updateSettings(
+					saveKeys ? pickMatrixSettings(settings, saveKeys) : settings
+				);
 			},
+			equals: trackedKeys
+				? (current, saved) => matrixSettingsEqualByKeys(trackedKeys, current, saved)
+				: undefined,
 			feedback
 		}
 	);

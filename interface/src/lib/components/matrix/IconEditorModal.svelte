@@ -10,7 +10,7 @@
 	interface Props {
 		isOpen: boolean;
 		onClose: () => void;
-		customIcons: number[][]; // Current store state
+		customIcons: number[][];
 		onSave: (icons: number[][]) => Promise<boolean> | boolean;
 	}
 
@@ -22,7 +22,7 @@
 
 	let wasOpen = $state(false);
 
-	// Reset tab only when modal transitions from closed → open
+	// Reset tab only when modal transitions from closed to open.
 	$effect(() => {
 		if (isOpen && !wasOpen) {
 			activeTab = 0;
@@ -30,7 +30,7 @@
 		wasOpen = isOpen;
 	});
 
-	// Clone current state when modal is open and customIcons change
+	// Clone current state when modal is open and customIcons change.
 	$effect(() => {
 		if (isOpen) {
 			const source = customIcons && customIcons.length > 0 ? customIcons : [[], [], []];
@@ -60,7 +60,7 @@
 		localIcons[idx] = [...pixels];
 	}
 
-	// Helper to ensure we pass a valid 64-length array to the editor
+	// Ensure the editor always receives a valid 64-pixel icon.
 	function getEditorValue(index: number): number[] {
 		const current = localIcons[index];
 		if (current && current.length === 64) {
@@ -72,9 +72,6 @@
 
 <Modal {isOpen} {onClose} title={m.matrix_icon_editor_title()}>
 	<div class="flex flex-col gap-4">
-		<!-- Tabs -->
-		<!-- Tabs (Task Manager Style) -->
-		<!-- Tabs (Compact Buttons) -->
 		<div class="grid grid-cols-3 gap-2">
 			<button
 				type="button"
@@ -104,11 +101,7 @@
 			</button>
 		</div>
 
-		<!-- Editor Area -->
-		<!-- Editor Area -->
 		<div class="flex justify-center p-2 bg-base-200 rounded-box min-h-[340px]">
-			<!-- Removed {#key} block to prevent component destruction/re-creation -->
-			<!-- IconEditor will update reactively when its props change -->
 			<IconEditor
 				value={getEditorValue(activeTab)}
 				onChange={(val) => updateIcon(activeTab, val)}

@@ -7,6 +7,7 @@
 	import { type useMatrixSettings } from './useMatrixSettings.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import { getMatrixEffectName } from './matrixEffectLabels';
 	import {
 		MATRIX_COLOR_PRESETS,
 		MATRIX_EFFECT_CATEGORIES,
@@ -204,82 +205,6 @@
 		hexColor3 = toMatrixHexColor(preset.colors[2]);
 	}
 
-	function getEffectName(id: number): string {
-		const mapping: Record<number, (args: { locale: string }) => string> = {
-			0: m.matrix_eff_static,
-			1: m.matrix_eff_blink,
-			2: m.matrix_eff_breath,
-			3: m.matrix_eff_color_wipe,
-			4: m.matrix_eff_color_wipe_inv,
-			5: m.matrix_eff_color_wipe_rev,
-			6: m.matrix_eff_color_wipe_rev_inv,
-			7: m.matrix_eff_color_wipe_random,
-			8: m.matrix_eff_random_color,
-			9: m.matrix_eff_single_dynamic,
-			10: m.matrix_eff_multi_dynamic,
-			11: m.matrix_eff_rainbow,
-			12: m.matrix_eff_rainbow_cycle,
-			13: m.matrix_eff_scan,
-			14: m.matrix_eff_dual_scan,
-			15: m.matrix_eff_fade,
-			16: m.matrix_eff_theater_chase,
-			17: m.matrix_eff_theater_chase_rainbow,
-			18: m.matrix_eff_running_lights,
-			19: m.matrix_eff_twinkle,
-			20: m.matrix_eff_twinkle_random,
-			21: m.matrix_eff_twinkle_fade,
-			22: m.matrix_eff_twinkle_fade_random,
-			23: m.matrix_eff_sparkle,
-			24: m.matrix_eff_flash_sparkle,
-			25: m.matrix_eff_hyper_sparkle,
-			26: m.matrix_eff_strobe,
-			27: m.matrix_eff_strobe_rainbow,
-			28: m.matrix_eff_multi_strobe,
-			29: m.matrix_eff_blink_rainbow,
-			30: m.matrix_eff_chase_white,
-			31: m.matrix_eff_chase_color,
-			32: m.matrix_eff_chase_random,
-			33: m.matrix_eff_chase_rainbow,
-			34: m.matrix_eff_chase_flash,
-			35: m.matrix_eff_chase_flash_random,
-			36: m.matrix_eff_chase_rainbow_white,
-			37: m.matrix_eff_chase_blackout,
-			38: m.matrix_eff_chase_blackout_rainbow,
-			39: m.matrix_eff_color_sweep_random,
-			40: m.matrix_eff_running_color,
-			41: m.matrix_eff_running_red_blue,
-			42: m.matrix_eff_running_random,
-			43: m.matrix_eff_larson_scanner,
-			44: m.matrix_eff_comet,
-			45: m.matrix_eff_fireworks,
-			46: m.matrix_eff_fireworks_random,
-			47: m.matrix_eff_merry_christmas,
-			48: m.matrix_eff_fire_flicker,
-			49: m.matrix_eff_fire_flicker_soft,
-			50: m.matrix_eff_fire_flicker_intense,
-			51: m.matrix_eff_circus_combustus,
-			52: m.matrix_eff_halloween,
-			53: m.matrix_eff_bicolor_chase,
-			54: m.matrix_eff_tricolor_chase,
-			55: m.matrix_eff_twinklefox,
-			56: m.matrix_eff_rain,
-			57: m.matrix_eff_block_dissolve,
-			58: m.matrix_eff_icu,
-			59: m.matrix_eff_dual_larson,
-			60: m.matrix_eff_running_random2,
-			61: m.matrix_eff_filler_up,
-			62: m.matrix_eff_rainbow_larson,
-			63: m.matrix_eff_rainbow_fireworks,
-			64: m.matrix_eff_trifade,
-			65: m.matrix_eff_heartbeat,
-			66: m.matrix_eff_bits,
-			67: m.matrix_eff_multi_comet,
-			68: m.matrix_eff_popcorn,
-			69: m.matrix_eff_oscillator
-		};
-		return mapping[id] ? mapping[id]({ locale: i18n.languageTag }) : `Effect ${id}`;
-	}
-
 	const effectCategoryOptions = $derived.by(() =>
 		effectCategories.map((category) => ({
 			value: category.value,
@@ -290,7 +215,7 @@
 	const effectOptions = $derived.by(() =>
 		(getCategoryById(effectCategory)?.effectIds ?? MATRIX_EFFECT_IDS).map((effectId) => ({
 			value: effectId,
-			label: getEffectName(effectId)
+			label: getMatrixEffectName(effectId, i18n.languageTag)
 		}))
 	);
 
@@ -330,8 +255,6 @@
 				{store.error}
 			</div>
 		{:else}
-			<!-- Master Toggle -->
-			<!-- Master Toggle -->
 			<ContentBox class="flex items-center justify-between">
 				<div>
 					<span class="font-bold text-sm">{m.matrix_effects_enable()}</span>
@@ -363,8 +286,6 @@
 					/>
 				</ContentBox>
 
-				<!-- Mode Selection -->
-				<!-- Mode Selection -->
 				<ContentBox>
 					<FormSelect
 						label={m.matrix_effect_mode()}
@@ -377,8 +298,6 @@
 					/>
 				</ContentBox>
 
-				<!-- Speed Configuration -->
-				<!-- Speed Configuration -->
 				<ContentBox>
 					<FormRange
 						label={m.matrix_effect_speed()}
@@ -409,8 +328,6 @@
 					</div>
 				</ContentBox>
 
-				<!-- Color Selection -->
-				<!-- Color Selection -->
 				<ContentBox class="flex flex-col gap-3">
 					<div>
 						<span class="font-bold text-sm">{m.matrix_effect_palettes()}</span>

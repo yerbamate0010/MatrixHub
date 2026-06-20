@@ -65,11 +65,11 @@ async function installAuthenticatedSession(page: Page) {
 }
 
 test.describe('Matrix LED settings', () => {
-	test('saves matrix display, effect, color, and icon drafts through the card Save action', async ({
+	test('saves matrix display, effect, and alarm drafts through their own screens', async ({
 		page
 	}) => {
 		let matrixSettings = structuredClone(initialMatrixSettings);
-		const matrixPosts: MatrixSettings[] = [];
+		const matrixPosts: Partial<MatrixSettings>[] = [];
 
 		await installAuthenticatedSession(page);
 		await page.route('**/rest/features', (route) =>
@@ -84,7 +84,7 @@ test.describe('Matrix LED settings', () => {
 			if (route.request().method() === 'POST') {
 				const payload = (route.request().postDataJSON() ?? {}) as Partial<MatrixSettings>;
 				matrixSettings = { ...matrixSettings, ...payload };
-				matrixPosts.push(structuredClone(matrixSettings));
+				matrixPosts.push(structuredClone(payload));
 				await fulfillJson(route, matrixSettings);
 				return;
 			}
@@ -94,14 +94,14 @@ test.describe('Matrix LED settings', () => {
 
 		await page.goto('/system/matrix');
 
-		await expect(page.getByRole('heading', { name: 'Matrix LED Settings' })).toBeVisible({
+		await expect(page.getByRole('heading', { name: 'Matrix Display' })).toBeVisible({
 			timeout: 30_000
 		});
-		await expect(page.getByRole('heading', { name: 'Visual Effects' })).toBeVisible({
-			timeout: 30_000
-		});
+		const matrixTabs = page.getByLabel('Matrix LED sections');
+		await expect(matrixTabs.getByRole('link', { name: 'Matrix Alarms' })).toBeVisible();
+		await expect(matrixTabs.getByRole('link', { name: 'LED Effects' })).toBeVisible();
 
-		const brightnessSlider = page.locator('input[type="range"]').nth(1);
+		const brightnessSlider = page.getByLabel('Brightness');
 		await brightnessSlider.evaluate((input) => {
 			const range = input as HTMLInputElement;
 			range.value = '88';
@@ -109,34 +109,52 @@ test.describe('Matrix LED settings', () => {
 		});
 		await page.getByRole('button', { name: '90°' }).click();
 		await page.getByLabel('Menu Text Color').fill('#112233');
-		await page.getByRole('combobox', { name: 'Effect Mode' }).selectOption('11');
-
-		await page.getByRole('button', { name: 'Edit Icons' }).click();
-		const iconDialog = page.getByRole('dialog');
-		await iconDialog.getByRole('button', { name: 'Pixel 1', exact: true }).click();
-		await iconDialog.getByRole('button', { name: 'Save' }).click();
 
 		expect(matrixPosts).toHaveLength(0);
 
-		await page.getByRole('button', { name: 'Save' }).first().click();
+		await page.getByRole('button', { name: 'Save' }).click();
 		await expect.poll(() => matrixPosts.length).toBe(1);
 
 		expect(matrixPosts[0]).toMatchObject({
 			brightness: 88,
 			rotation: 1,
 			menu_text_color: 0x112233,
-			effect_mode: 11,
 			menu_enabled: true
 		});
-		expect(matrixPosts[0].custom_icons?.[0]).toHaveLength(64);
+		expect(matrixPosts[0]).not.toHaveProperty('effect_mode');
+		expect(matrixPosts[0]).not.toHaveProperty('alarm_mode');
 
-		await page.reload();
-		await expect(page.getByRole('heading', { name: 'Matrix LED Settings' })).toBeVisible({
+		await page.goto('/system/matrix/effects');
+		await expect(page.getByRole('heading', { name: 'Visual Effects' })).toBeVisible({
 			timeout: 30_000
 		});
-		await expect(page.locator('input[type="range"]').nth(1)).toHaveValue('88');
-		await expect(page.getByLabel('Menu Text Color')).toHaveValue('#112233');
-		await expect(page.getByRole('combobox', { name: 'Effect Mode' })).toHaveValue('11');
+		await page.getByRole('combobox', { name: 'Effect Mode' }).selectOption('11');
+		await page.getByRole('button', { name: 'Save' }).click();
+		await expect.poll(() => matrixPosts.length).toBe(2);
+		expect(matrixPosts[1]).toMatchObject({
+			effect_enabled: true,
+			effect_mode: 11,
+			effect_speed: 1000
+		});
+		expect(matrixPosts[1]).not.toHaveProperty('brightness');
+		expect(matrixPosts[1]).not.toHaveProperty('alarm_mode');
+
+		await page.goto('/system/matrix/alarms');
+		await expect(page.getByRole('heading', { name: 'Matrix Alarms' })).toBeVisible({
+			timeout: 30_000
+		});
+		await page.getByRole('button', { name: 'Edit Icons' }).click();
+		const iconDialog = page.getByRole('dialog');
+		await iconDialog.getByRole('button', { name: 'Pixel 1', exact: true }).click();
+		await iconDialog.getByRole('button', { name: 'Save' }).click();
+
+		expect(matrixPosts).toHaveLength(2);
+		await page.getByRole('button', { name: 'Save' }).first().click();
+		await expect.poll(() => matrixPosts.length).toBe(3);
+		expect(matrixPosts[2]).toMatchObject({ alarm_mode: 1 });
+		expect(matrixPosts[2].custom_icons?.[0]).toHaveLength(64);
+		expect(matrixPosts[2]).not.toHaveProperty('effect_mode');
+		expect(matrixPosts[2]).not.toHaveProperty('brightness');
 	});
 
 	test('guards unsaved matrix drafts during internal navigation', async ({ page }) => {
@@ -163,11 +181,11 @@ test.describe('Matrix LED settings', () => {
 		});
 
 		await page.goto('/system/matrix');
-		await expect(page.getByRole('heading', { name: 'Matrix LED Settings' })).toBeVisible({
+		await expect(page.getByRole('heading', { name: 'Matrix Display' })).toBeVisible({
 			timeout: 30_000
 		});
 
-		const brightnessSlider = page.locator('input[type="range"]').nth(1);
+		const brightnessSlider = page.getByLabel('Brightness');
 		await brightnessSlider.evaluate((input) => {
 			const range = input as HTMLInputElement;
 			range.value = '77';

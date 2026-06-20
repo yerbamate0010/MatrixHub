@@ -5,6 +5,9 @@ import {
 	MATRIX_COLOR_PRESETS,
 	MATRIX_CUSTOM_ICON_PIXELS,
 	MATRIX_EFFECT_CATEGORIES,
+	MATRIX_ALARM_SETTING_KEYS,
+	MATRIX_DISPLAY_SETTING_KEYS,
+	MATRIX_EFFECT_SETTING_KEYS,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
 	MATRIX_EFFECT_SPEED_MAX,
@@ -55,6 +58,20 @@ describe('matrixModel', () => {
 			'neon',
 			'aurora'
 		]);
+	});
+
+	it('defines non-overlapping matrix settings sections for UI pages', () => {
+		const sections = [
+			MATRIX_DISPLAY_SETTING_KEYS,
+			MATRIX_ALARM_SETTING_KEYS,
+			MATRIX_EFFECT_SETTING_KEYS
+		];
+		const keys = sections.flat();
+
+		expect(new Set(keys).size).toBe(keys.length);
+		expect(MATRIX_ALARM_SETTING_KEYS).toEqual(['alarm_mode', 'custom_icons']);
+		expect(MATRIX_EFFECT_SETTING_KEYS).toContain('effect_enabled');
+		expect(MATRIX_DISPLAY_SETTING_KEYS).toContain('menu_enabled');
 	});
 
 	it('keeps the matrix effect speed range aligned with firmware', () => {

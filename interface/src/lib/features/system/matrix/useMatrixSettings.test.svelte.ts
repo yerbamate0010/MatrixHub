@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MatrixSettings } from '$lib/services/api/core/MatrixApiService';
+import { MATRIX_EFFECT_SETTING_KEYS } from './matrixModel';
 
 const { mockNotifications } = vi.hoisted(() => ({
 	mockNotifications: {
@@ -193,6 +194,52 @@ describe('useMatrixSettings', () => {
 							menu_enabled: false
 						})
 					);
+					resolve();
+				});
+			});
+		});
+
+		cleanup?.();
+	});
+
+	it('tracks and saves only the requested matrix settings section', async () => {
+		const { useMatrixSettings } = await import('./useMatrixSettings.svelte');
+		const updatedSettings = createMatrixSettings({
+			effect_mode: 11,
+			effect_enabled: true
+		});
+		const api = {
+			getSettings: vi.fn().mockResolvedValue(createMatrixSettings()),
+			updateSettings: vi.fn().mockResolvedValue(updatedSettings)
+		};
+
+		let cleanup: (() => void) | undefined;
+
+		await new Promise<void>((resolve) => {
+			cleanup = $effect.root(() => {
+				const matrix = useMatrixSettings(() => api as never, {
+					trackedKeys: MATRIX_EFFECT_SETTING_KEYS
+				});
+
+				void matrix.loadSettings().then(async () => {
+					matrix.updateSetting('brightness', 77);
+					expect(matrix.hasChanges).toBe(false);
+
+					matrix.updateSetting('effect_enabled', true);
+					matrix.updateSetting('effect_mode', 11);
+					expect(matrix.hasChanges).toBe(true);
+
+					matrix.saveSettings();
+					await flushPromises();
+
+					expect(api.updateSettings).toHaveBeenCalledWith({
+						effect_enabled: true,
+						effect_mode: 11,
+						effect_speed: 1000,
+						effect_color: 0x00ff00,
+						effect_color_2: 0xff0000,
+						effect_color_3: 0x0000ff
+					});
 					resolve();
 				});
 			});

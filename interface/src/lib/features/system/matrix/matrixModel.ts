@@ -1,5 +1,6 @@
 import type { MatrixSettings } from '$lib/services/api/core/MatrixApiService';
 
+export type MatrixSettingsKey = keyof MatrixSettings;
 export type MatrixEffectSpeedScale = 'ms' | 's' | 'm' | 'h';
 export type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seasonal' | 'all';
 
@@ -28,6 +29,29 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	menu_text_color: 0xffffff,
 	menu_scroll_speed: 20
 };
+
+export const MATRIX_DISPLAY_SETTING_KEYS = [
+	'brightness',
+	'rotation',
+	'auto_rotate',
+	'menu_enabled',
+	'menu_text_color',
+	'menu_scroll_speed'
+] as const satisfies readonly MatrixSettingsKey[];
+
+export const MATRIX_ALARM_SETTING_KEYS = [
+	'alarm_mode',
+	'custom_icons'
+] as const satisfies readonly MatrixSettingsKey[];
+
+export const MATRIX_EFFECT_SETTING_KEYS = [
+	'effect_enabled',
+	'effect_mode',
+	'effect_speed',
+	'effect_color',
+	'effect_color_2',
+	'effect_color_3'
+] as const satisfies readonly MatrixSettingsKey[];
 
 // Keep this aligned with the backend validator in MatrixConfigJson.cpp.
 export const MATRIX_EFFECT_SPEED_MIN = 50;
