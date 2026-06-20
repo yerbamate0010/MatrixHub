@@ -132,7 +132,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 	imu_sample_fresh: () => 'fresh',
 	imu_sample_stale: () => 'stale',
 	imu_last_error: () => 'Last start error',
-	imu_retry_at: ({ ms }: { ms: string }) => `retry @ ${ms} ms`,
+	imu_retry_at: ({ duration }: { duration: string }) => `retry @ ${duration}`,
 	imu_baseline_valid: () => 'valid',
 	imu_baseline_missing: () => 'missing',
 	imu_consumer_configured: () => 'Configured',
@@ -230,6 +230,17 @@ describe('ImuPage', () => {
 		expect(
 			within(getCardByTitle('IMU Overview')).queryByRole('button', { name: 'Save' })
 		).toBeNull();
+	});
+
+	it('renders IMU millisecond durations as seconds', () => {
+		render(ImuPage);
+
+		const settingsCard = getCardByTitle('Alarm & Orientation');
+		expect(within(settingsCard).getByText('0.75 s')).toBeTruthy();
+		expect(within(settingsCard).getByText('1.5 s')).toBeTruthy();
+		expect(within(settingsCard).getByText('1.2 s')).toBeTruthy();
+		expect(within(settingsCard).queryByText(/750 ms/)).toBeNull();
+		expect(within(settingsCard).queryByText(/1500 ms/)).toBeNull();
 	});
 
 	it('labels AirMouse consumer state as configured, desired, and running', () => {

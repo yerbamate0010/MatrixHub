@@ -63,7 +63,7 @@
 	"imu_sample_fresh": "fresh",
 	"imu_sample_stale": "stale",
 	"imu_last_error": "Last start error",
-	"imu_retry_at": "retry @ {ms} ms",
+	"imu_retry_at": "retry @ {duration}",
 	"imu_baseline_valid": "valid",
 	"imu_baseline_missing": "missing",
 	"imu_consumer_configured": "Configured",

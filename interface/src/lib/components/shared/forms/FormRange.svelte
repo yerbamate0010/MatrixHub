@@ -14,6 +14,7 @@
 		class: className = '',
 		rangeClass = 'range-primary',
 		suffix = '',
+		valueFormatter = undefined,
 		valueClass = '',
 		id = undefined,
 		ariaLabel = undefined,
@@ -29,12 +30,17 @@
 		class?: string;
 		rangeClass?: string;
 		suffix?: string;
+		valueFormatter?: (value: number) => string;
 		valueClass?: string;
 		id?: string;
 		ariaLabel?: string;
 		oninput?: (e: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
 		onchange?: (e: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
 	} = $props();
+
+	const displayValue = $derived(
+		valueFormatter ? valueFormatter(value) : suffix ? `${value} ${suffix}` : String(value)
+	);
 </script>
 
 <div class="form-control {className}">
@@ -57,17 +63,12 @@
 			aria-label={ariaLabel || label || undefined}
 			{...rest}
 		/>
-		{#if suffix}
-			<span
-				class="text-xs text-right font-mono tabular-nums whitespace-nowrap {valueClass || 'w-20'}"
-				>{value} {suffix}</span
-			>
-		{:else}
-			<span
-				class="text-xs text-right font-mono tabular-nums whitespace-nowrap {valueClass || 'w-12'}"
-				>{value}</span
-			>
-		{/if}
+		<span
+			class="text-xs text-right font-mono tabular-nums whitespace-nowrap {valueClass ||
+				(suffix ? 'w-20' : 'w-12')}"
+		>
+			{displayValue}
+		</span>
 	</div>
 
 	{#if description}

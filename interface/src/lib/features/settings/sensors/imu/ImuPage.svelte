@@ -105,8 +105,16 @@
 	}
 
 	function sampleAgeLabel(value: number | null | undefined) {
-		if (value === null || value === undefined) return '--';
-		return `${value} ms`;
+		return durationSecondsLabel(value);
+	}
+
+	function compactNumber(value: number, maxDigits = 3) {
+		return value.toFixed(maxDigits).replace(/\.?0+$/, '');
+	}
+
+	function durationSecondsLabel(value: number | null | undefined, maxDigits = 3) {
+		if (value === null || value === undefined || Number.isNaN(value)) return '--';
+		return `${compactNumber(value / 1000, maxDigits)} s`;
 	}
 
 	function numberLabel(value: number | null | undefined, digits = 2, suffix = '') {
@@ -152,7 +160,7 @@
 	}
 
 	function retryAtLabel(ms: number) {
-		return m.imu_retry_at({ ms: String(ms) }, { locale: i18n.languageTag });
+		return m.imu_retry_at({ duration: durationSecondsLabel(ms) }, { locale: i18n.languageTag });
 	}
 
 	function samplesLabel(count: number) {
@@ -285,13 +293,17 @@
 								<div class="text-xs opacity-60">
 									{m.imu_alarm_trigger_hold({ locale: i18n.languageTag })}
 								</div>
-								<div class="font-mono">{alarm?.trigger_hold_elapsed_ms ?? 0} ms</div>
+								<div class="font-mono">
+									{durationSecondsLabel(alarm?.trigger_hold_elapsed_ms, 2)}
+								</div>
 							</div>
 							<div>
 								<div class="text-xs opacity-60">
 									{m.imu_alarm_clear_hold({ locale: i18n.languageTag })}
 								</div>
-								<div class="font-mono">{alarm?.clear_hold_elapsed_ms ?? 0} ms</div>
+								<div class="font-mono">
+									{durationSecondsLabel(alarm?.clear_hold_elapsed_ms, 2)}
+								</div>
 							</div>
 							<div class="col-span-2 md:col-span-1">
 								<div class="text-xs opacity-60">
@@ -464,7 +476,8 @@
 								min={100}
 								max={10000}
 								step={50}
-								suffix="ms"
+								valueFormatter={(value) => durationSecondsLabel(value, 2)}
+								valueClass="w-16"
 							/>
 							<FormRange
 								id="imu_tilt_clear_hold"
@@ -473,7 +486,8 @@
 								min={100}
 								max={15000}
 								step={50}
-								suffix="ms"
+								valueFormatter={(value) => durationSecondsLabel(value, 2)}
+								valueClass="w-16"
 							/>
 						</div>
 					</ContentBox>
@@ -502,7 +516,7 @@
 									</div>
 									<div class="font-mono">{imu.settings.calibration_revision}</div>
 									<div class="font-mono text-xs opacity-70">
-										{imu.settings.baseline_calibrated_at} ms
+										{durationSecondsLabel(imu.settings.baseline_calibrated_at, 2)}
 									</div>
 								</div>
 							</div>

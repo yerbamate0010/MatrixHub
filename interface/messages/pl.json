@@ -63,7 +63,7 @@
 	"imu_sample_fresh": "świeża",
 	"imu_sample_stale": "stara",
 	"imu_last_error": "Ostatni błąd startu",
-	"imu_retry_at": "ponów @ {ms} ms",
+	"imu_retry_at": "ponów @ {duration}",
 	"imu_baseline_valid": "poprawna",
 	"imu_baseline_missing": "brak",
 	"imu_consumer_configured": "Konfiguracja",
