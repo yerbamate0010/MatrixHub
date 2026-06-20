@@ -29,8 +29,9 @@ namespace LoggingConfig {
 // ============================================================================
 namespace APP {
 namespace LOGGING {
-    // Boot-time logging level used before user settings are applied in phase2_Logging.
-    constexpr esp_log_level_t STARTUP_LEVEL = ESP_LOG_VERBOSE;
+    // Boot-time level before persisted settings are loaded. Keep only hard
+    // failures visible until Phase 1 can apply the saved runtime level.
+    constexpr esp_log_level_t STARTUP_LEVEL = ESP_LOG_ERROR;
 }
 
 namespace NOTIFICATIONS {

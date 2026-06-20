@@ -8,11 +8,11 @@
 
 #include "../../../config/System.h"
 #include "../../../system/boot/BootTracker.h"
+#include "../../../system/logging/Logging.h"
 #include "../../../system/shutdown/ShutdownSequence.h"
 #include "../../../system/utils/Random.h"
 
 #include <Arduino.h>
-#include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -20,6 +20,14 @@
 
 namespace {
 constexpr const char* kLogTag = "TgReboot";
+
+void logRebootError(const char* message) {
+#if defined(NATIVE_BUILD)
+    (void)message;
+#else
+    LOG::Logging::log(ESP_LOG_ERROR, kLogTag, "%s", message);
+#endif
+}
 }
 
 namespace TELEGRAM::Commands {
@@ -53,7 +61,7 @@ static void delayedRebootTask(void* pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(TIMEOUT::REBOOT_COMMAND_DELAY_MS));
 
     if (!registry) {
-        ESP_LOGE(kLogTag, "Reboot task started without ServiceRegistry; aborting restart");
+        logRebootError("Reboot task started without ServiceRegistry; aborting restart");
         vTaskDelete(NULL);
         return;
     }

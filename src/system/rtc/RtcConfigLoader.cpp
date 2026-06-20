@@ -18,6 +18,10 @@ namespace RTC {
 
 namespace {
 bool s_warmBootPathUsed = false;
+
+void applyLoadedLoggingLevel() {
+    LOG::Logging::setLevel(getConfig().logging.level);
+}
 }  // namespace
 
 bool isWarmBoot() {
@@ -35,6 +39,7 @@ bool initConfig(FS& fs) {
     
     if (deepSleepReset && rtcValidAtBoot) {
         s_warmBootPathUsed = true;
+        applyLoadedLoggingLevel();
 
         // Warm boot fast path: the retained snapshot already restored the
         // PSRAM working copy, so we only validate runtime-only RTC structures
@@ -80,6 +85,7 @@ bool reloadAllFromFS(FS& fs) {
     
     // Mark the freshly built working copy as valid for later warm-boot use.
     markValid();
+    applyLoadedLoggingLevel();
     
     LOGI("RTC config ready (%u bytes used)", sizeof(ConfigStore));
     logStatus();

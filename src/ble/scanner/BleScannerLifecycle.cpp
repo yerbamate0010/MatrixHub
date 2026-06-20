@@ -125,9 +125,13 @@ void BleScanner::flushRuntimeStateIfDirty() {
 }
 
 void BleScanner::startScan() {
-    LOGD("startScan() called: _pScan=%p, _scanning=%d", _pScan, _scanning.load(std::memory_order_acquire));
+    LOGV_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                   "startScan() called: _pScan=%p, _scanning=%d",
+                   _pScan,
+                   _scanning.load(std::memory_order_acquire));
     if (!_pScan) {
-        LOGW("startScan ignored: scan instance not ready");
+        LOGW_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                       "startScan ignored: scan instance not ready");
         return;
     }
 
@@ -137,14 +141,17 @@ void BleScanner::startScan() {
 
     _scanning.store(true, std::memory_order_release);
     if (_pScan->isScanning()) {
-        LOGD("Scan already running (NimBLE isScanning=true)");
+        LOGV_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                       "Scan already running (NimBLE isScanning=true)");
         return;
     }
 
-    LOGI("Starting BLE scan (%us cycle)", SENSOR::BLE::SCAN_DURATION_SEC);
+    LOGD_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                   "Starting BLE scan (%us cycle)",
+                   SENSOR::BLE::SCAN_DURATION_SEC);
     if (!_pScan->start(SENSOR::BLE::SCAN_DURATION_SEC, false)) {
         _scanning.store(false, std::memory_order_release);
-        LOGW("Failed to start BLE scan");
+        LOGW_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS, "Failed to start BLE scan");
     }
 }
 
@@ -178,7 +185,7 @@ void BleScanner::onScanComplete(const NimBLEScanResults& results) {
     _pScan->clearResults(); // Prevent heap growth from scan results.
     if (!_pScan->start(SENSOR::BLE::SCAN_DURATION_SEC, false)) {
         _scanning.store(false, std::memory_order_release);
-        LOGW("Failed to restart BLE scan");
+        LOGW_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS, "Failed to restart BLE scan");
     }
 }
 

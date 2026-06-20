@@ -409,7 +409,7 @@ void HeartbeatWorker::taskLoop() {
                 _lastPingMs = millis();
                 _pingCycleActive.store(false, std::memory_order_release);
                 cycleSnapshotLoaded = false;
-                LOGD("Heartbeat ping cycle complete");
+                LOGV_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS, "Heartbeat ping cycle complete");
                 continue;
             }
 
@@ -419,14 +419,23 @@ void HeartbeatWorker::taskLoop() {
 
             _currentCycleOffset.store(cycleOffset + 1, std::memory_order_release);
 
-            LOGI("Slot %u [%s]: pinging", slotIndex, slot.name);
+            LOGD_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                           "Slot %u [%s]: pinging",
+                           slotIndex,
+                           slot.name);
 
             const bool ok = _transport.ping(slot, HEARTBEAT::HTTP_TIMEOUT_MS, HEARTBEAT::HTTP_RETRIES);
             if (ok) {
-                LOGI("Slot %u [%s]: OK", slotIndex, slot.name);
+                LOGD_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                               "Slot %u [%s]: OK",
+                               slotIndex,
+                               slot.name);
                 RTC::runtimeStats.heartbeatSlots[slotIndex].successCount++;
             } else {
-                LOGW("Slot %u [%s]: failed", slotIndex, slot.name);
+                LOGW_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                               "Slot %u [%s]: failed",
+                               slotIndex,
+                               slot.name);
                 RTC::runtimeStats.heartbeatSlots[slotIndex].failCount++;
             }
             RTC::runtimeStats.heartbeatSlots[slotIndex].lastPingMs = millis();

@@ -4,6 +4,7 @@
 #include <esp_log.h>
 #include <cstring>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include "../../config/System.h"
 #include "LogRingBuffer.h"
@@ -194,6 +195,52 @@ private:
 #define LOGW(fmt, ...) LOG::Logging::log(ESP_LOG_WARN, LOG_TAG, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) LOG::Logging::log(ESP_LOG_ERROR, LOG_TAG, fmt, ##__VA_ARGS__)
 #define LOGV(fmt, ...) LOG::Logging::log(ESP_LOG_VERBOSE, LOG_TAG, fmt, ##__VA_ARGS__)
+
+#define LOG_THROTTLED(level, intervalMs, fmt, ...)                         \
+    do {                                                                   \
+        static uint32_t _lastThrottledLogMs_ = _LOG_JITTER_OFFSET();       \
+        static uint32_t _suppressedThrottledLogs_ = 0;                     \
+        uint32_t _now_ = (uint32_t)millis();                               \
+        if (_lastThrottledLogMs_ == 0 ||                                   \
+            _now_ - _lastThrottledLogMs_ >= (uint32_t)(intervalMs)) {       \
+            uint32_t _suppressed_ = _suppressedThrottledLogs_;             \
+            _suppressedThrottledLogs_ = 0;                                 \
+            _lastThrottledLogMs_ = _now_;                                  \
+            if (_suppressed_ > 0) {                                        \
+                LOG::Logging::log(level, LOG_TAG, fmt " (suppressed %lu repeats)", \
+                                  ##__VA_ARGS__, (unsigned long)_suppressed_); \
+            } else {                                                       \
+                LOG::Logging::log(level, LOG_TAG, fmt, ##__VA_ARGS__);     \
+            }                                                              \
+        } else if (_suppressedThrottledLogs_ < 0xFFFFFFFFu) {              \
+            ++_suppressedThrottledLogs_;                                   \
+        }                                                                  \
+    } while (0)
+
+#define LOG_ON_CHANGE(level, value, fmt, ...)                              \
+    do {                                                                   \
+        const auto _logCurrentValue_ = (value);                             \
+        using _LogValueType_ = std::remove_cv_t<std::remove_reference_t<decltype(_logCurrentValue_)>>; \
+        static bool _logHasLastValue_ = false;                             \
+        static _LogValueType_ _logLastValue_{};                            \
+        if (!_logHasLastValue_ || _logLastValue_ != _logCurrentValue_) {    \
+            _logLastValue_ = _logCurrentValue_;                            \
+            _logHasLastValue_ = true;                                      \
+            LOG::Logging::log(level, LOG_TAG, fmt, ##__VA_ARGS__);         \
+        }                                                                  \
+    } while (0)
+
+#define LOGD_THROTTLED(intervalMs, fmt, ...) LOG_THROTTLED(ESP_LOG_DEBUG, intervalMs, fmt, ##__VA_ARGS__)
+#define LOGI_THROTTLED(intervalMs, fmt, ...) LOG_THROTTLED(ESP_LOG_INFO, intervalMs, fmt, ##__VA_ARGS__)
+#define LOGW_THROTTLED(intervalMs, fmt, ...) LOG_THROTTLED(ESP_LOG_WARN, intervalMs, fmt, ##__VA_ARGS__)
+#define LOGE_THROTTLED(intervalMs, fmt, ...) LOG_THROTTLED(ESP_LOG_ERROR, intervalMs, fmt, ##__VA_ARGS__)
+#define LOGV_THROTTLED(intervalMs, fmt, ...) LOG_THROTTLED(ESP_LOG_VERBOSE, intervalMs, fmt, ##__VA_ARGS__)
+
+#define LOGD_ON_CHANGE(value, fmt, ...) LOG_ON_CHANGE(ESP_LOG_DEBUG, value, fmt, ##__VA_ARGS__)
+#define LOGI_ON_CHANGE(value, fmt, ...) LOG_ON_CHANGE(ESP_LOG_INFO, value, fmt, ##__VA_ARGS__)
+#define LOGW_ON_CHANGE(value, fmt, ...) LOG_ON_CHANGE(ESP_LOG_WARN, value, fmt, ##__VA_ARGS__)
+#define LOGE_ON_CHANGE(value, fmt, ...) LOG_ON_CHANGE(ESP_LOG_ERROR, value, fmt, ##__VA_ARGS__)
+#define LOGV_ON_CHANGE(value, fmt, ...) LOG_ON_CHANGE(ESP_LOG_VERBOSE, value, fmt, ##__VA_ARGS__)
 
 #define LOGD_FAST(fmt, ...) LOG::Logging::log(ESP_LOG_DEBUG, LOG_TAG, fmt, ##__VA_ARGS__)
 #define LOGI_FAST(fmt, ...) LOG::Logging::log(ESP_LOG_INFO, LOG_TAG, fmt, ##__VA_ARGS__)

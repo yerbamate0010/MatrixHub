@@ -49,7 +49,7 @@ TelegramSendResult TelegramNotifier::sendMessage(const char* text, size_t textLe
 
     if (_queue && _queue->enqueue(validation.chatId, text, textLen)) {
         result.queued = true;
-        LOGI("Queued OK");
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_TELEGRAM_DISP_MS, "Queued OK");
     } else {
         result.error = _queue ? "queue_full" : "queue_unavailable";
         LOGW("Queue unavailable/full, message dropped");

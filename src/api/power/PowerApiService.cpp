@@ -9,6 +9,7 @@
 #include "../../system/power/PowerWakeController.h"
 #include "../../system/thermal/ThermalMonitor.h"
 #include "../../system/boot/BootTracker.h"
+#include "../../system/logging/Logging.h"
 #include "../../system/rtc/RtcConfig.h"
 #include "../../config/System.h"
 #include "../../config/Hardware.h"
@@ -17,6 +18,9 @@
 #include <ArduinoJson.h>
 
 namespace API {
+
+#undef LOG_TAG
+#define LOG_TAG "PowerApi"
 
 namespace {
 constexpr const char* kPowerConfigPath = "/rest/power/config";
@@ -128,9 +132,9 @@ void PowerApiService::begin() {
             if (_powerManager) {
                 _powerManager->setWakeInterval(100);
                 RTC::markMaintenanceSleepPending(millis());
-                ESP_LOGI("Power", "[Hygiene] Flag set: active=%d, count=%u",
-                         RTC::runtimeStats.hygieneSleepActive,
-                         RTC::runtimeStats.hygieneSleepCount);
+                LOGI("[Hygiene] Flag set: active=%d, count=%u",
+                     RTC::runtimeStats.hygieneSleepActive,
+                     RTC::runtimeStats.hygieneSleepCount);
                 _powerManager->requestSleep("manual-hygiene");
             }
             return ESP_OK;

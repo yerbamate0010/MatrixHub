@@ -146,7 +146,9 @@ void TelegramPoller::pollAndDispatch(int64_t& lastUpdateId,
     });
     
     if (liteCount == 0) {
-        LOGD("Poll OK, no new updates (lastId=%lld)", lastUpdateId);
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_TELEGRAM_FETCH_MS,
+                       "Poll OK, no new updates (lastId=%lld)",
+                       lastUpdateId);
         return;
     }
 

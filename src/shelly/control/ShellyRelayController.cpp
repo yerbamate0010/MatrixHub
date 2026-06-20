@@ -186,7 +186,7 @@ bool ShellyRelayController::pollDevice(const ShellyDevice& t) {
     ShellyStatus status;
     uint8_t detectedGeneration = t.generation;
     
-    LOGD("Polling %s (%s)", t.id, t.ip);
+    LOGV_THROTTLED(TASK_MONITOR::INTERVAL_SHELLY_POLL_MS, "Polling %s (%s)", t.id, t.ip);
 
     auto tryPollGeneration = [&](uint8_t generation, ShellyStatus& outStatus) -> bool {
         size_t bytesRead = 0;
@@ -200,10 +200,10 @@ bool ShellyRelayController::pollDevice(const ShellyDevice& t) {
             return false;
         }
 
-        LOGD("Response: %u bytes", bytesRead);
+        LOGV_THROTTLED(TASK_MONITOR::INTERVAL_SHELLY_POLL_MS, "Response: %u bytes", bytesRead);
         if (!parseStatusForGeneration(generation, _responseBuffer, bytesRead, t.relayIndex, outStatus)) {
             LOGW("Parse Failed (Gen %u): %s", generation, t.id);
-            LOGD("Raw [First 64B]: %.64s", _responseBuffer);
+            LOGV("Raw [First 64B]: %.64s", _responseBuffer);
             return false;
         }
 
@@ -239,13 +239,22 @@ bool ShellyRelayController::pollDevice(const ShellyDevice& t) {
                 LOGI("Shelly %s remains unreachable at %s after %u failed polls; reducing log noise while backoff grows",
                      t.id, t.ip, nextFailureCount);
             } else {
-                LOGD("Poll still failing: %s ip=%s failures=%u", t.id, t.ip, nextFailureCount);
+                LOGD_THROTTLED(TASK_MONITOR::INTERVAL_SHELLY_POLL_MS,
+                               "Poll still failing: %s ip=%s failures=%u",
+                               t.id,
+                               t.ip,
+                               nextFailureCount);
             }
         }
     }
 
     if (online) {
-        LOGI("Poll Success: %s (IP: %s, Gen: %u, State: %s)", t.id, t.ip, detectedGeneration, status.isOn ? "ON" : "OFF");
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_SHELLY_POLL_MS,
+                       "Poll success: %s (IP: %s, Gen: %u, State: %s)",
+                       t.id,
+                       t.ip,
+                       detectedGeneration,
+                       status.isOn ? "ON" : "OFF");
 
         // Fix for Shelly intermittent 0.0W bug:
         // Shelly devices sometimes report apower=0.0 while ON, even with normal voltage.

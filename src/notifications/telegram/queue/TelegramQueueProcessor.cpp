@@ -101,7 +101,7 @@ OutboundProcessResult TelegramQueueProcessor::processOneQueuedMessage(WorkerStat
             RTC::runtimeStats.telegramMsgsSent++;
             lastSendMs = millis();
             applyQueueDelay = queue && queue->count() > 0;
-            LOGI("Sent OK");
+            LOGD_THROTTLED(TASK_MONITOR::INTERVAL_TELEGRAM_DISP_MS, "Sent OK");
         } else {
             const char* error = result.error ? result.error : "send_failed";
             lastError = error;

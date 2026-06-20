@@ -397,7 +397,7 @@ UdpPusher::PushNowResult UdpPusher::runPushLocked(const RTC::UdpPusherData& cfg)
     }
 
     if (WiFi.status() != WL_CONNECTED) {
-        LOGD("Skip - WiFi not connected");
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_UDP_PUSH_MS, "Skip - WiFi not connected");
         return PushNowResult::WifiDisconnected;
     }
 
@@ -410,7 +410,6 @@ UdpPusher::PushNowResult UdpPusher::runPushLocked(const RTC::UdpPusherData& cfg)
         TASK_MONITOR::THRESHOLD_UDP_PUSH_US);
 
     if (result) {
-        LOGD("Sent OK");
         return PushNowResult::Sent;
     }
 
@@ -465,7 +464,7 @@ bool UdpPusher::doSend(const RTC::UdpPusherData& cfg) {
     
     RTC::runtimeStats.udpSent++;
     RTC::runtimeStats.udpLastSendMs = millis();
-    LOGD("Sent %zu bytes to %s:%u", len, cfg.host, cfg.port);
+    LOGD_THROTTLED(TASK_MONITOR::INTERVAL_UDP_PUSH_MS, "Sent %zu bytes to %s:%u", len, cfg.host, cfg.port);
     return true;
 }
 

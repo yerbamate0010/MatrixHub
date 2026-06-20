@@ -265,7 +265,10 @@ WebhookDispatchResult WebhookWorker::sendRequest(const char* url, const char* pa
         RTC::runtimeStats.webhookSent++;
         RTC::runtimeStats.webhookLastSendMs = millis();
         RTC::runtimeStats.webhookLastHttpCode = static_cast<int16_t>(result.httpCode);
-        LOGI("Success: %d (total: %u)", result.httpCode, RTC::runtimeStats.webhookSent);
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_WEBHOOK_MS,
+                       "Success: %d (total: %u)",
+                       result.httpCode,
+                       RTC::runtimeStats.webhookSent);
         return result;
     } else {
         RTC::runtimeStats.webhookFailed++;

@@ -99,11 +99,9 @@ bool BleDeviceProcessor::process(
     
     // Log encrypted BTHome warning (once per minute)
     if (encrypted) {
-        static uint32_t lastEncryptedLog = 0;
-        if (now - lastEncryptedLog > 60000) {
-            LOGW("BTHome encrypted packet from %s - disable encryption in PVVX settings", macBuf);
-            lastEncryptedLog = now;
-        }
+        LOGW_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                       "BTHome encrypted packet from %s - disable encryption in PVVX settings",
+                       macBuf);
     }
     
     if (data.valid) {
@@ -111,11 +109,11 @@ bool BleDeviceProcessor::process(
         int rssi = device->getRSSI();
         const uint32_t nowMs = millis();
 
-        static uint32_t lastValidDataLogMs = 0;
-        if (now - lastValidDataLogMs >= TASK_MONITOR::BLE_WARNING_THROTTLE_MS) {
-            LOGD("Data Valid for %s: Temp=%.1f Hum=%.1f (throttled)", macBuf, data.temperature, data.humidity);
-            lastValidDataLogMs = now;
-        }
+        LOGD_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                       "Data valid for %s: Temp=%.1f Hum=%.1f",
+                       macBuf,
+                       data.temperature,
+                       data.humidity);
 
         // Throttling check (delegated to BleScanner)
         if (scanner.shouldReport(macBuf, data.temperature, data.humidity, data.battery, rssi, nowMs)) {

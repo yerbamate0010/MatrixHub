@@ -242,7 +242,11 @@ void Scd4xSensorService::readAll(SensorSnapshot& outSnap, PhaseStatus& outStatus
     outStatus.duration_ms = millis() - outStatus.start_ms;
     outStatus.ok = true;
 
-    LOGD("CO2=%u ppm, T=%.1f°C, RH=%.1f%%", co2, temperature, humidity);
+    LOGD_THROTTLED(TASK_MONITOR::INTERVAL_I2C_READ_MS,
+                   "CO2=%u ppm, T=%.1f C, RH=%.1f%%",
+                   co2,
+                   temperature,
+                   humidity);
 }
 
 void Scd4xSensorService::sleep() {

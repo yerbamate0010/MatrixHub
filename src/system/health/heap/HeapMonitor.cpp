@@ -150,14 +150,22 @@ void HeapMonitor::logStatus() {
     uint32_t minFree = getMinFreeHeap();
     uint8_t frag = getFragmentation();
     
-    LOGD("Heap: IntFree=%u, TotFree=%u, LrgBlock=%u, Frag=%u%%", 
-         freeInternal, totalFree, largest, frag);
+    LOGD_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                   "Heap: IntFree=%u, TotFree=%u, LrgBlock=%u, Frag=%u%%",
+                   freeInternal,
+                   totalFree,
+                   largest,
+                   frag);
          
     if (esp_psram_get_size() > 0) {
         size_t freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
         size_t totalPsram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
         size_t largestPsram = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
-        LOGD("PSRAM: Free=%zu/%zu, Largest=%zu", freePsram, totalPsram, largestPsram);
+        LOGD_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                       "PSRAM: Free=%zu/%zu, Largest=%zu",
+                       freePsram,
+                       totalPsram,
+                       largestPsram);
     }
 }
 

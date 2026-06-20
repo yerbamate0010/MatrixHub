@@ -87,9 +87,11 @@ void InitSequence::phase1_Storage() {
 void InitSequence::phase2_Logging() {
     LoggingConfig::begin();
     auto logCfg = LoggingConfig::get();
-    // Apply user's saved level WITHOUT clearing the ring buffer
-    // (early Phase 1 logs are preserved from main.cpp's Logging::begin)
+    // Re-apply the saved level after Phase 1 in case runtime config changed
+    // while the boot loader was still using the emergency startup level.
     LOG::Logging::setLevel(logCfg.level);
+
+    LOGI("\n\n* * * %s %s v%s * * *\n", APP::DEVICE, APP::NAME, APP::VERSION);
     
     LOGI("[Phase2] Logging: level=%s", 
          LOG::Logging::levelToString(logCfg.level));

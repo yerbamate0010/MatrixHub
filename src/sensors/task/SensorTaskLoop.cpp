@@ -450,7 +450,7 @@ void SensorTaskLoop::run() {
 
             // Only log if we have valid data (seq > 0 means we had at least one read)
             if (logSnap.seq > 0) {
-                LOGD("WRITE_START");
+                LOGV_THROTTLED(TASK_MONITOR::INTERVAL_FLASH_WRITE_MS, "WRITE_START");
                 PhaseStatus writeStatus;
                 
                 // Allow forcing flash write if explicitly requested OR it's the first write of the session
@@ -460,7 +460,9 @@ void SensorTaskLoop::run() {
                 SensorState::updateAfterWrite(writeStatus);
                 
                 if (writeStatus.ok) {
-                    LOGD("WRITE_OK (%.0f ms)", (float)writeStatus.duration_ms);
+                    LOGD_THROTTLED(TASK_MONITOR::INTERVAL_FLASH_WRITE_MS,
+                                   "WRITE_OK (%.0f ms)",
+                                   (float)writeStatus.duration_ms);
                     if (_pLastLogTime) _pLastLogTime->store(millis());
                 } else {
                     LOGE("WRITE_FAIL: %s", writeStatus.error_code);

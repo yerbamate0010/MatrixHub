@@ -14,7 +14,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <core/StatefulService.h>
-#include <esp_log.h>
+#include "../logging/Logging.h"
 #include "RtcConfig.h"
 #include "../utils/ScopeLock.h"
 
@@ -66,7 +66,7 @@ public:
             UpdateHandler handler{id, cb, allowRemove};
             _updateHandlers.push_back(handler);
         } else {
-            ESP_LOGW(RTC_TAG, "addUpdateHandler: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "addUpdateHandler: mutex timeout");
             return 0;
         }
         
@@ -80,7 +80,7 @@ public:
                 return h.allowRemove && h.id == id;
             });
         } else {
-            ESP_LOGW(RTC_TAG, "removeUpdateHandler: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "removeUpdateHandler: mutex timeout");
         }
     }
 
@@ -91,7 +91,7 @@ public:
     StateTransactionResult updateAndPropagate(std::function<StateUpdateResult(T&)> stateUpdater, std::string_view originId) override {
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "update: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "update: mutex timeout");
             return StateTransactionResult::failure("internal/update_failed");
         }
         if (!syncCachedStateLocked()) {
@@ -132,7 +132,7 @@ public:
     StateTransactionResult updateAndPropagate(JsonObject& jsonObject, JsonStateUpdater<T> stateUpdater, std::string_view originId) override {
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "update(json): mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "update(json): mutex timeout");
             return StateTransactionResult::failure("internal/update_failed");
         }
         if (!syncCachedStateLocked()) {
@@ -174,7 +174,7 @@ public:
         (void)originId;
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "updateWithoutPropagation: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "updateWithoutPropagation: mutex timeout");
             return StateUpdateResult::ERROR;
         }
         if (!syncCachedStateLocked()) {
@@ -197,7 +197,7 @@ public:
         (void)originId;
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "updateWithoutPropagation(json): mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "updateWithoutPropagation(json): mutex timeout");
             return StateUpdateResult::ERROR;
         }
         if (!syncCachedStateLocked()) {
@@ -225,7 +225,7 @@ public:
             stateReader(_state);
             return StateHandlerResult::success();
         } else {
-            ESP_LOGW(RTC_TAG, "read: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "read: mutex timeout");
             return StateHandlerResult::failure("internal/update_failed");
         }
     }
@@ -239,7 +239,7 @@ public:
             stateReader(_state, jsonObject);
             return StateHandlerResult::success();
         } else {
-            ESP_LOGW(RTC_TAG, "read(json): mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "read(json): mutex timeout");
             return StateHandlerResult::failure("internal/update_failed");
         }
     }
@@ -250,7 +250,7 @@ public:
         if (lock.isLocked()) {
             handlersCopy = _updateHandlers;
         } else {
-            ESP_LOGW(RTC_TAG, "callUpdateHandlers: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "callUpdateHandlers: mutex timeout");
             return StateHandlerResult::failure("internal/update_failed");
         }
 
@@ -270,7 +270,7 @@ protected:
     bool syncCachedState() {
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "syncCachedState: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "syncCachedState: mutex timeout");
             return false;
         }
         return syncCachedStateLocked();
@@ -280,7 +280,7 @@ protected:
         auto* self = const_cast<RtcStatefulService*>(this);
         SYSTEM::RecursiveScopeLock lock(self->_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "getCachedStateCopy: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "getCachedStateCopy: mutex timeout");
             return T{};
         }
         if (!self->syncCachedStateLocked()) {
@@ -300,19 +300,19 @@ private:
 
     bool syncCachedStateLocked() {
         if (!_rtcMember) {
-            ESP_LOGW(RTC_TAG, "syncCachedStateLocked: RTC member not configured");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "syncCachedStateLocked: RTC member not configured");
             return false;
         }
 
         SemaphoreHandle_t rtcLock = RTC::getLock();
         if (!rtcLock) {
-            ESP_LOGW(RTC_TAG, "syncCachedStateLocked: RTC config lock not initialized");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "syncCachedStateLocked: RTC config lock not initialized");
             return false;
         }
 
         SYSTEM::ScopeLock rtcAccess(rtcLock, kRtcConfigLockTimeout);
         if (!rtcAccess.isLocked()) {
-            ESP_LOGW(RTC_TAG, "syncCachedStateLocked: RTC config lock timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "syncCachedStateLocked: RTC config lock timeout");
             return false;
         }
 
@@ -322,19 +322,19 @@ private:
 
     bool commitCachedStateLocked() {
         if (!_rtcMember) {
-            ESP_LOGW(RTC_TAG, "commitCachedStateLocked: RTC member not configured");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "commitCachedStateLocked: RTC member not configured");
             return false;
         }
 
         SemaphoreHandle_t rtcLock = RTC::getLock();
         if (!rtcLock) {
-            ESP_LOGW(RTC_TAG, "commitCachedStateLocked: RTC config lock not initialized");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "commitCachedStateLocked: RTC config lock not initialized");
             return false;
         }
 
         SYSTEM::ScopeLock rtcAccess(rtcLock, kRtcConfigLockTimeout);
         if (!rtcAccess.isLocked()) {
-            ESP_LOGW(RTC_TAG, "commitCachedStateLocked: RTC config lock timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "commitCachedStateLocked: RTC config lock timeout");
             return false;
         }
 
@@ -346,7 +346,7 @@ private:
     bool restoreState(const T& previousState) {
         SYSTEM::RecursiveScopeLock lock(_accessMutex, kRtcMutexTimeout);
         if (!lock.isLocked()) {
-            ESP_LOGW(RTC_TAG, "restoreState: mutex timeout");
+            LOG::Logging::log(ESP_LOG_WARN, RTC_TAG, "restoreState: mutex timeout");
             return false;
         }
 

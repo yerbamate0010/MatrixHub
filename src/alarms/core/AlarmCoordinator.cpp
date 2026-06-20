@@ -137,9 +137,11 @@ AlarmCoordinator::EvaluationPassResult AlarmCoordinator::collectPendingEvents(co
         char safeName[kMaxAlarmNameLen] = {0};
         safeCopyAlarmName(safeName, rule.name);
 
-        LOGD("Rule '%s' [En=%d]: Src=%d Val=%.2f Thresh=%.2f -> Trig=%d Ch=0x%02X",
-             safeName, rule.enabled, static_cast<int>(rule.source),
-             valueForLogging, rule.threshold, result.triggered, rule.notifyChannels);
+        if (result.stateChanged || result.shouldNotify) {
+            LOGD("Rule '%s' state: Src=%d Val=%.2f Thresh=%.2f -> Trig=%d Notify=%d Ch=0x%02X",
+                 safeName, static_cast<int>(rule.source),
+                 valueForLogging, rule.threshold, result.triggered, result.shouldNotify, rule.notifyChannels);
+        }
 
         const bool shouldBroadcast =
             (_stateChangeCb != nullptr) &&

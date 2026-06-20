@@ -93,8 +93,11 @@ void HeapTrendTracker::sampleHeap() {
         rtcHistory.count++;
     }
     
-    LOGD("Heap sample: free=%u, largest=%u, frag=%u%%",
-         sample.freeHeap, sample.largestBlock, sample.fragmentation);
+    LOGD_THROTTLED(TASK_MONITOR::STACK_LOG_INTERVAL_MS,
+                   "Heap sample: free=%u, largest=%u, frag=%u%%",
+                   sample.freeHeap,
+                   sample.largestBlock,
+                   sample.fragmentation);
 }
 
 const HeapHistory& HeapTrendTracker::getHistory() {

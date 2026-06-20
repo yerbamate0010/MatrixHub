@@ -223,7 +223,9 @@ PushoverResult PushoverWorker::sendRequest(const char* message, const char* user
         RTC::runtimeStats.pushoverSent++;
         RTC::runtimeStats.pushoverLastSendMs = millis();
         RTC::runtimeStats.pushoverLastHttpCode = static_cast<int16_t>(res.httpCode);
-        LOGI("Success (total: %u)", RTC::runtimeStats.pushoverSent);
+        LOGD_THROTTLED(TASK_MONITOR::INTERVAL_PUSHOVER_MS,
+                       "Success (total: %u)",
+                       RTC::runtimeStats.pushoverSent);
         return res;
     } else {
         RTC::runtimeStats.pushoverFailed++;

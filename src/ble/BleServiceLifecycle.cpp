@@ -95,13 +95,12 @@ void BleService::initModules() {
     _pScanner->syncStateFromRtc();
     _pScanner->setBleStats(&RTC::runtimeStats.ble);
     _pScanner->begin([](const char* mac, const TpData& data, int rssi) {
-        static uint32_t lastThermoLogMs = 0;
-        const uint32_t now = millis();
-        if (now - lastThermoLogMs >= TASK_MONITOR::BLE_WARNING_THROTTLE_MS) {
-            LOGD("ThermoPro data: mac=%s, temp=%d, hum=%d%%, rssi=%d (throttled)",
-                 mac, (int)data.temperature, (int)data.humidity, rssi);
-            lastThermoLogMs = now;
-        }
+        LOGD_THROTTLED(TASK_MONITOR::BLE_WARNING_THROTTLE_MS,
+                       "ThermoPro data: mac=%s, temp=%d, hum=%d%%, rssi=%d",
+                       mac,
+                       (int)data.temperature,
+                       (int)data.humidity,
+                       rssi);
     });
     if (_discoveryCallback) {
         _pScanner->setDiscoveryCallback(_discoveryCallback);
