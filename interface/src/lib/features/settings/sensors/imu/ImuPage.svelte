@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Activity from '~icons/tabler/activity';
+	import Bell from '~icons/tabler/bell';
+	import ExternalLink from '~icons/tabler/external-link';
 	import Gauge from '~icons/tabler/gauge';
+	import GridDots from '~icons/tabler/grid-dots';
+	import Mouse from '~icons/tabler/mouse';
 	import Rotate from '~icons/tabler/rotate-clockwise';
 	import Target from '~icons/tabler/target';
 	import Save from '~icons/tabler/device-floppy';
@@ -14,22 +18,57 @@
 	import { Spinner } from '$lib/components';
 	import { FormButton, FormRange, FormToggle } from '$lib/components/shared/forms';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
+	import { useImuConsumerSettings } from './useImuConsumerSettings.svelte';
 	import { useImuSettings } from './useImuSettings.svelte';
 
 	const session = useSessionAccess();
 	const canManage = $derived(session.canManage);
 	const imu = useImuSettings({ shouldLoad: () => canManage });
+	const consumerSettings = useImuConsumerSettings({ shouldLoad: () => canManage });
 
 	const status = $derived(imu.status);
 	const metrics = $derived(status?.metrics ?? null);
 	const consumerRows = $derived.by(() => {
 		const consumers = status?.consumers;
 		return [
-			{ key: 'ui_monitor', label: 'UI monitor', data: consumers?.ui_monitor },
-			{ key: 'alarm', label: 'Alarm', data: consumers?.alarm },
-			{ key: 'auto_rotate', label: 'Matrix auto-rotate', data: consumers?.auto_rotate },
-			{ key: 'airmouse_movement', label: 'AirMouse movement', data: consumers?.airmouse_movement },
-			{ key: 'airmouse_click', label: 'AirMouse click', data: consumers?.airmouse_click }
+			{
+				key: 'ui_monitor',
+				label: m.imu_consumer_ui_monitor({ locale: i18n.languageTag }),
+				icon: Activity,
+				configured: imu.settings.ui_monitor_enabled,
+				data: consumers?.ui_monitor
+			},
+			{
+				key: 'alarm',
+				label: m.imu_consumer_alarm({ locale: i18n.languageTag }),
+				icon: Bell,
+				configured: imu.settings.alarm_monitor_enabled,
+				data: consumers?.alarm
+			},
+			{
+				key: 'auto_rotate',
+				label: m.imu_consumer_matrix({ locale: i18n.languageTag }),
+				icon: GridDots,
+				configured: consumerSettings.matrixAutoRotate,
+				data: consumers?.auto_rotate,
+				href: '/system/matrix'
+			},
+			{
+				key: 'airmouse_movement',
+				label: m.imu_consumer_airmouse_movement({ locale: i18n.languageTag }),
+				icon: Mouse,
+				configured: consumerSettings.airMouseMovementEnabled,
+				data: consumers?.airmouse_movement,
+				href: '/usb-features/airmouse'
+			},
+			{
+				key: 'airmouse_click',
+				label: m.imu_consumer_airmouse_click({ locale: i18n.languageTag }),
+				icon: Mouse,
+				configured: consumerSettings.airMouseClickEnabled,
+				data: consumers?.airmouse_click,
+				href: '/usb-features/airmouse'
+			}
 		];
 	});
 
@@ -39,6 +78,28 @@
 
 	function freshLabel(value?: boolean) {
 		return value ? 'fresh' : 'stale';
+	}
+
+	function enabledLabel(value: boolean | null | undefined) {
+		if (value === null || value === undefined) return m.imu_state_unknown({ locale: i18n.languageTag });
+		return value
+			? m.imu_state_enabled({ locale: i18n.languageTag })
+			: m.imu_state_disabled({ locale: i18n.languageTag });
+	}
+
+	function runtimeLabel(desired?: boolean, running?: boolean) {
+		const desiredLabel = desired
+			? m.imu_state_desired({ locale: i18n.languageTag })
+			: m.imu_state_not_desired({ locale: i18n.languageTag });
+		const runningLabel = running
+			? m.imu_state_running({ locale: i18n.languageTag })
+			: m.imu_state_idle({ locale: i18n.languageTag });
+		return `${desiredLabel} · ${runningLabel}`;
+	}
+
+	function sampleAgeLabel(value: number | null | undefined) {
+		if (value === null || value === undefined) return '--';
+		return `${value} ms`;
 	}
 
 	function numberLabel(value: number | null | undefined, digits = 2, suffix = '') {
@@ -77,7 +138,7 @@
 						icon={Refresh}
 						label={m.imu_sample({ locale: i18n.languageTag })}
 						value={freshLabel(status?.sample_fresh)}
-						subValue={`${status?.sample_age_ms ?? 0} ms`}
+						subValue={sampleAgeLabel(status?.sample_age_ms)}
 					/>
 					<StatusRow
 						icon={Target}
@@ -116,13 +177,47 @@
 
 		<BaseCard title={m.imu_consumers({ locale: i18n.languageTag })} icon={Rotate} class="h-full">
 			<div class="space-y-2">
+				{#if consumerSettings.errorMessage}
+					<ContentBox>
+						<div class="text-warning text-sm">{consumerSettings.errorMessage}</div>
+					</ContentBox>
+				{/if}
 				{#each consumerRows as row (row.key)}
-					<StatusRow
-						icon={Activity}
-						label={row.label}
-						value={row.data?.desired ? 'desired' : 'off'}
-						subValue={row.data?.running ? 'running' : 'idle'}
-					/>
+					<ContentBox>
+						<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+							<StatusRow
+								icon={row.icon}
+								label={row.label}
+								value={enabledLabel(row.configured)}
+								subValue={runtimeLabel(row.data?.desired, row.data?.running)}
+							/>
+							<div class="flex items-center justify-end gap-2">
+								{#if row.key === 'auto_rotate'}
+									<input
+										type="checkbox"
+										class="toggle toggle-primary toggle-sm"
+										aria-label={m.imu_consumer_matrix({ locale: i18n.languageTag })}
+										checked={consumerSettings.matrixAutoRotate === true}
+										disabled={!canManage ||
+											consumerSettings.matrixAutoRotate === null ||
+											consumerSettings.matrixSaving}
+										onchange={async (event) => {
+											await consumerSettings.setMatrixAutoRotate(
+												(event.target as HTMLInputElement).checked
+											);
+											await imu.refreshStatus();
+										}}
+									/>
+								{/if}
+								{#if row.href}
+									<a class="btn btn-outline btn-xs" href={row.href} aria-label={row.label}>
+										<ExternalLink class="h-3.5 w-3.5" />
+										{m.imu_open_config({ locale: i18n.languageTag })}
+									</a>
+								{/if}
+							</div>
+						</div>
+					</ContentBox>
 				{/each}
 			</div>
 		</BaseCard>
@@ -185,6 +280,28 @@
 							max={2}
 							step={0.01}
 							suffix="g"
+						/>
+					</ContentBox>
+					<ContentBox>
+						<FormRange
+							id="imu_tilt_hold"
+							label={m.imu_tilt_hold({ locale: i18n.languageTag })}
+							bind:value={imu.settings.tilt_hold_ms}
+							min={100}
+							max={10000}
+							step={50}
+							suffix="ms"
+						/>
+					</ContentBox>
+					<ContentBox>
+						<FormRange
+							id="imu_tilt_clear_hold"
+							label={m.imu_tilt_clear_hold({ locale: i18n.languageTag })}
+							bind:value={imu.settings.tilt_clear_hold_ms}
+							min={100}
+							max={15000}
+							step={50}
+							suffix="ms"
 						/>
 					</ContentBox>
 					<div class="flex justify-end gap-2 pt-2">

@@ -58,8 +58,8 @@ export interface ImuStatus {
 	next_retry_ms: number;
 	retry_pending: boolean;
 	sample_fresh: boolean;
-	sample_age_ms: number;
-	last_sample_ms: number;
+	sample_age_ms: number | null;
+	last_sample_ms: number | null;
 	consumers: Record<
 		'airmouse_movement' | 'airmouse_click' | 'auto_rotate' | 'alarm' | 'ui_monitor',
 		ImuConsumerState

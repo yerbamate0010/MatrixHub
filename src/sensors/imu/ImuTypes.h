@@ -24,6 +24,7 @@ struct ImuSample {
 struct ImuMetrics {
     ImuSample sample;
     uint32_t sampleAgeMs = 0;
+    bool sampleTimestampKnown = false;
     bool sampleFresh = false;
     float accelMagnitudeG = 0.0f;
     float accelDeltaG = 0.0f;

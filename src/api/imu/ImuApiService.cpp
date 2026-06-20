@@ -115,8 +115,18 @@ esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
     w.value(manager.lastStartError == IMU::StartError::RetryPending ||
             manager.lastStartError == IMU::StartError::StartFailed);
     w.raw(","); w.key(CONFIG::Keys::kSampleFresh); w.value(metrics.sampleFresh);
-    w.raw(","); w.key(CONFIG::Keys::kSampleAgeMs); w.value(static_cast<unsigned long>(metrics.sampleAgeMs));
-    w.raw(","); w.key(CONFIG::Keys::kLastSampleMs); w.value(static_cast<unsigned long>(metrics.sample.timestampMs));
+    w.raw(","); w.key(CONFIG::Keys::kSampleAgeMs);
+    if (metrics.sampleTimestampKnown) {
+        w.value(static_cast<unsigned long>(metrics.sampleAgeMs));
+    } else {
+        w.raw("null");
+    }
+    w.raw(","); w.key(CONFIG::Keys::kLastSampleMs);
+    if (metrics.sampleTimestampKnown) {
+        w.value(static_cast<unsigned long>(metrics.sample.timestampMs));
+    } else {
+        w.raw("null");
+    }
 
     w.raw(","); w.key(CONFIG::Keys::kConsumers);
     w.raw("{");

@@ -23,10 +23,6 @@ constexpr uint16_t kCalibrationSamples = 50;
 constexpr uint32_t kCalibrationSampleDelayMs = 10;
 constexpr float kCalibrationMaxAccelVariance = 0.0035f;
 
-uint32_t ageMs(uint32_t now, uint32_t timestamp) {
-    return now >= timestamp ? now - timestamp : (0xFFFFFFFFu - timestamp) + now + 1u;
-}
-
 bool readFreshSample(ImuService* service, ImuSample& sample) {
     if (!service) {
         sample = {};
@@ -130,7 +126,8 @@ bool ImuRuntimeService::updateMetricsFromCache(uint32_t nowMs) {
     ImuMetrics next = getMetrics();
     next.sample = sample;
     next.sampleFresh = fresh;
-    next.sampleAgeMs = sample.valid ? ageMs(nowMs, sample.timestampMs) : 0;
+    next.sampleTimestampKnown = sample.valid || sample.timestampMs != 0;
+    next.sampleAgeMs = next.sampleTimestampKnown ? MATH::elapsedMs(nowMs, sample.timestampMs) : 0;
     next.baselineValid = settings.orientationBaselineValid;
     next.baseline = {
         settings.orientationBaselineX,

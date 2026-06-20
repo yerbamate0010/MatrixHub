@@ -46,6 +46,11 @@ void test_accel_stability_window_matches_orientation_calibration_guard() {
     TEST_ASSERT_FALSE(IMU::MATH::isAccelMagnitudeStable(1.16f));
 }
 
+void test_elapsed_ms_handles_normal_and_wrapped_timestamps() {
+    TEST_ASSERT_EQUAL_UINT32(250u, IMU::MATH::elapsedMs(1250u, 1000u));
+    TEST_ASSERT_EQUAL_UINT32(32u, IMU::MATH::elapsedMs(15u, 0xFFFFFFEFu));
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -56,5 +61,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_tilt_degrees_normalizes_non_unit_vectors);
     RUN_TEST(test_normalize_rejects_invalid_baseline_vector);
     RUN_TEST(test_accel_stability_window_matches_orientation_calibration_guard);
+    RUN_TEST(test_elapsed_ms_handles_normal_and_wrapped_timestamps);
     return UNITY_END();
 }

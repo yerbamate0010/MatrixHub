@@ -53,6 +53,10 @@ bool isAccelMagnitudeStable(float magnitudeG) {
            magnitudeG <= kStableAccelMaxG;
 }
 
+uint32_t elapsedMs(uint32_t nowMs, uint32_t thenMs) {
+    return nowMs >= thenMs ? nowMs - thenMs : (0xFFFFFFFFu - thenMs) + nowMs + 1u;
+}
+
 const char* calibrationStatusToString(OrientationCalibrationStatus status) {
     switch (status) {
         case OrientationCalibrationStatus::Success: return "success";
