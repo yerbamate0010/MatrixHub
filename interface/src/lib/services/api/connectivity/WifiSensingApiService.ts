@@ -33,9 +33,13 @@ export class WifiSensingApiService {
 	}
 
 	async calibrateCsiAlarm(): Promise<{ ok: boolean; state?: string; error?: string }> {
-		return this.client.post('/api/wifisensing/csi/calibrate', {}, {
-			signal: AbortSignal.timeout(WifiSensingApiService.SAVE_TIMEOUT_MS)
-		});
+		return this.client.post(
+			'/api/wifisensing/csi/calibrate',
+			{},
+			{
+				signal: AbortSignal.timeout(WifiSensingApiService.SAVE_TIMEOUT_MS)
+			}
+		);
 	}
 
 	async getWifiStatus(): Promise<WifiStatus> {

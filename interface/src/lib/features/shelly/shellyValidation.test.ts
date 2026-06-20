@@ -3,7 +3,7 @@ import { sanitizeShellyIpv4Input, validateShellyDraft } from './shellyValidation
 
 describe('shellyValidation', () => {
 	it('sanitizes IPv4-like user input down to the host part', () => {
-		expect(sanitizeShellyIpv4Input('https://192.168.0.19:80/relay/0')).toBe('192.168.0.19');
+		expect(sanitizeShellyIpv4Input('https://192.168.0.20:80/relay/0')).toBe('192.168.0.20');
 		expect(sanitizeShellyIpv4Input('  http://10.0.0.4/  ')).toBe('10.0.0.4');
 	});
 

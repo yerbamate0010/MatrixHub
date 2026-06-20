@@ -52,7 +52,7 @@
 				isConnected={csi.isConnected}
 				userEnabled={csi.userEnabled}
 				bands={csiAlarm.settings.bands}
-				selectionMode={selectionMode}
+				{selectionMode}
 				onToggleConnection={() => csi.toggle()}
 				onBandSelected={(band) => csiAlarm.setBandFromSelection(band)}
 			/>

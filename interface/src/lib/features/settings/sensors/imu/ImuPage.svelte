@@ -5,7 +5,6 @@
 	import Gauge from '~icons/tabler/gauge';
 	import GridDots from '~icons/tabler/grid-dots';
 	import Mouse from '~icons/tabler/mouse';
-	import Rotate from '~icons/tabler/rotate-clockwise';
 	import Target from '~icons/tabler/target';
 	import Refresh from '~icons/tabler/refresh';
 	import { i18n } from '$lib/i18n.svelte';

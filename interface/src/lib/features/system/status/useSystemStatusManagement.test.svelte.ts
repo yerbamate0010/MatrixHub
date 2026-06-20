@@ -260,7 +260,7 @@ describe('useSystemStatusManagement', () => {
 			success: true,
 			accepted: true,
 			connected: true,
-			ip: '192.168.0.16'
+			ip: '192.168.0.30'
 		});
 		const { useSystemStatusManagement } = await import('./useSystemStatusManagement.svelte');
 		let statusView: SystemStatusView | null = null;

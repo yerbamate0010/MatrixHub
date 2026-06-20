@@ -8,7 +8,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 
 const defaultProxyTarget =
-	process.env.VITE_PROXY_TARGET || process.env.DEVICE_URL || 'https://192.168.0.16';
+	process.env.VITE_PROXY_TARGET || process.env.DEVICE_URL || 'https://192.168.0.30';
 const devHost = process.env.VITE_DEV_HOST || '0.0.0.0';
 const hmrHost = process.env.VITE_HMR_HOST;
 const chromeDevtoolsConfigPath = '/.well-known/appspecific/com.chrome.devtools.json';

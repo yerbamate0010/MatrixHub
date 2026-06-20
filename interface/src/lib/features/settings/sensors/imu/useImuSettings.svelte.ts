@@ -16,7 +16,11 @@ type ImuErrors = Record<string, never>;
 type ImuSettingsDeps = {
 	api?: Pick<
 		ImuApiService,
-		'getSettings' | 'updateSettings' | 'getStatus' | 'calibrateOrientation' | 'resetOrientationBaseline'
+		| 'getSettings'
+		| 'updateSettings'
+		| 'getStatus'
+		| 'calibrateOrientation'
+		| 'resetOrientationBaseline'
 	>;
 	feedback?: SettingsFeedback<ImuSettings>;
 	shouldLoad?: () => boolean;
@@ -53,7 +57,8 @@ export function useImuSettings(deps: ImuSettingsDeps = {}) {
 		{},
 		{
 			load: async () => normalizeSettings(await createApi().getSettings()),
-			save: async (settings) => normalizeSettings(await createApi().updateSettings(normalizeSettings(settings))),
+			save: async (settings) =>
+				normalizeSettings(await createApi().updateSettings(normalizeSettings(settings))),
 			feedback,
 			onLoadSuccess: () => {
 				void refreshStatus();

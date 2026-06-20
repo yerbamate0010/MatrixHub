@@ -9,11 +9,27 @@ clang = shutil.which("clang")
 clangxx = shutil.which("clang++")
 
 if not clang or not clangxx:
-    raise FileNotFoundError("LLVM coverage build requires clang and clang++")
+    gcc = shutil.which("gcc")
+    gxx = shutil.which("g++")
+    if not gcc or not gxx:
+        raise FileNotFoundError(
+            "Coverage build requires clang/clang++ or gcc/g++ in PATH"
+        )
 
-env.Replace(CC=clang, CXX=clangxx, LINK=clangxx)
-
-if sys.platform == "darwin":
+    print("clang/clang++ not found; using gcc/g++ coverage fallback")
+    env.Replace(CC=gcc, CXX=gxx, LINK=gxx)
+    env.Append(
+        CCFLAGS=["--coverage"],
+        CXXFLAGS=["--coverage"],
+        LINKFLAGS=["--coverage"],
+    )
+elif sys.platform == "darwin":
+    env.Replace(CC=clang, CXX=clangxx, LINK=clangxx)
+    env.Append(
+        CCFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+        CXXFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+        LINKFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+    )
     resource_dir = subprocess.check_output(
         ["xcrun", "clang", "--print-resource-dir"], text=True
     ).strip()
@@ -27,3 +43,10 @@ if sys.platform == "darwin":
         )
 
     env.Append(LINKFLAGS=[str(profile_runtime)])
+else:
+    env.Replace(CC=clang, CXX=clangxx, LINK=clangxx)
+    env.Append(
+        CCFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+        CXXFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+        LINKFLAGS=["-fprofile-instr-generate", "-fcoverage-mapping"],
+    )

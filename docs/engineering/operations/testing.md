@@ -111,7 +111,7 @@ Run against another device:
 
 ```bash
 cd interface
-DEVICE_URL=https://192.168.0.123 npm run test:e2e
+DEVICE_URL=https://192.168.0.30 npm run test:e2e
 ```
 
 Override credentials if needed:

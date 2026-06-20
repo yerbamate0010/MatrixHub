@@ -23,7 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     add_common_device_args(parser)
     parser.add_argument("--id", default="shelly-fake-01")
     parser.add_argument("--name", default="Diagnostics Shelly")
-    parser.add_argument("--ip", default="192.168.0.222")
+    parser.add_argument("--ip", default="192.168.0.20")
     parser.add_argument("--relay-index", type=int, default=0)
     parser.add_argument("--no-restart", action="store_true")
     args = parser.parse_args(argv)

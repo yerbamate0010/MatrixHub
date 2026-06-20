@@ -270,8 +270,7 @@ Wymagania:
 
 - domyslny `DEVICE_URL` ma byc `https://192.168.0.30`,
 - opcjonalny alias `https://plantcare.local`,
-- brak hardcoded starych adresow `192.168.0.55`, `192.168.0.22`,
-  `192.168.0.18`, `192.168.0.16`,
+- brak hardcoded starych adresow testowych,
 - `requests.Session()` z retry i `verify=False` przy HTTPS,
 - centralny helper loginu i ponowienia po 401,
 - brak interaktywnych promptow,
