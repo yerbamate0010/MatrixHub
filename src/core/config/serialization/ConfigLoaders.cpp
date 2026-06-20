@@ -6,6 +6,7 @@
 #include "config/json/CompensationConfigJson.h"
 #include "config/json/ConfigKeys.h"
 #include "config/json/KeyboardConfigJson.h"
+#include "config/json/ImuConfigJson.h"
 #include "config/json/MacroConfigJson.h"
 #include "config/json/MatrixConfigJson.h"
 #include "config/json/NotificationSettingsJson.h"
@@ -41,6 +42,7 @@ void loadConfigSections(SYSTEM::SpiRamJsonDocument& doc) {
     loadIfObject(doc, Keys::kHeartbeat, JSON::loadHeartbeat);
     loadIfObject(doc, Keys::kUdpPusher, JSON::loadUdpPusher);
     loadIfObject(doc, Keys::kAirMouse, JSON::loadAirMouse);
+    loadIfObject(doc, Keys::kImu, JSON::loadImu);
     loadIfObject(doc, Keys::kMatrix, JSON::loadMatrix);
     loadIfObject(doc, Keys::kMacros, JSON::loadMacros);
     loadIfObject(doc, Keys::kKeyboard, JSON::loadKeyboard);

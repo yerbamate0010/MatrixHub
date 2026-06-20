@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <cstdio>
 #include <cstring>
+#include <utility>
 
 #undef LOG_TAG
 #define LOG_TAG "IMU"
@@ -12,14 +13,32 @@
 namespace IMU {
 
 namespace {
-const char* consumerName(Consumer consumer) {
+constexpr uint32_t kStartRetryDelayMs = 5000;
+}
+
+const char* ImuManager::consumerName(Consumer consumer) {
     switch (consumer) {
         case Consumer::AirMouseMovement: return "AirMouseMovement";
         case Consumer::AirMouseClick: return "AirMouseClick";
         case Consumer::AutoRotate: return "AutoRotate";
+        case Consumer::Alarm: return "Alarm";
+        case Consumer::UiMonitor: return "UiMonitor";
         default: return "Unknown";
     }
 }
+
+const char* ImuManager::startErrorToString(StartError error) {
+    switch (error) {
+        case StartError::None: return "none";
+        case StartError::MissingBackend: return "missing_backend";
+        case StartError::StartFailed: return "start_failed";
+        case StartError::RetryPending: return "retry_pending";
+        case StartError::TransitionBusy: return "transition_busy";
+        default: return "unknown";
+    }
+}
+
+namespace {
 
 void appendLabel(char* out, size_t len, const char* label, bool& first) {
     if (!out || len == 0 || !label) return;
@@ -34,7 +53,9 @@ void appendLabel(char* out, size_t len, const char* label, bool& first) {
     first = false;
 }
 
-void formatConsumers(uint32_t mask, char* out, size_t len) {
+} // namespace
+
+void ImuManager::formatConsumers(uint32_t mask, char* out, size_t len) {
     if (!out || len == 0) return;
     out[0] = '\0';
     bool first = true;
@@ -48,15 +69,38 @@ void formatConsumers(uint32_t mask, char* out, size_t len) {
     if (mask & (1u << static_cast<uint8_t>(Consumer::AutoRotate))) {
         appendLabel(out, len, consumerName(Consumer::AutoRotate), first);
     }
+    if (mask & (1u << static_cast<uint8_t>(Consumer::Alarm))) {
+        appendLabel(out, len, consumerName(Consumer::Alarm), first);
+    }
+    if (mask & (1u << static_cast<uint8_t>(Consumer::UiMonitor))) {
+        appendLabel(out, len, consumerName(Consumer::UiMonitor), first);
+    }
 
     if (out[0] == '\0') {
         snprintf(out, len, "none");
     }
 }
-} // namespace
 
 ImuManager::ImuManager(ImuService* imuService)
     : _imuService(imuService) {
+    _backend.start = [this]() { return _imuService && _imuService->begin(); };
+    _backend.stop = [this]() {
+        if (_imuService) {
+            _imuService->stop();
+        }
+    };
+    _backend.isInitialized = [this]() {
+        return _imuService && _imuService->isInitialized();
+    };
+
+    _transitionMutex = xSemaphoreCreateMutex();
+    if (!_transitionMutex) {
+        LOGE("IMU manager mutex alloc failed");
+    }
+}
+
+ImuManager::ImuManager(Backend backend)
+    : _backend(std::move(backend)) {
     _transitionMutex = xSemaphoreCreateMutex();
     if (!_transitionMutex) {
         LOGE("IMU manager mutex alloc failed");
@@ -70,71 +114,203 @@ ImuManager::~ImuManager() {
     }
 }
 
-void ImuManager::setConsumerActive(Consumer consumer, bool active) {
-    if (!_imuService) return;
+bool ImuManager::backendInitialized() const {
+    return _backend.isInitialized ? _backend.isInitialized() : false;
+}
 
+bool ImuManager::isRunning() const {
+    return backendInitialized();
+}
+
+ManagerStatus ImuManager::getStatus() const {
+    ManagerStatus status;
+    status.desiredMask = _desiredMask.load(std::memory_order_acquire);
+    status.runningMask = _runningMask.load(std::memory_order_acquire);
+    status.initialized = backendInitialized();
+    if (_transitionMutex &&
+        xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) == pdTRUE) {
+        status.transitionInProgress = _transitionInProgress;
+        status.lastStartError = _lastStartError;
+        status.lastStartAttemptMs = _lastStartAttemptMs;
+        status.lastStartDurationMs = _lastStartDurationMs;
+        status.nextRetryMs = _nextRetryMs;
+        xSemaphoreGive(_transitionMutex);
+    } else {
+        status.lastStartError = StartError::TransitionBusy;
+    }
+    return status;
+}
+
+void ImuManager::setConsumerActive(Consumer consumer, bool active) {
     const uint32_t bitMask = consumerBit(consumer);
     uint32_t prev = 0;
     uint32_t next = 0;
-    bool shouldStart = false;
-    bool shouldStop = false;
+
     if (_transitionMutex) {
         if (xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) != pdTRUE) {
             LOGW("IMU transition lock timeout (consumer=%s)", consumerName(consumer));
+            _lastStartError = StartError::TransitionBusy;
             return;
         }
     }
 
-    prev = _activeMask.load(std::memory_order_relaxed);
+    prev = _desiredMask.load(std::memory_order_relaxed);
     next = active ? (prev | bitMask) : (prev & ~bitMask);
     if (prev == next) {
         if (_transitionMutex) xSemaphoreGive(_transitionMutex);
         return;
     }
 
-    _activeMask.store(next, std::memory_order_release);
-    shouldStart = (prev == 0 && next != 0);
-    shouldStop = (prev != 0 && next == 0);
+    _desiredMask.store(next, std::memory_order_release);
     if (_transitionMutex) xSemaphoreGive(_transitionMutex);
 
-    char activeList[64];
-    formatConsumers(next, activeList, sizeof(activeList));
-    LOGI("IMU consumer %s -> %s (active=[%s], mask=0x%lx)",
+    char desiredList[96];
+    formatConsumers(next, desiredList, sizeof(desiredList));
+    LOGI("IMU consumer %s -> %s (desired=[%s], mask=0x%lx)",
          consumerName(consumer),
          active ? "ON" : "OFF",
-         activeList,
+         desiredList,
          (unsigned long)next);
 
-    if (shouldStart) {
-        if (_activeMask.load(std::memory_order_acquire) == 0) {
-            LOGW("IMU start skipped (no active consumers)");
+    reconcile();
+}
+
+void ImuManager::clearConsumers() {
+    if (_transitionMutex) {
+        if (xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) != pdTRUE) {
+            LOGW("IMU transition lock timeout during clearConsumers");
+            _lastStartError = StartError::TransitionBusy;
             return;
         }
-        LOGI("Starting IMU (reason=[%s])", activeList);
-        const uint32_t startMs = millis();
-        const bool started = _imuService->begin();
-        const uint32_t elapsedMs = millis() - startMs;
-        if (!started) {
-            LOGE("IMU start failed (reason=[%s], %lu ms)", activeList, (unsigned long)elapsedMs);
-        } else {
-            LOGI("IMU start ok (%lu ms)", (unsigned long)elapsedMs);
-        }
-    } else if (shouldStop) {
-        if (_activeMask.load(std::memory_order_acquire) != 0) {
-            LOGW("IMU stop skipped (new consumers active)");
-            return;
-        }
-        char prevList[64];
-        formatConsumers(prev, prevList, sizeof(prevList));
+    }
+
+    _desiredMask.store(0, std::memory_order_release);
+    if (_transitionMutex) xSemaphoreGive(_transitionMutex);
+    reconcile();
+}
+
+void ImuManager::tick() {
+    reconcile();
+}
+
+void ImuManager::reconcile() {
+    if (!_transitionMutex) {
+        return;
+    }
+
+    uint32_t desired = 0;
+    bool shouldStart = false;
+    bool shouldStop = false;
+    bool stopAfterLateStart = false;
+    uint32_t now = millis();
+
+    if (xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) != pdTRUE) {
+        _lastStartError = StartError::TransitionBusy;
+        return;
+    }
+
+    if (_transitionInProgress) {
+        xSemaphoreGive(_transitionMutex);
+        return;
+    }
+
+    desired = _desiredMask.load(std::memory_order_acquire);
+    const bool initialized = backendInitialized();
+
+    if (desired == 0 && initialized) {
+        _transitionInProgress = true;
+        shouldStop = true;
+    } else if (desired == 0) {
+        _runningMask.store(0, std::memory_order_release);
+        _lastStartError = StartError::None;
+        _nextRetryMs = 0;
+    } else if (initialized) {
+        _runningMask.store(desired, std::memory_order_release);
+        _lastStartError = StartError::None;
+    } else if (now >= _nextRetryMs) {
+        _transitionInProgress = true;
+        _lastStartAttemptMs = now;
+        shouldStart = true;
+    } else {
+        _lastStartError = StartError::RetryPending;
+    }
+
+    xSemaphoreGive(_transitionMutex);
+
+    if (!shouldStart && !shouldStop) {
+        return;
+    }
+
+    if (shouldStop) {
+        char prevList[96];
+        formatConsumers(_runningMask.load(std::memory_order_acquire), prevList, sizeof(prevList));
         LOGI("Stopping IMU (previous=[%s])", prevList);
-        const bool wasRunning = _imuService->isInitialized();
         const uint32_t startMs = millis();
-        _imuService->stop();
+        if (_backend.stop) {
+            _backend.stop();
+        }
         const uint32_t elapsedMs = millis() - startMs;
-        if (wasRunning) {
-            LOGI("IMU resources released (%lu ms)", (unsigned long)elapsedMs);
+
+        if (xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) == pdTRUE) {
+            _runningMask.store(0, std::memory_order_release);
+            _lastStartDurationMs = elapsedMs;
+            _lastStartError = StartError::None;
+            _transitionInProgress = false;
+            xSemaphoreGive(_transitionMutex);
+        }
+        LOGI("IMU resources released (%lu ms)", (unsigned long)elapsedMs);
+        return;
+    }
+
+    if (shouldStart) {
+        char desiredList[96];
+        formatConsumers(desired, desiredList, sizeof(desiredList));
+        LOGI("Starting IMU (reason=[%s])", desiredList);
+        const uint32_t startMs = millis();
+        bool started = false;
+        if (_backend.start) {
+            started = _backend.start();
+        }
+        const uint32_t elapsedMs = millis() - startMs;
+
+        if (xSemaphoreTake(_transitionMutex, pdMS_TO_TICKS(CONFIG::IMU::MANAGER_TRANSITION_TIMEOUT_MS)) != pdTRUE) {
+            if (started && _backend.stop) {
+                _backend.stop();
+            }
+            return;
+        }
+
+        const uint32_t currentDesired = _desiredMask.load(std::memory_order_acquire);
+        stopAfterLateStart = started && currentDesired == 0;
+        if (currentDesired == 0) {
+            _runningMask.store(0, std::memory_order_release);
+            _lastStartError = StartError::None;
+            _nextRetryMs = 0;
+        } else if (started) {
+            _runningMask.store(currentDesired, std::memory_order_release);
+            _lastStartError = StartError::None;
+            _nextRetryMs = 0;
         } else {
-            LOGI("IMU already stopped (%lu ms)", (unsigned long)elapsedMs);
+            _runningMask.store(0, std::memory_order_release);
+            _lastStartError = _backend.start ? StartError::StartFailed : StartError::MissingBackend;
+            _nextRetryMs = millis() + kStartRetryDelayMs;
+        }
+        _lastStartDurationMs = elapsedMs;
+        _transitionInProgress = false;
+        xSemaphoreGive(_transitionMutex);
+
+        if (stopAfterLateStart && _backend.stop) {
+            LOGI("Stopping IMU after late start - consumers cleared during startup");
+            _backend.stop();
+        }
+
+        if (started && !stopAfterLateStart) {
+            LOGI("IMU start ok (%lu ms)", (unsigned long)elapsedMs);
+        } else if (!started) {
+            LOGE("IMU start failed (reason=[%s], %lu ms), retry in %lu ms",
+                 desiredList,
+                 (unsigned long)elapsedMs,
+                 (unsigned long)kStartRetryDelayMs);
         }
     }
 }

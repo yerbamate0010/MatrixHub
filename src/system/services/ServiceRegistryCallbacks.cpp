@@ -7,6 +7,7 @@
 #include "../../notifications/runtime/NotificationRuntimeReconciler.h"
 #include "../../notifications/runtime/NotificationWorker.h"
 #include "../../notifications/settings/NotificationSettingsService.h"
+#include "../../sensors/imu/ImuManager.h"
 #include "../../shelly/ShellyService.h"
 #include "../../wifisensing/csi/core/CsiService.h"
 #include "../health/network/HttpServerHealthTracker.h"
@@ -56,6 +57,9 @@ void ServiceRegistry::detachRuntimeCallbacks() {
 void ServiceRegistry::stopBackgroundWorkers() {
     if (_notifications.runtimeWorker) {
         _notifications.runtimeWorker->stop();
+    }
+    if (_imuManager) {
+        _imuManager->clearConsumers();
     }
 }
 

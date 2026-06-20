@@ -55,6 +55,8 @@ void initDefaults() {
 
     cfg.airMouse = AirMouseData{};
 
+    cfg.imu = ImuData{};
+
     cfg.matrix = MatrixData{};
 
     cfg.macros = MacroData{};

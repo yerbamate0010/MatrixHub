@@ -33,6 +33,7 @@ type NavigationLeafId =
 	| 'logs'
 	| 'time'
 	| 'compensation'
+	| 'imu'
 	| 'power'
 	| 'matrix_led'
 	| 'users'
@@ -253,6 +254,7 @@ const registry = [
 			'logs',
 			'time',
 			'compensation',
+			'imu',
 			'power',
 			'matrix_led',
 			'users',
@@ -288,6 +290,14 @@ const registry = [
 		href: '/settings/sensors/compensation',
 		icon: menuIcons.Thermometer,
 		label: m.menu_compensation,
+		guards: ['admin']
+	},
+	{
+		type: 'leaf',
+		id: 'imu',
+		href: '/settings/sensors/imu',
+		icon: menuIcons.Activity,
+		label: m.menu_imu,
 		guards: ['admin']
 	},
 	{

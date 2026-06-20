@@ -15,6 +15,7 @@
 #include "../../api/shelly/ShellyApiService.h"
 #include "../../api/heartbeat/HeartbeatApiService.h"
 #include "../../api/ble/BleApiService.h"
+#include "../../api/imu/ImuApiService.h"
 #include "../../api/udp/UdpApiService.h"
 #include "../../api/power/PowerApiService.h"
 #include "../../api/keyboard/KeyboardApiService.h"
@@ -43,6 +44,7 @@ struct ApiServices {
     SYSTEM::PsramStaticService<API::AlarmsApiService> alarmsApi;
     SYSTEM::PsramStaticService<API::ShellyApiService> shellyApi;
     SYSTEM::PsramStaticService<API::BleApiService> bleApi;
+    SYSTEM::PsramStaticService<API::ImuApiService> imuApi;
     SYSTEM::PsramStaticService<API::HeartbeatApiService> heartbeatApi;
     SYSTEM::PsramStaticService<API::UdpApiService> udpApi;
     SYSTEM::PsramStaticService<API::AirMouseApiService> airMouseApi;
@@ -61,6 +63,7 @@ struct ApiServices {
         keyboardApi.destroy();
         udpApi.destroy();
         heartbeatApi.destroy();
+        imuApi.destroy();
         bleApi.destroy();
         shellyApi.destroy();
         alarmsApi.destroy();

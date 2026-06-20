@@ -96,6 +96,19 @@ constexpr bool RandomInterval = CONFIG::AIR_MOUSE::JIGGLER::DEFAULT_RANDOM_INTER
 }  // namespace Jiggler
 }  // namespace AirMouse
 
+namespace Imu {
+constexpr bool UiMonitorEnabled = false;
+constexpr bool AlarmMonitorEnabled = false;
+constexpr float BaselineX = 0.0f;
+constexpr float BaselineY = 0.0f;
+constexpr float BaselineZ = 1.0f;
+constexpr float TiltThresholdDeg = 30.0f;
+constexpr float TiltHysteresisDeg = 5.0f;
+constexpr uint16_t TiltHoldMs = 750;
+constexpr uint16_t TiltClearHoldMs = 1500;
+constexpr float AccelDeltaThresholdG = 0.35f;
+}  // namespace Imu
+
 namespace Matrix {
 constexpr uint8_t Brightness = UI::MATRIX::BRIGHTNESS_DEFAULT;
 constexpr uint8_t AlarmMode = 1;  // MatrixAlarmMode::ICON

@@ -50,7 +50,10 @@ class MatrixManagerService;
 }
 
 class ImuService;
-namespace IMU { class ImuManager; }
+namespace IMU {
+class ImuManager;
+class ImuRuntimeService;
+}
 
 namespace COMPENSATION {
 class CompensationService;
@@ -219,6 +222,10 @@ public:
       return _imuManager.get();
   }
 
+  IMU::ImuRuntimeService* getImuRuntimeService() const {
+      return _imuRuntimeService.get();
+  }
+
   ALARMS::AlarmService* getAlarmService() const {
       return _alarmService.get();
   }
@@ -385,6 +392,7 @@ private:
   std::unique_ptr<SENSORS::Scd4xSensorService> _sensorService;
   std::unique_ptr<ImuService> _imuService;
   std::unique_ptr<IMU::ImuManager> _imuManager;
+  std::unique_ptr<IMU::ImuRuntimeService> _imuRuntimeService;
   std::unique_ptr<COMPENSATION::CompensationService> _compensationService;
   // Registry owns the RTC-backed compensation config so API stays transport-
   // only and the save/apply path follows the same lifecycle as the runtime.

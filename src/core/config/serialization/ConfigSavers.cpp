@@ -6,6 +6,7 @@
 #include "config/json/CompensationConfigJson.h"
 #include "config/json/ConfigKeys.h"
 #include "config/json/KeyboardConfigJson.h"
+#include "config/json/ImuConfigJson.h"
 #include "config/json/MacroConfigJson.h"
 #include "config/json/MatrixConfigJson.h"
 #include "config/json/NotificationSettingsJson.h"
@@ -48,6 +49,9 @@ void buildConfigDocument(SYSTEM::SpiRamJsonDocument& doc,
 
     JsonObject airmouse = doc[Keys::kAirMouse].to<JsonObject>();
     JSON::saveAirMouse(airmouse);
+
+    JsonObject imu = doc[Keys::kImu].to<JsonObject>();
+    JSON::saveImu(imu);
 
     JsonObject matrix = doc[Keys::kMatrix].to<JsonObject>();
     JSON::saveMatrix(matrix);

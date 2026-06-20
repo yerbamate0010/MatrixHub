@@ -94,6 +94,10 @@ class UsbTerminalService;
 class UsbTerminalSettingsService;
 }
 
+namespace IMU {
+class ImuRuntimeService;
+}
+
 namespace TELEGRAM {
 class TelegramWorker;
 }
@@ -137,6 +141,7 @@ struct SharedApiServicesDeps {
     SYSTEM::HeartbeatSettingsService* heartbeatSettings = nullptr;
     USB_TERMINAL::UsbTerminalSettingsService* usbTerminalSettings = nullptr;
     SYSTEM::HeapMonitor* heapMonitor = nullptr;
+    IMU::ImuRuntimeService* imuRuntimeService = nullptr;
     SemaphoreHandle_t fsMutex = nullptr;
 };
 

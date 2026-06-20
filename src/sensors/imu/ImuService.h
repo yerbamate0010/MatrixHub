@@ -11,6 +11,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <atomic>
+#include "ImuTypes.h"
 
 /**
  * @class ImuService
@@ -72,6 +73,12 @@ public:
      * @return true if a fresh sample is available
      */
     bool getCachedSample(float& ax, float& ay, float& az, float& gx, float& gy, float& gz) const;
+
+    /**
+     * @brief Non-blocking read of the latest cached sample including timestamp.
+     * @return true if a fresh sample is available
+     */
+    bool getCachedSample(IMU::ImuSample& sample) const;
 
     /**
      * @brief Thread-safe read of all sensor data (Acc + Gyro)

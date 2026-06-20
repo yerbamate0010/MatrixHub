@@ -26,6 +26,7 @@
 #include "types/RtcRuntimeTypes.h"
 #include "types/RtcNetworkState.h"
 #include "types/RtcAirMouseTypes.h"
+#include "types/RtcImuTypes.h"
 #include "types/RtcMatrixTypes.h"
 #include "types/RtcMacroTypes.h"
 #include "types/RtcKeyboardTypes.h"
@@ -81,8 +82,9 @@ constexpr uint32_t kMagicValid = 0xC0FFEE42;
  *  41 - Removed BLE peripheral/passkey retained settings; BLE is scanner-only (March 2026)
  *  42 - Expanded Matrix effectSpeed to uint32_t for long-duration animations (April 2026)
  *  43 - Added WiFi CSI motion alarm retained settings (June 2026)
+ *  44 - Added shared IMU runtime/settings state (June 2026)
  */
-constexpr uint32_t kSchemaVersion = 43;
+constexpr uint32_t kSchemaVersion = 44;
 
 // Shelly Constants moved to types/RtcShellyTypes.h
 
@@ -146,6 +148,7 @@ struct __attribute__((packed)) ConfigStore {
     AlarmRuntimeData alarms;
     UdpPusherData udpPusher;  // UDP data pusher (LAN: InfluxDB, Telegraf, etc.)
     AirMouseData airMouse;    // Air Mouse settings
+    ImuData imu;              // Shared IMU settings/calibration state
     MatrixData matrix;        // Matrix LED settings
     MacroData macros;         // Macro settings [Refactored]
     KeyboardData keyboard;    // Direct keyboard feature config

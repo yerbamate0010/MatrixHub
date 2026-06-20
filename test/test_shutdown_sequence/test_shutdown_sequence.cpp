@@ -42,6 +42,7 @@ inline bool shellyRunning = false;
 inline int shellyStopCalls = 0;
 inline int blePrepareCalls = 0;
 inline int matrixTaskStopCalls = 0;
+inline int imuClearConsumerCalls = 0;
 inline int thermalStopCalls = 0;
 inline int psramLogBufferEndCalls = 0;
 inline int ringBufferEndCalls = 0;
@@ -80,6 +81,7 @@ void reset() {
     shellyStopCalls = 0;
     blePrepareCalls = 0;
     matrixTaskStopCalls = 0;
+    imuClearConsumerCalls = 0;
     thermalStopCalls = 0;
     psramLogBufferEndCalls = 0;
     ringBufferEndCalls = 0;
@@ -98,6 +100,7 @@ void reset() {
     clearRawObject<AIRMOUSE::AirMouseService>();
     clearRawObject<MACROS::MacroService>();
     clearRawObject<BLE::BleService>();
+    clearRawObject<IMU::ImuManager>();
     clearRawObject<MatrixService>();
     std::memset(shellyStorage, 0, sizeof(shellyStorage));
 }
@@ -149,6 +152,12 @@ void wireBleService(ServiceRegistry& registry) {
 void wireMatrixService(ServiceRegistry& registry) {
     new (&registry._matrixService)
         std::unique_ptr<MatrixService>(reinterpret_cast<MatrixService*>(rawStorage<MatrixService>()));
+}
+
+void wireImuManager(ServiceRegistry& registry) {
+    new (&registry._imuManager)
+        std::unique_ptr<IMU::ImuManager>(
+            reinterpret_cast<IMU::ImuManager*>(rawStorage<IMU::ImuManager>()));
 }
 
 size_t indexOf(const char* value) {
@@ -314,6 +323,15 @@ void BleService::prepareForSleep() {
 
 }  // namespace BLE
 
+namespace IMU {
+
+void ImuManager::clearConsumers() {
+    TEST_SHUTDOWN::calls.push("imu.clearConsumers");
+    TEST_SHUTDOWN::imuClearConsumerCalls++;
+}
+
+}  // namespace IMU
+
 namespace MATRIX {
 
 void MatrixTask::stop() {
@@ -390,6 +408,7 @@ void test_execute_stops_runtime_services_before_network_and_hardware_shutdown() 
     TEST_SHUTDOWN::wireShellyService(registry);
     TEST_SHUTDOWN::wireBleService(registry);
     TEST_SHUTDOWN::wireMatrixService(registry);
+    TEST_SHUTDOWN::wireImuManager(registry);
     TEST_SHUTDOWN::sleepReason = "scheduled";
     TEST_SHUTDOWN::shellyRunning = true;
 
@@ -414,6 +433,7 @@ void test_execute_stops_runtime_services_before_network_and_hardware_shutdown() 
     TEST_ASSERT_EQUAL_INT(1, TEST_SHUTDOWN::shellyStopCalls);
     TEST_ASSERT_EQUAL_INT(1, TEST_SHUTDOWN::blePrepareCalls);
     TEST_ASSERT_EQUAL_INT(1, TEST_SHUTDOWN::matrixTaskStopCalls);
+    TEST_ASSERT_EQUAL_INT(1, TEST_SHUTDOWN::imuClearConsumerCalls);
     TEST_ASSERT_EQUAL_INT(1, TEST_SHUTDOWN::thermalStopCalls);
     TEST_ASSERT_EQUAL_INT(1, TEST_STUBS::WIFI::modeCalls);
     TEST_ASSERT_EQUAL_INT(WIFI_MODE_NULL, TEST_STUBS::WIFI::mode);

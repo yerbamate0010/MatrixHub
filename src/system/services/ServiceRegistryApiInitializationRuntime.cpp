@@ -50,6 +50,7 @@ void initializeApiServices(
     initializerDeps.heartbeatSettings = sharedDeps.heartbeatSettings;
     initializerDeps.usbTerminalSettings = sharedDeps.usbTerminalSettings;
     initializerDeps.heapMonitor = sharedDeps.heapMonitor;
+    initializerDeps.imuRuntimeService = sharedDeps.imuRuntimeService;
     initializerDeps.fsMutex = sharedDeps.fsMutex;
     ApiServicesInitializer::initialize(*api, initializerDeps);
 

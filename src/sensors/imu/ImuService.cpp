@@ -288,6 +288,32 @@ bool ImuService::getCachedSample(float& ax, float& ay, float& az, float& gx, flo
     return true;
 }
 
+bool ImuService::getCachedSample(IMU::ImuSample& sample) const {
+    portENTER_CRITICAL(&_cacheMux);
+    const bool valid = _sampleValid;
+    const uint32_t sampleTimestampMs = _sampleTimestampMs;
+    const float cachedAx = _cachedAx;
+    const float cachedAy = _cachedAy;
+    const float cachedAz = _cachedAz;
+    const float cachedGx = _cachedGx;
+    const float cachedGy = _cachedGy;
+    const float cachedGz = _cachedGz;
+    portEXIT_CRITICAL(&_cacheMux);
+
+    sample.timestampMs = sampleTimestampMs;
+    sample.valid = valid;
+    sample.ax = cachedAx;
+    sample.ay = cachedAy;
+    sample.az = cachedAz;
+    sample.gx = cachedGx;
+    sample.gy = cachedGy;
+    sample.gz = cachedGz;
+
+    if (!valid) return false;
+    if (millis() - sampleTimestampMs > CONFIG::TASKS::IMU_SAMPLE_STALE_MS) return false;
+    return true;
+}
+
 void ImuService::updateCachedSample(float ax, float ay, float az, float gx, float gy, float gz) {
     portENTER_CRITICAL(&_cacheMux);
     _cachedAx = ax;

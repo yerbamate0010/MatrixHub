@@ -29,6 +29,7 @@
 #include "../../notifications/runtime/NotificationWorker.h"
 #include "../../wifisensing/WifiSensingService.h"
 #include "../../airmouse/AirMouseService.h"
+#include "../../sensors/imu/ImuManager.h"
 #include "../../macros/MacroService.h"
 #include "../../api/notifications/NotificationsApiService.h"
 
@@ -287,6 +288,10 @@ void ShutdownSequence::stopHardware(ServiceRegistry& registry) {
     
     // Give tasks a moment to realize they should stop before killing I2C
     vTaskDelay(pdMS_TO_TICKS(SHUTDOWN::HARDWARE_SETTLE_DELAY_MS));
+
+    if (auto* imuManager = registry.getImuManager()) {
+        imuManager->clearConsumers();
+    }
 
     // [FIX] Wire.end() REMOVED
     // Reason: Even though SensorLoggingTask::stop() is blocking (waits for task exit),

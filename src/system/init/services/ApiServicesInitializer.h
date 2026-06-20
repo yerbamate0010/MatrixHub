@@ -68,6 +68,8 @@ class UdpSettingsService;
 }
 namespace SYSTEM { class HeapMonitor; }
 
+namespace IMU { class ImuRuntimeService; }
+
 // Local composition bundle for the shared Phase-1 API boot path.
 //
 // The goal is purely structural: keep one explicit list of everything needed
@@ -103,6 +105,7 @@ struct ApiServicesInitializerDeps {
   SYSTEM::HeartbeatSettingsService *heartbeatSettings = nullptr;
   USB_TERMINAL::UsbTerminalSettingsService *usbTerminalSettings = nullptr;
   SYSTEM::HeapMonitor *heapMonitor = nullptr;
+  IMU::ImuRuntimeService *imuRuntimeService = nullptr;
   SemaphoreHandle_t fsMutex = nullptr;
 };
 

@@ -19,6 +19,7 @@ import Power from '~icons/tabler/power';
 import Users from '~icons/tabler/users';
 import Health from '~icons/tabler/stethoscope';
 import Heartbeat from '~icons/tabler/heart-rate-monitor';
+import Activity from '~icons/tabler/activity';
 import FileText from '~icons/tabler/file-text';
 import GridDots from '~icons/tabler/grid-dots';
 import Folder from '~icons/tabler/folder';
@@ -48,6 +49,7 @@ export const menuIcons = {
 	Users,
 	Health,
 	Heartbeat,
+	Activity,
 	FileText,
 	GridDots,
 	Folder,

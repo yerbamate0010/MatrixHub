@@ -192,6 +192,9 @@ void initializeRuntimeApis(ApiServices& api,
       deps.server, securityManager, deps.powerManager, deps.bleSettings, deps.bleService);
   api.bleApi->begin();
 
+  api.imuApi.init(deps.server, securityManager, deps.powerManager, deps.imuRuntimeService);
+  api.imuApi->begin();
+
   api.heartbeatApi.init(
       deps.server, securityManager, deps.powerManager, deps.heartbeatSettings);
   api.heartbeatApi->begin();

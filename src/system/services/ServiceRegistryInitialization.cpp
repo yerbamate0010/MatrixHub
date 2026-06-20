@@ -173,6 +173,8 @@ void ServiceRegistry::initializeImuServices() {
     ImuServicesInitializer::initialize({
         _imuService,
         _imuManager,
+        _imuRuntimeService,
+        _framework ? _framework->getFS() : nullptr,
     });
 }
 
@@ -306,6 +308,7 @@ void ServiceRegistry::initializeApiServices() {
     sharedDeps.heartbeatSettings = _heartbeatSettings.get();
     sharedDeps.usbTerminalSettings = _usbTerminalSettings.get();
     sharedDeps.heapMonitor = &SYSTEM::HeapMonitor::instance();
+    sharedDeps.imuRuntimeService = _imuRuntimeService.get();
     sharedDeps.fsMutex = _fsMutex;
 
     // Phase-2 registry-owned APIs are split on purpose: their lifecycle has a

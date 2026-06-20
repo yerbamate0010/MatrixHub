@@ -12,6 +12,7 @@
 #include "services/ServiceRegistry.h"
 #include "../alarms/AlarmService.h"
 #include "../ble/BleService.h"
+#include "../sensors/imu/ImuRuntimeService.h"
 #include "../udp/UdpPusher.h"
 #include "../usb_terminal/UsbTerminalService.h"
 
@@ -99,6 +100,10 @@ void runLoopCore(ServiceRegistry& services,
   }
 
   SYSTEM::SystemHealth::update();
+
+  if (auto* imuRuntime = services.getImuRuntimeService()) {
+    imuRuntime->tick();
+  }
 
   if (auto* alarmService = services.getAlarmService()) {
     // Alarm producers only publish the newest merged snapshot. We intentionally

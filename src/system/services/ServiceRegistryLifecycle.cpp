@@ -24,6 +24,7 @@
 #include "../../notifications/webhook/WebhookNotifier.h"
 #include "../../notifications/webhook/WebhookWorker.h"
 #include "../../sensors/imu/ImuManager.h"
+#include "../../sensors/imu/ImuRuntimeService.h"
 #include "../../sensors/imu/ImuService.h"
 #include "../../shelly/ShellyService.h"
 #include "../../sensors/scd4x/Scd4xSensorService.h"
