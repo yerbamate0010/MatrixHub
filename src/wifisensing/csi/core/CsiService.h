@@ -17,6 +17,7 @@
 #include "CsiPingSession.h"
 #include "../algo/CsiGainController.h"
 #include "../algo/CsiBandMotionDetector.h"
+#include "../algo/CsiVisualizationReducer.h"
 
 #include <functional>
 
@@ -61,6 +62,7 @@ struct CsiMetricsSnapshot {
     int calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
     const char* calibrationState = "unknown";
     CsiMotionSnapshot motion;
+    CsiVisualizationSnapshot visualization;
 };
 
 class CsiService {
@@ -80,9 +82,9 @@ public:
     void setCsiCallback(CsiCallback cb);
     void setMotionCallback(MotionCallback cb);
     void setMotionConfig(const CsiMotionConfig& config);
-    void setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config);
     void requestMotionCalibration();
     CsiMotionSnapshot getMotionSnapshot() const;
+    CsiVisualizationSnapshot getVisualizationSnapshot() const;
 
     // Components
     CsiPingSession _ping;
@@ -126,10 +128,13 @@ public:
     MotionCallback getMotionCallbackSnapshot();
     void applyPendingMotionCommandsNonBlocking();
     CsiMotionSnapshot processMotionPacket(CsiPacket& packet, uint32_t nowMs);
+    CsiVisualizationSnapshot processVisualizationPacket(const CsiPacket& packet, uint32_t nowMs);
     void publishMotionSnapshot(const CsiMotionSnapshot& snapshot);
+    void publishVisualizationSnapshot(const CsiVisualizationSnapshot& snapshot);
     void maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs);
     void publishMotionBoolean(bool motion, uint32_t nowMs);
     void refreshMotionConfigFromConsumers();
+    void resetVisualizationState();
     bool reapStoppedProcessingTask(TickType_t waitTicks);
     void destroyProcessingTaskResources();
     void resetRuntimeMetrics();
@@ -169,13 +174,15 @@ public:
     uint32_t _lastBatchesRateTotal = 0;
 
     CsiBandMotionDetector _motionDetector;
+    CsiVisualizationReducer _visualizationReducer;
     CsiMotionConfig _alarmMotionConfig;
-    CsiMotionConfig _matrixVisualizationMotionConfig;
     CsiMotionConfig _pendingMotionConfig;
     std::atomic<bool> _motionConfigDirty{false};
     std::atomic<bool> _motionCalibrationRequested{false};
     mutable portMUX_TYPE _motionSnapshotMux = portMUX_INITIALIZER_UNLOCKED;
     CsiMotionSnapshot _lastMotionSnapshot;
+    mutable portMUX_TYPE _visualizationSnapshotMux = portMUX_INITIALIZER_UNLOCKED;
+    CsiVisualizationSnapshot _lastVisualizationSnapshot;
     uint32_t _lastMotionCallbackMs = 0;
     bool _lastPublishedMotion = false;
     static constexpr uint32_t MOTION_KEEPALIVE_MS = 3000;

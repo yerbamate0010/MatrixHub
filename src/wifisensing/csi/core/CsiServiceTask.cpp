@@ -201,6 +201,7 @@ void CsiService::processingTask(void* param) {
             self->_lastPacketMs.store(now, std::memory_order_relaxed);
             self->applyPendingMotionCommandsNonBlocking();
             packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
+            self->publishVisualizationSnapshot(self->processVisualizationPacket(packet, now));
             const auto motion = self->processMotionPacket(packet, now);
             self->publishMotionSnapshot(motion);
             self->maybePublishMotion(motion, now);
@@ -213,6 +214,7 @@ void CsiService::processingTask(void* param) {
                 self->_lastPacketMs.store(now, std::memory_order_relaxed);
                 self->applyPendingMotionCommandsNonBlocking();
                 packet.compensate_gain = self->_gainCtrl.update(&(packet.rx_ctrl));
+                self->publishVisualizationSnapshot(self->processVisualizationPacket(packet, now));
                 const auto motion = self->processMotionPacket(packet, now);
                 self->publishMotionSnapshot(motion);
                 self->maybePublishMotion(motion, now);

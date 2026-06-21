@@ -105,13 +105,10 @@ bool g_lastConsumerActive = false;
 IMU::Consumer g_lastConsumer = IMU::Consumer::AutoRotate;
 SensorSnapshot g_sensorSnapshot{};
 WIFISENSING::RssiStats g_rssiStats{};
-WIFISENSING::CSI::CsiMetricsSnapshot g_csiMetrics{};
+WIFISENSING::CSI::CsiVisualizationSnapshot g_csiVisualization{};
 uint32_t g_csiConsumerCalls = 0;
 bool g_lastCsiConsumerActive = false;
 WIFISENSING::CSI::CsiConsumer g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
-uint32_t g_matrixCsiConfigCalls = 0;
-bool g_lastMatrixCsiActive = false;
-WIFISENSING::CSI::CsiMotionConfig g_lastMatrixCsiConfig{};
 char g_lastBleRequestedMac[18] = {};
 uint32_t g_bleSelectedLookupCalls = 0;
 uint32_t g_bleSlotLookupCalls = 0;
@@ -236,16 +233,8 @@ bool CsiService::setConsumerActive(CsiConsumer consumer, bool active) {
     return active;
 }
 
-CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
-    return g_csiMetrics;
-}
-
-void CsiService::setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config) {
-    g_matrixCsiConfigCalls++;
-    g_lastCsiConsumer = CsiConsumer::MatrixVisualization;
-    g_lastCsiConsumerActive = active;
-    g_lastMatrixCsiActive = active;
-    g_lastMatrixCsiConfig = config;
+CsiVisualizationSnapshot CsiService::getVisualizationSnapshot() const {
+    return g_csiVisualization;
 }
 
 }  // namespace CSI
@@ -281,13 +270,10 @@ void resetState() {
     g_lastConsumer = IMU::Consumer::AutoRotate;
     g_sensorSnapshot = SensorSnapshot{};
     g_rssiStats = WIFISENSING::RssiStats{};
-    g_csiMetrics = WIFISENSING::CSI::CsiMetricsSnapshot{};
+    g_csiVisualization = WIFISENSING::CSI::CsiVisualizationSnapshot{};
     g_csiConsumerCalls = 0;
     g_lastCsiConsumerActive = false;
     g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
-    g_matrixCsiConfigCalls = 0;
-    g_lastMatrixCsiActive = false;
-    g_lastMatrixCsiConfig = WIFISENSING::CSI::CsiMotionConfig{};
     std::memset(g_lastBleRequestedMac, 0, sizeof(g_lastBleRequestedMac));
     g_bleSelectedLookupCalls = 0;
     g_bleSlotLookupCalls = 0;
@@ -493,37 +479,36 @@ void test_data_visualization_csi_enables_consumer_and_forwards_bins() {
         static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi);
     RTC::mockStore.matrix.dataVisualizationMetric =
         static_cast<uint8_t>(MATRIX::MatrixDataMetric::CsiMotion);
-    g_csiMetrics.enabled = true;
-    g_csiMetrics.lastPacketMs = 900;
-    g_csiMetrics.motion.baselineReady = true;
-    g_csiMetrics.motion.confidence = 0.5f;
-    g_csiMetrics.motion.visualizationBinCount = 64;
+    g_csiVisualization.valid = true;
+    g_csiVisualization.stale = false;
+    g_csiVisualization.timestampMs = 900;
+    g_csiVisualization.width = 128;
+    g_csiVisualization.value = 42.0f;
+    g_csiVisualization.binCount = 64;
     for (uint8_t i = 0; i < 64; ++i) {
-        g_csiMetrics.motion.visualizationBins[i] = i;
+        g_csiVisualization.bins[i] = static_cast<uint8_t>(63u - i);
     }
     TEST_STUBS::ARDUINO::millisValue = 1000;
 
     MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
 
-    TEST_ASSERT_EQUAL_UINT32(0, g_csiConsumerCalls);
-    TEST_ASSERT_EQUAL_UINT32(1, g_matrixCsiConfigCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, g_csiConsumerCalls);
     TEST_ASSERT_EQUAL(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, g_lastCsiConsumer);
     TEST_ASSERT_TRUE(g_lastCsiConsumerActive);
-    TEST_ASSERT_TRUE(g_lastMatrixCsiActive);
-    TEST_ASSERT_TRUE(g_lastMatrixCsiConfig.enabled);
     TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
     TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
-    TEST_ASSERT_EQUAL_FLOAT(50.0f, matrix.lastDataVisualizationInput.value);
+    TEST_ASSERT_EQUAL_FLOAT(42.0f, matrix.lastDataVisualizationInput.value);
+    TEST_ASSERT_EQUAL_FLOAT(128.0f, matrix.lastDataVisualizationInput.secondary);
     TEST_ASSERT_EQUAL_UINT8(64, matrix.lastDataVisualizationInput.binCount);
-    TEST_ASSERT_EQUAL_UINT8(0, matrix.lastDataVisualizationInput.bins[0]);
-    TEST_ASSERT_EQUAL_UINT8(63, matrix.lastDataVisualizationInput.bins[63]);
+    TEST_ASSERT_EQUAL_UINT8(63, matrix.lastDataVisualizationInput.bins[0]);
+    TEST_ASSERT_EQUAL_UINT8(0, matrix.lastDataVisualizationInput.bins[63]);
 
     RTC::mockStore.matrix.backgroundMode =
         static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::Effects);
     TEST_STUBS::ARDUINO::millisValue = 1300;
     MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
 
-    TEST_ASSERT_EQUAL_UINT32(2, g_matrixCsiConfigCalls);
+    TEST_ASSERT_EQUAL_UINT32(2, g_csiConsumerCalls);
     TEST_ASSERT_FALSE(g_lastCsiConsumerActive);
 }
 

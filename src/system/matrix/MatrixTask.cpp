@@ -149,38 +149,14 @@ void fillRssiBins(WIFISENSING::WifiSensingService* wifiSensingService, MATRIX::M
     }
 }
 
-void fillCsiBins(const WIFISENSING::CSI::CsiMotionSnapshot& snapshot,
+void fillCsiBins(const WIFISENSING::CSI::CsiVisualizationSnapshot& snapshot,
                  MATRIX::MatrixDataVisualizationInput& input) {
-    input.binCount = snapshot.visualizationBinCount > MATRIX::kMatrixDataVizPixelCount
+    input.binCount = snapshot.binCount > MATRIX::kMatrixDataVizPixelCount
         ? MATRIX::kMatrixDataVizPixelCount
-        : snapshot.visualizationBinCount;
+        : snapshot.binCount;
     for (uint8_t i = 0; i < input.binCount; ++i) {
-        input.bins[i] = snapshot.visualizationBins[i];
+        input.bins[i] = snapshot.bins[i];
     }
-}
-
-WIFISENSING::CSI::CsiMotionConfig buildMatrixCsiMotionConfig(const RTC::WifiSensingData& state) {
-    WIFISENSING::CSI::CsiMotionConfig config;
-    config.enabled = true;
-    config.bandCount = state.csiAlarmBandCount > WIFISENSING::CSI::MAX_CSI_ALARM_BANDS
-                           ? WIFISENSING::CSI::MAX_CSI_ALARM_BANDS
-                           : state.csiAlarmBandCount;
-    for (uint8_t i = 0; i < config.bandCount; ++i) {
-        config.bands[i].start = state.csiAlarmBandStart[i];
-        config.bands[i].end = state.csiAlarmBandEnd[i];
-    }
-    config.baselineFrames = state.csiBaselineFrames;
-    config.topK = state.csiTopK;
-    config.enterThreshold = state.csiEnterThreshold;
-    config.clearThreshold = state.csiClearThreshold;
-    config.holdMs = state.csiHoldMs;
-    config.clearHoldMs = state.csiClearHoldMs;
-    config.minNoise = state.csiMinNoise;
-    config.minEnergy = state.csiMinEnergy;
-    config.noisyScoreThreshold = state.csiNoisyThreshold;
-    config.autoRecalibration = state.csiAutoRecalibration;
-    config.sensitivity = state.csiSensitivity;
-    return config;
 }
 
 } // namespace
@@ -486,9 +462,7 @@ void MatrixTask::evaluateDataVisualizationInput(BLE::BleService* bleService,
     if (wantsCsi != _lastMatrixDataVizCsiEnabled) {
         LOGI("Matrix data visualization CSI input %s", wantsCsi ? "ON" : "OFF");
         if (csiService) {
-            csiService->setMatrixVisualizationMotionConfig(
-                wantsCsi,
-                buildMatrixCsiMotionConfig(RTC::getConfig().wifiSensing));
+            csiService->setConsumerActive(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, wantsCsi);
         } else {
             LOGW("CSI service missing - matrix data visualization consumer not updated");
         }
@@ -586,15 +560,15 @@ void MatrixTask::evaluateDataVisualizationInput(BLE::BleService* bleService,
 
         case MATRIX::MatrixDataSource::WifiCsi: {
             if (csiService) {
-                const WIFISENSING::CSI::CsiMetricsSnapshot metrics = csiService->getMetricsSnapshot();
-                const auto& motion = metrics.motion;
-                input.calibrationReady = motion.baselineReady;
-                input.needsCalibration = motion.needsCalibration;
-                input.valid = metrics.enabled && motion.baselineReady;
-                input.stale = !input.valid || metrics.lastPacketMs == 0 || (now - metrics.lastPacketMs) > 5000;
-                input.value = clampf(motion.confidence * 100.0f, 0.0f, 100.0f);
-                input.secondary = motion.score;
-                fillCsiBins(motion, input);
+                const WIFISENSING::CSI::CsiVisualizationSnapshot visualization =
+                    csiService->getVisualizationSnapshot();
+                input.valid = visualization.valid;
+                input.stale = !input.valid ||
+                    visualization.timestampMs == 0 ||
+                    (now - visualization.timestampMs) > 5000;
+                input.value = clampf(visualization.value, 0.0f, 100.0f);
+                input.secondary = static_cast<float>(visualization.width);
+                fillCsiBins(visualization, input);
             }
             break;
         }

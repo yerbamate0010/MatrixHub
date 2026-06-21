@@ -23,16 +23,6 @@ uint8_t countActiveConsumers(uint32_t mask) {
     return count;
 }
 
-CsiMotionConfig withMatrixVisualizationDefaults(CsiMotionConfig config) {
-    config.enabled = true;
-    if (config.bandCount == 0) {
-        config.bandCount = 1;
-        config.bands[0].start = 0;
-        config.bands[0].end = MAX_CSI_SUBCARRIERS - 1;
-    }
-    return config;
-}
-
 } // namespace
 
 CsiService::CsiService() {
@@ -96,6 +86,7 @@ void CsiService::begin() {
         LOGE("Failed to allocate CSI motion detector buffers in PSRAM");
     }
     publishMotionSnapshot(_motionDetector.snapshot());
+    resetVisualizationState();
     LOGI("Service initialized (Disabled by default)");
     // Queue is now allocated lazily when the first consumer becomes active.
 }
@@ -138,40 +129,11 @@ void CsiService::setMotionConfig(const CsiMotionConfig& config) {
             return;
         }
         _alarmMotionConfig = config;
-        if (_matrixVisualizationMotionConfig.enabled) {
-            _matrixVisualizationMotionConfig = withMatrixVisualizationDefaults(config);
-        }
     } else {
         _alarmMotionConfig = config;
-        if (_matrixVisualizationMotionConfig.enabled) {
-            _matrixVisualizationMotionConfig = withMatrixVisualizationDefaults(config);
-        }
     }
 
     setConsumerActive(CsiConsumer::AlarmSystem, config.enabled);
-    refreshMotionConfigFromConsumers();
-}
-
-void CsiService::setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config) {
-    CsiMotionConfig nextConfig = config;
-    if (active) {
-        nextConfig = withMatrixVisualizationDefaults(nextConfig);
-    } else {
-        nextConfig.enabled = false;
-    }
-
-    if (_motionConfigMutex) {
-        SYSTEM::ScopeLock lock(_motionConfigMutex, pdMS_TO_TICKS(200));
-        if (!lock.isLocked()) {
-            LOGW("Failed to update matrix CSI motion config");
-            return;
-        }
-        _matrixVisualizationMotionConfig = nextConfig;
-    } else {
-        _matrixVisualizationMotionConfig = nextConfig;
-    }
-
-    setConsumerActive(CsiConsumer::MatrixVisualization, active);
     refreshMotionConfigFromConsumers();
 }
 
@@ -183,6 +145,13 @@ CsiMotionSnapshot CsiService::getMotionSnapshot() const {
     portENTER_CRITICAL(&_motionSnapshotMux);
     const CsiMotionSnapshot copy = _lastMotionSnapshot;
     portEXIT_CRITICAL(&_motionSnapshotMux);
+    return copy;
+}
+
+CsiVisualizationSnapshot CsiService::getVisualizationSnapshot() const {
+    portENTER_CRITICAL(&_visualizationSnapshotMux);
+    const CsiVisualizationSnapshot copy = _lastVisualizationSnapshot;
+    portEXIT_CRITICAL(&_visualizationSnapshotMux);
     return copy;
 }
 
@@ -202,6 +171,7 @@ void CsiService::resetRuntimeMetrics() {
     _lastBatchMs.store(0, std::memory_order_relaxed);
     _lastPacketsRateTotal = 0;
     _lastBatchesRateTotal = 0;
+    resetVisualizationState();
     if (_queue) {
         _queue->resetStats();
     }
@@ -236,6 +206,7 @@ CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
     snapshot.calibrationTarget = CsiGainController::CALIBRATION_PACKETS;
     snapshot.calibrationState = _gainCtrl.stateName();
     snapshot.motion = getMotionSnapshot();
+    snapshot.visualization = getVisualizationSnapshot();
 
     if (!_stateMutex) {
         return snapshot;
@@ -283,10 +254,20 @@ CsiMotionSnapshot CsiService::processMotionPacket(CsiPacket& packet, uint32_t no
     return snapshot;
 }
 
+CsiVisualizationSnapshot CsiService::processVisualizationPacket(const CsiPacket& packet, uint32_t nowMs) {
+    return _visualizationReducer.process(packet, nowMs);
+}
+
 void CsiService::publishMotionSnapshot(const CsiMotionSnapshot& snapshot) {
     portENTER_CRITICAL(&_motionSnapshotMux);
     _lastMotionSnapshot = snapshot;
     portEXIT_CRITICAL(&_motionSnapshotMux);
+}
+
+void CsiService::publishVisualizationSnapshot(const CsiVisualizationSnapshot& snapshot) {
+    portENTER_CRITICAL(&_visualizationSnapshotMux);
+    _lastVisualizationSnapshot = snapshot;
+    portEXIT_CRITICAL(&_visualizationSnapshotMux);
 }
 
 void CsiService::maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs) {
@@ -327,14 +308,9 @@ void CsiService::refreshMotionConfigFromConsumers() {
         const uint32_t mask = _activeConsumers.load(std::memory_order_relaxed);
         const bool alarmActive =
             (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0 && _alarmMotionConfig.enabled;
-        const bool matrixActive =
-            (mask & consumerBit(CsiConsumer::MatrixVisualization)) != 0 &&
-            _matrixVisualizationMotionConfig.enabled;
 
         if (alarmActive) {
             selectedConfig = _alarmMotionConfig;
-        } else if (matrixActive) {
-            selectedConfig = _matrixVisualizationMotionConfig;
         } else {
             selectedConfig.enabled = false;
         }
@@ -345,14 +321,9 @@ void CsiService::refreshMotionConfigFromConsumers() {
         const uint32_t mask = _activeConsumers.load(std::memory_order_relaxed);
         const bool alarmActive =
             (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0 && _alarmMotionConfig.enabled;
-        const bool matrixActive =
-            (mask & consumerBit(CsiConsumer::MatrixVisualization)) != 0 &&
-            _matrixVisualizationMotionConfig.enabled;
 
         if (alarmActive) {
             selectedConfig = _alarmMotionConfig;
-        } else if (matrixActive) {
-            selectedConfig = _matrixVisualizationMotionConfig;
         } else {
             selectedConfig.enabled = false;
         }
@@ -383,6 +354,11 @@ void CsiService::recordBatchDelivery(size_t packetCount, bool accepted) {
     }
 
     _batchesDroppedTotal.fetch_add(1, std::memory_order_relaxed);
+}
+
+void CsiService::resetVisualizationState() {
+    _visualizationReducer.reset();
+    publishVisualizationSnapshot(_visualizationReducer.snapshot());
 }
 
 uint32_t CsiService::consumerBit(CsiConsumer consumer) {
@@ -558,6 +534,7 @@ bool CsiService::applyEnabledState(bool enabled) {
             _cleanupSem = nullptr;
         }
 
+        resetVisualizationState();
         return true;
     }
 
@@ -636,6 +613,7 @@ void CsiService::rollbackFailedEnable(bool csiConfigured) {
         _cleanupSem = nullptr;
     }
 
+    resetVisualizationState();
     _enabled.store(false, std::memory_order_relaxed);
 }
 
