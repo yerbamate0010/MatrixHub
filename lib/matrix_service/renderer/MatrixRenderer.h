@@ -64,7 +64,6 @@ private:
     uint32_t _lastScrollUpdate;
     uint16_t _scrollSpeed = UI::MATRIX::SCROLL_INTERVAL_MS;
     uint32_t _effectSpeedMs = UI::MATRIX::DEFAULT_EFFECT_SPEED;
-    uint32_t _lastEffectServiceMs = 0;
     uint32_t _nativeFrame[MATRIX_FX::kMatrixFxPixelCount] = {};
     MATRIX_FX::MatrixFxEngine3D _nativeEngine;
     uint32_t _dataVisualizationFrame[MATRIX::kMatrixDataVizPixelCount] = {};

@@ -91,6 +91,24 @@ void test_show_text_after_effect_renders_immediately() {
     TEST_ASSERT_EQUAL_HEX32(0xABCDEF, matrix().lastDrawColor);
 }
 
+void test_legacy_effect_service_is_not_double_throttled_by_renderer() {
+    MatrixRenderer renderer;
+    renderer.begin(5);
+    matrix().resetCounters();
+
+    renderer.showEffect(11, 1000, 0x123456, 0x234567, 0x345678);
+    TEST_ASSERT_EQUAL_UINT16(1000, matrix().lastSpeed);
+
+    TEST_STUBS::ARDUINO::millisValue = 1000;
+    renderer.loop();
+    TEST_STUBS::ARDUINO::millisValue = 1010;
+    renderer.loop();
+    TEST_STUBS::ARDUINO::millisValue = 1020;
+    renderer.loop();
+
+    TEST_ASSERT_EQUAL_UINT32(3, matrix().serviceCalls);
+}
+
 void test_native_3d_effect_renders_bitmap_without_starting_legacy_fx() {
     MatrixRenderer renderer;
     renderer.begin(5);
@@ -167,6 +185,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_show_text_same_text_new_color_repaints);
     RUN_TEST(test_show_text_same_text_same_color_is_deduplicated);
     RUN_TEST(test_show_text_after_effect_renders_immediately);
+    RUN_TEST(test_legacy_effect_service_is_not_double_throttled_by_renderer);
     RUN_TEST(test_native_3d_effect_renders_bitmap_without_starting_legacy_fx);
     RUN_TEST(test_data_visualization_renders_bitmap_without_starting_legacy_fx);
     RUN_TEST(test_brightness_zero_blacks_out_and_blocks_effect_rendering);

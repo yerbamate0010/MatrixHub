@@ -137,7 +137,7 @@ export const MATRIX_CUSTOM_ICON_PIXELS = 64;
 // Keep this aligned with the backend validator. Matrix effects use one compact
 // 0..69 range end-to-end, with no hidden holes or excluded vendor IDs.
 export const MATRIX_EFFECT_MODE_MAX = 69;
-export const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 13;
+export const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 14;
 export const MATRIX_EFFECT_ENGINE_LEGACY = 0 satisfies MatrixEffectEngine;
 export const MATRIX_EFFECT_ENGINE_NATIVE_3D = 1 satisfies MatrixEffectEngine;
 export const MATRIX_REACTIVITY_PROVIDER_NONE = 0 satisfies MatrixEffectReactivityProvider;
@@ -302,11 +302,11 @@ export const MATRIX_NATIVE_3D_EFFECT_IDS = Array.from(
 export const MATRIX_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 	{
 		value: 'recommended',
-		effectIds: [2, 11, 44, 48, 65]
+		effectIds: [2, 11, 18, 44, 64]
 	},
 	{
 		value: 'calm',
-		effectIds: [0, 1, 2, 15, 18, 40, 64]
+		effectIds: [0, 2, 11, 15, 18, 40, 64]
 	},
 	{
 		value: 'dynamic',
@@ -325,11 +325,11 @@ export const MATRIX_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 export const MATRIX_NATIVE_3D_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 	{
 		value: 'recommended',
-		effectIds: [0, 1, 4, 5, 7, 10]
+		effectIds: [0, 1, 3, 4, 5, 7, 10, 14]
 	},
 	{
 		value: 'calm',
-		effectIds: [0, 3, 4, 5, 6, 10, 13]
+		effectIds: [0, 3, 4, 5, 6, 10, 13, 14]
 	},
 	{
 		value: 'dynamic',

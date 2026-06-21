@@ -32,7 +32,6 @@ void MatrixRenderer::blackout() {
     _scrolling = false;
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
-    _lastEffectServiceMs = 0;
     _matrix->fillScreen(0);
     _matrix->show();
 }
@@ -81,11 +80,6 @@ void MatrixRenderer::loop() {
     }
     // EFFECT MODE
     else if (_effectRunning) {
-        const uint32_t now = millis();
-        if (_lastEffectServiceMs != 0 && now - _lastEffectServiceMs < _effectSpeedMs) {
-            return;
-        }
-        _lastEffectServiceMs = now;
         _matrix->service();
     } else if (_nativeEffectRunning) {
         if (_nativeEngine.render(millis(), _nativeFrame, MATRIX_FX::kMatrixFxPixelCount)) {
@@ -273,7 +267,6 @@ void MatrixRenderer::showEffect(uint8_t mode, uint32_t speed, uint32_t color, ui
             ? UI::MATRIX::EFFECT_DRIVER_SPEED_MAX
             : _effectSpeedMs));
     _matrix->setColors(0, colors);
-    _lastEffectServiceMs = 0;
     
     if (!_effectRunning) {
         _matrix->start();

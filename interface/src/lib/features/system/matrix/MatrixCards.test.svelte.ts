@@ -178,6 +178,7 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_eff_3d_prism_sweep: () => 'Prism Sweep',
 		matrix_eff_3d_rain_glass: () => 'Rain Glass',
 		matrix_eff_3d_breathing_terrain: () => 'Breathing Terrain',
+		matrix_eff_3d_palette_wave: () => 'Palette Wave',
 		imu_state_enabled: () => 'Enabled',
 		imu_state_disabled: () => 'Disabled'
 	};
@@ -280,11 +281,11 @@ describe('Matrix cards', () => {
 		});
 
 		expect(store.settings.effect_engine).toBe(1);
-		expect(store.settings.effect_mode).toBe(13);
+		expect(store.settings.effect_mode).toBe(14);
 		expect(store.settings.effect_reactivity_provider).toBe(1);
 		expect(store.settings.effect_reactivity_gain).toBe(125);
 		expect((screen.getByRole('combobox', { name: 'Effect Mode' }) as HTMLSelectElement).value).toBe(
-			'13'
+			'14'
 		);
 		expect(store.saveSettingsSilentlyNow).not.toHaveBeenCalled();
 	});

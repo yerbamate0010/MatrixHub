@@ -1338,6 +1338,7 @@
 	"matrix_eff_3d_prism_sweep": "Prism Sweep",
 	"matrix_eff_3d_rain_glass": "Rain Glass",
 	"matrix_eff_3d_breathing_terrain": "Breathing Terrain",
+	"matrix_eff_3d_palette_wave": "Palette Wave",
 	"webhook_url_invalid": "Please enter a valid HTTP or HTTPS URL",
 	"settings_load_error": "Failed to load settings.",
 	"settings_save_error": "Failed to save settings.",

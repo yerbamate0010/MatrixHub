@@ -1338,6 +1338,7 @@
 	"matrix_eff_3d_prism_sweep": "Pryzmatyczny skan",
 	"matrix_eff_3d_rain_glass": "Deszcz na szybie",
 	"matrix_eff_3d_breathing_terrain": "Oddychający teren",
+	"matrix_eff_3d_palette_wave": "Paletowa fala",
 	"webhook_url_invalid": "Proszę podać prawidłowy URL HTTP lub HTTPS",
 	"settings_load_error": "Błąd ładowania ustawień.",
 	"settings_save_error": "Błąd zapisu ustawień.",

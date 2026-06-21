@@ -92,7 +92,8 @@ const native3dEffectLabelResolvers: Record<number, (args: { locale: string }) =>
 	10: m.matrix_eff_3d_lava_lamp,
 	11: m.matrix_eff_3d_prism_sweep,
 	12: m.matrix_eff_3d_rain_glass,
-	13: m.matrix_eff_3d_breathing_terrain
+	13: m.matrix_eff_3d_breathing_terrain,
+	14: m.matrix_eff_3d_palette_wave
 };
 
 export function getMatrixEffectName(

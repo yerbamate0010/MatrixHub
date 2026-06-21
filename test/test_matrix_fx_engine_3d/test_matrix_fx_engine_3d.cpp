@@ -74,6 +74,74 @@ uint32_t countUniqueColors(const uint32_t* frame) {
     return unique;
 }
 
+struct TemporalAudit {
+    float avgBrightnessDelta = 0.0f;
+    float hardPixelRate = 0.0f;
+    float onOffRate = 0.0f;
+    uint8_t minLit = MATRIX_FX::kMatrixFxPixelCount;
+};
+
+TemporalAudit measureTemporalSmoothness(uint8_t mode) {
+    MATRIX_FX::MatrixFxEngine3D engine;
+    auto config = makeConfig(mode);
+    config.speedMs = 1000;
+    config.reactivityGain = 95;
+    engine.configure(config);
+
+    MATRIX_FX::MatrixFxInput input;
+    input.imuValid = true;
+    input.ax = -0.72f;
+    input.ay = 0.58f;
+    input.az = 0.38f;
+    input.motionEnergy = 0.45f;
+    engine.setInput(input);
+
+    uint32_t current[MATRIX_FX::kMatrixFxPixelCount]{};
+    uint32_t previous[MATRIX_FX::kMatrixFxPixelCount]{};
+    for (uint8_t warmup = 0; warmup < 8; ++warmup) {
+        TEST_ASSERT_TRUE(engine.render(1000 + warmup * 33, current, MATRIX_FX::kMatrixFxPixelCount));
+    }
+
+    TemporalAudit metrics;
+    uint32_t totalBrightnessDelta = 0;
+    uint32_t hardPixels = 0;
+    uint32_t onOffTransitions = 0;
+    constexpr uint8_t frameCount = 48;
+
+    for (uint8_t frame = 0; frame < frameCount; ++frame) {
+        TEST_ASSERT_TRUE(engine.render(1000 + (frame + 8) * 33, current, MATRIX_FX::kMatrixFxPixelCount));
+        metrics.minLit = std::min<uint8_t>(metrics.minLit, static_cast<uint8_t>(countLitPixels(current)));
+
+        if (frame > 0) {
+            for (uint8_t pixel = 0; pixel < MATRIX_FX::kMatrixFxPixelCount; ++pixel) {
+                const uint8_t previousBrightness = brightness(previous[pixel]);
+                const uint8_t currentBrightness = brightness(current[pixel]);
+                const uint8_t delta = previousBrightness > currentBrightness
+                    ? previousBrightness - currentBrightness
+                    : currentBrightness - previousBrightness;
+                totalBrightnessDelta += delta;
+                if (delta > 70) {
+                    hardPixels++;
+                }
+                if ((previousBrightness <= 10 && currentBrightness >= 42) ||
+                    (previousBrightness >= 42 && currentBrightness <= 10)) {
+                    onOffTransitions++;
+                }
+            }
+        }
+
+        for (uint8_t pixel = 0; pixel < MATRIX_FX::kMatrixFxPixelCount; ++pixel) {
+            previous[pixel] = current[pixel];
+        }
+    }
+
+    const float sampleCount = static_cast<float>((frameCount - 1) * MATRIX_FX::kMatrixFxPixelCount);
+    metrics.avgBrightnessDelta = static_cast<float>(totalBrightnessDelta) / sampleCount;
+    metrics.hardPixelRate = static_cast<float>(hardPixels) / sampleCount;
+    metrics.onOffRate = static_cast<float>(onOffTransitions) / sampleCount;
+    return metrics;
+}
+
 void renderSettledFrame(uint8_t mode,
                         MATRIX_FX::MatrixFxConfig config,
                         const MATRIX_FX::MatrixFxInput& input,
@@ -124,7 +192,11 @@ void test_engine_renders_all_native_modes_to_nonblank_frames() {
     }
 }
 
-void test_render_audit_all_native_modes_are_palette_responsive_and_varied() {
+bool isClassicIridescentMode(uint8_t mode) {
+    return mode == static_cast<uint8_t>(MATRIX_FX::Native3DMode::CenterRipple);
+}
+
+void test_render_audit_all_native_modes_are_varied() {
     MATRIX_FX::MatrixFxInput input;
     input.imuValid = true;
     input.ax = 0.42f;
@@ -150,7 +222,9 @@ void test_render_audit_all_native_modes_are_palette_responsive_and_varied() {
 
         TEST_ASSERT_GREATER_THAN_UINT32(4, countLitPixels(coolFrame));
         TEST_ASSERT_GREATER_THAN_UINT32(3, countUniqueColors(coolFrame));
-        TEST_ASSERT_GREATER_THAN_UINT32(4, countChangedPixels(coolFrame, warmFrame));
+        if (!isClassicIridescentMode(mode)) {
+            TEST_ASSERT_GREATER_THAN_UINT32(4, countChangedPixels(coolFrame, warmFrame));
+        }
     }
 }
 
@@ -175,6 +249,16 @@ void test_render_audit_all_native_modes_react_to_imu_input() {
         renderSettledFrame(mode, config, tilted, tiltedFrame);
 
         TEST_ASSERT_GREATER_THAN_UINT32(0, countChangedPixels(idleFrame, tiltedFrame));
+    }
+}
+
+void test_render_audit_all_native_modes_have_smooth_temporal_transitions() {
+    for (uint8_t mode = 0; mode <= MATRIX_FX::kNative3DModeMax; ++mode) {
+        const TemporalAudit metrics = measureTemporalSmoothness(mode);
+        TEST_ASSERT_GREATER_THAN_UINT32(0, metrics.minLit);
+        TEST_ASSERT_TRUE_MESSAGE(metrics.avgBrightnessDelta <= 34.0f, "effect should not jump too much between frames");
+        TEST_ASSERT_TRUE_MESSAGE(metrics.hardPixelRate <= 0.10f, "effect should not have many hard pixel jumps");
+        TEST_ASSERT_TRUE_MESSAGE(metrics.onOffRate <= 0.035f, "effect should not flicker pixels on/off");
     }
 }
 
@@ -260,6 +344,31 @@ void test_liquid_wave_reacts_to_imu_tilt() {
     TEST_ASSERT_GREATER_THAN_UINT32(8, countChangedPixels(idleFrame, tiltedFrame));
 }
 
+void test_liquid_wave_is_not_alias_of_iridescent_ripple() {
+    auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::CenterRipple));
+    MATRIX_FX::MatrixFxInput input;
+    input.imuValid = true;
+    input.ax = 0.34f;
+    input.ay = -0.42f;
+    input.motionEnergy = 0.18f;
+
+    uint32_t rippleFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+    renderSettledFrame(
+        static_cast<uint8_t>(MATRIX_FX::Native3DMode::CenterRipple),
+        config,
+        input,
+        rippleFrame);
+
+    uint32_t liquidFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+    renderSettledFrame(
+        static_cast<uint8_t>(MATRIX_FX::Native3DMode::LiquidWave),
+        config,
+        input,
+        liquidFrame);
+
+    TEST_ASSERT_GREATER_THAN_UINT32(24, countChangedPixels(rippleFrame, liquidFrame));
+}
+
 void test_gravity_particles_fall_opposite_accelerometer_support_vector() {
     const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::GravityParticles));
     uint32_t supportUpFrame[MATRIX_FX::kMatrixFxPixelCount]{};
@@ -311,12 +420,14 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_engine_rejects_render_before_configure);
     RUN_TEST(test_engine_renders_all_native_modes_to_nonblank_frames);
-    RUN_TEST(test_render_audit_all_native_modes_are_palette_responsive_and_varied);
+    RUN_TEST(test_render_audit_all_native_modes_are_varied);
     RUN_TEST(test_render_audit_all_native_modes_react_to_imu_input);
+    RUN_TEST(test_render_audit_all_native_modes_have_smooth_temporal_transitions);
     RUN_TEST(test_engine_clamps_config_and_keeps_small_runtime_state);
     RUN_TEST(test_imu_input_changes_projected_frame);
     RUN_TEST(test_iridescent_ripple_reacts_to_tilted_center_and_hue);
     RUN_TEST(test_liquid_wave_reacts_to_imu_tilt);
+    RUN_TEST(test_liquid_wave_is_not_alias_of_iridescent_ripple);
     RUN_TEST(test_gravity_particles_fall_opposite_accelerometer_support_vector);
     RUN_TEST(test_depth_tunnel_keeps_readable_wireframe_shape);
     return UNITY_END();

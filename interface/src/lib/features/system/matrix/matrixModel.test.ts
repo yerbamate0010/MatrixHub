@@ -70,16 +70,16 @@ describe('matrixModel', () => {
 		expect(matrixEffectCategoryContainsEffect('calm', 69)).toBe(false);
 		expect(getPreferredMatrixEffectCategory(11)).toBe('recommended');
 		expect(getPreferredMatrixEffectCategory(69)).toBe('dynamic');
-		expect(MATRIX_NATIVE_3D_EFFECT_MODE_MAX).toBe(13);
+		expect(MATRIX_NATIVE_3D_EFFECT_MODE_MAX).toBe(14);
 		expect(MATRIX_NATIVE_3D_EFFECT_IDS).toEqual(
-			Array.from({ length: 14 }, (_, effectId) => effectId)
+			Array.from({ length: 15 }, (_, effectId) => effectId)
 		);
 		expect(getMatrixEffectIds(MATRIX_EFFECT_ENGINE_NATIVE_3D)).toEqual(
-			Array.from({ length: 14 }, (_, effectId) => effectId)
+			Array.from({ length: 15 }, (_, effectId) => effectId)
 		);
 		expect(getMatrixEffectCategories(MATRIX_EFFECT_ENGINE_NATIVE_3D).at(-1)).toEqual({
 			value: 'all',
-			effectIds: Array.from({ length: 14 }, (_, effectId) => effectId)
+			effectIds: Array.from({ length: 15 }, (_, effectId) => effectId)
 		});
 		expect(getPreferredMatrixEffectCategory(4, MATRIX_EFFECT_ENGINE_NATIVE_3D)).toBe(
 			'recommended'

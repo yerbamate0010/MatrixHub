@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../../src/system/power/PowerManager.h"
+#include "../../src/wifisensing/csi/core/CsiService.h"
 
 namespace SHELLY {
 class ShellyService {};

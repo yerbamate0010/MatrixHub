@@ -118,8 +118,11 @@ bool MatrixFxEngine3D::render(uint32_t nowMs, uint32_t* outFrame, uint8_t pixelC
             renderRainGlass(outFrame);
             break;
         case Native3DMode::BreathingTerrain:
-        default:
             renderBreathingTerrain(outFrame);
+            break;
+        case Native3DMode::PaletteWave:
+        default:
+            renderPaletteWave(outFrame);
             break;
     }
     return true;
@@ -298,7 +301,7 @@ void MatrixFxEngine3D::renderIridescentRipple(uint32_t* outFrame) {
     const float gain = reactiveGain();
     const float centerX = 3.5f - _tiltX * 1.15f * gain;
     const float centerY = 3.5f - _tiltY * 1.15f * gain;
-    const float tiltShift = (_tiltX * 0.12f + _tiltY * 0.08f) * gain;
+    const float tiltHue = (_tiltX * 0.12f + _tiltY * 0.08f) * gain;
     const float motionLift = clampf(_input.motionEnergy * 0.18f, 0.0f, 0.18f);
 
     for (uint8_t y = 0; y < kMatrixFxHeight; ++y) {
@@ -311,9 +314,10 @@ void MatrixFxEngine3D::renderIridescentRipple(uint32_t* outFrame) {
             const float ripple = clampf(expanding * expanding + contracting * contracting * 0.48f, 0.0f, 1.0f);
             const float centerGlow = clampf(1.0f - dist / 5.0f, 0.0f, 1.0f);
             const float oilSheen = std::sin((dx * _tiltY - dy * _tiltX) * 1.2f + _phase * 2.0f * kPi) * 0.035f;
-            const float colorPos = _phase * 0.48f + dist * 0.055f + tiltShift + oilSheen;
+            const float hue = _phase * 0.48f + dist * 0.055f + tiltHue + oilSheen;
+            const float saturation = clampf(0.58f + ripple * 0.36f + centerGlow * 0.10f, 0.45f, 1.0f);
             const float value = clampf(0.08f + ripple * 0.76f + centerGlow * 0.18f + motionLift, 0.04f, 1.0f);
-            outFrame[y * kMatrixFxWidth + x] = paletteColor(colorPos, value);
+            outFrame[y * kMatrixFxWidth + x] = hsvColor(hue, saturation, value);
         }
     }
 }
@@ -324,6 +328,11 @@ void MatrixFxEngine3D::renderGravityParticles(uint32_t* outFrame) {
     }
 
     fadeFrame(outFrame, 88);
+    const uint32_t ambient = paletteColor(_phase * 0.10f, 0.025f);
+    for (uint8_t i = 0; i < kMatrixFxPixelCount; ++i) {
+        outFrame[i] = blend(outFrame[i], ambient, 0.35f);
+    }
+
     const float dt = _lastDeltaSec;
     const float frameScale = dt * 20.0f;
     const float gain = reactiveGain();
@@ -356,7 +365,23 @@ void MatrixFxEngine3D::renderGravityParticles(uint32_t* outFrame) {
         }
 
         const float energy = clampf(std::sqrt(p.vx * p.vx + p.vy * p.vy) * 2.2f, 0.25f, 1.0f);
-        addPixel(outFrame, static_cast<int>(std::round(p.x)), static_cast<int>(std::round(p.y)), p.color, energy);
+        const int left = static_cast<int>(std::floor(p.x));
+        const int top = static_cast<int>(std::floor(p.y));
+        const float fx = p.x - static_cast<float>(left);
+        const float fy = p.y - static_cast<float>(top);
+
+        for (uint8_t oy = 0; oy < 2; ++oy) {
+            for (uint8_t ox = 0; ox < 2; ++ox) {
+                const float wx = ox == 0 ? 1.0f - fx : fx;
+                const float wy = oy == 0 ? 1.0f - fy : fy;
+                addPixel(outFrame, left + ox, top + oy, p.color, energy * wx * wy * 0.95f);
+            }
+        }
+
+        addPixel(outFrame, left - 1, top, p.color, energy * 0.10f);
+        addPixel(outFrame, left + 2, top, p.color, energy * 0.10f);
+        addPixel(outFrame, left, top - 1, p.color, energy * 0.10f);
+        addPixel(outFrame, left, top + 2, p.color, energy * 0.10f);
     }
 }
 
@@ -383,9 +408,8 @@ void MatrixFxEngine3D::renderDepthTunnel(uint32_t* outFrame) {
 
 void MatrixFxEngine3D::renderLiquidWave(uint32_t* outFrame) {
     const float gain = reactiveGain();
-    const float waveTiltX = -_tiltX * 1.25f * gain;
-    const float waveTiltY = -_tiltY * 1.05f * gain;
-    const float tiltShift = (_tiltX * 0.16f + _tiltY * 0.11f) * gain;
+    const float waveTiltX = -_tiltX * 0.65f * gain;
+    const float waveTiltY = -_tiltY * 0.65f * gain;
 
     for (uint8_t y = 0; y < kMatrixFxHeight; ++y) {
         for (uint8_t x = 0; x < kMatrixFxWidth; ++x) {
@@ -394,14 +418,12 @@ void MatrixFxEngine3D::renderLiquidWave(uint32_t* outFrame) {
             const float perspective = 0.55f + ny * 1.65f;
             const float surfaceX = nx * perspective + waveTiltX;
             const float surfaceY = ny + waveTiltY * 0.35f;
-            const float tiltSlope = (nx * _tiltX + (ny - 0.5f) * _tiltY) * gain;
             const float wave =
-                std::sin(surfaceX * 3.1f + _phase * 2.0f * kPi + surfaceY * 1.6f + tiltSlope * 1.4f) *
-                (0.18f + ny * 0.26f);
+                std::sin(surfaceX * 3.1f + _phase * 2.0f * kPi + surfaceY * 1.6f) * (0.18f + ny * 0.26f);
             const float band = 1.0f - std::abs(fract((surfaceY + wave) * 4.0f - _phase * 1.15f) - 0.5f) * 2.0f;
             const float depthLight = 0.16f + ny * 0.38f;
-            const float bright = clampf(depthLight + band * (0.28f + ny * 0.34f) + std::abs(tiltSlope) * 0.10f, 0.05f, 1.0f);
-            outFrame[y * kMatrixFxWidth + x] = paletteColor(0.08f + surfaceY * 0.54f + wave * 0.24f + tiltShift, bright);
+            const float bright = clampf(depthLight + band * (0.28f + ny * 0.34f), 0.05f, 1.0f);
+            outFrame[y * kMatrixFxWidth + x] = scaleColor(palette(0.48f + surfaceY * 0.28f + wave * 0.25f), bright);
         }
     }
 }
@@ -622,6 +644,31 @@ void MatrixFxEngine3D::renderBreathingTerrain(uint32_t* outFrame) {
             const float slopeLight = clampf((nx * lightX + ny * lightY) * 0.20f + 0.20f, 0.0f, 0.40f);
             const float bright = clampf(0.05f + height * 0.58f + breath * 0.20f + slopeLight, 0.04f, 0.98f);
             outFrame[y * kMatrixFxWidth + x] = paletteColor(height * 0.82f + _phase * 0.08f, bright);
+        }
+    }
+}
+
+void MatrixFxEngine3D::renderPaletteWave(uint32_t* outFrame) {
+    const float gain = reactiveGain();
+    const float waveTiltX = -_tiltX * 1.25f * gain;
+    const float waveTiltY = -_tiltY * 1.05f * gain;
+    const float tiltShift = (_tiltX * 0.16f + _tiltY * 0.11f) * gain;
+
+    for (uint8_t y = 0; y < kMatrixFxHeight; ++y) {
+        for (uint8_t x = 0; x < kMatrixFxWidth; ++x) {
+            const float nx = (static_cast<float>(x) - 3.5f) / 3.5f;
+            const float ny = static_cast<float>(y) / 7.0f;
+            const float perspective = 0.55f + ny * 1.65f;
+            const float surfaceX = nx * perspective + waveTiltX;
+            const float surfaceY = ny + waveTiltY * 0.35f;
+            const float tiltSlope = (nx * _tiltX + (ny - 0.5f) * _tiltY) * gain;
+            const float wave =
+                std::sin(surfaceX * 3.1f + _phase * 2.0f * kPi + surfaceY * 1.6f + tiltSlope * 1.4f) *
+                (0.18f + ny * 0.26f);
+            const float band = 1.0f - std::abs(fract((surfaceY + wave) * 4.0f - _phase * 1.15f) - 0.5f) * 2.0f;
+            const float depthLight = 0.16f + ny * 0.38f;
+            const float bright = clampf(depthLight + band * (0.28f + ny * 0.34f) + std::abs(tiltSlope) * 0.10f, 0.05f, 1.0f);
+            outFrame[y * kMatrixFxWidth + x] = paletteColor(0.08f + surfaceY * 0.54f + wave * 0.24f + tiltShift, bright);
         }
     }
 }

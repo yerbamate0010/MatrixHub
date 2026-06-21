@@ -52,6 +52,7 @@ private:
     void renderPrismSweep(uint32_t* outFrame);
     void renderRainGlass(uint32_t* outFrame);
     void renderBreathingTerrain(uint32_t* outFrame);
+    void renderPaletteWave(uint32_t* outFrame);
 
     void clearFrame(uint32_t* outFrame, uint32_t color = 0) const;
     void fadeFrame(uint32_t* outFrame, uint8_t amount) const;

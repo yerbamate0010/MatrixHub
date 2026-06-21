@@ -33,12 +33,13 @@ enum class Native3DMode : uint8_t {
     LavaLamp = 10,
     PrismSweep = 11,
     RainGlass = 12,
-    BreathingTerrain = 13
+    BreathingTerrain = 13,
+    PaletteWave = 14
 };
 
 constexpr uint8_t kEffectEngineMax = static_cast<uint8_t>(EffectEngine::Native3D);
 constexpr uint8_t kReactiveProviderMax = static_cast<uint8_t>(ReactiveProvider::Imu);
-constexpr uint8_t kNative3DModeMax = static_cast<uint8_t>(Native3DMode::BreathingTerrain);
+constexpr uint8_t kNative3DModeMax = static_cast<uint8_t>(Native3DMode::PaletteWave);
 constexpr uint8_t kDefaultReactivityGain = 80;
 constexpr uint8_t kMaxReactivityGain = 200;
 
