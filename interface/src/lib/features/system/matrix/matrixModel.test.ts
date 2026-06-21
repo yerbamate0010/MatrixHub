@@ -10,6 +10,18 @@ import {
 	MATRIX_DISPLAY_SETTING_KEYS,
 	MATRIX_EFFECT_SETTING_KEYS,
 	MATRIX_DATA_VISUALIZATION_SETTING_KEYS,
+	MATRIX_DATA_METRIC_CO2,
+	MATRIX_DATA_METRIC_HUMIDITY,
+	MATRIX_DATA_METRIC_SIGNAL_QUALITY,
+	MATRIX_DATA_METRIC_TEMPERATURE,
+	MATRIX_DATA_METRIC_RSSI,
+	MATRIX_DATA_SOURCE_BLE,
+	MATRIX_DATA_SOURCE_SCD4X,
+	MATRIX_DATA_SOURCE_WIFI_CSI,
+	MATRIX_DATA_SOURCE_WIFI_RSSI,
+	MATRIX_DATA_VIZ_MODE_GAUGE,
+	MATRIX_DATA_VIZ_MODE_HEATMAP,
+	MATRIX_DATA_VIZ_MODE_TREND,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
 	MATRIX_NATIVE_3D_EFFECT_IDS,
@@ -23,6 +35,8 @@ import {
 	getPreferredMatrixEffectCategory,
 	getPreferredMatrixEffectSpeedScale,
 	getMatrixCustomIcons,
+	getDefaultMatrixDataVisualizationMetric,
+	getMatrixDataVisualizationPreset,
 	matrixEffectCategoryContainsEffect,
 	normalizeMatrixColor,
 	normalizeMatrixCustomIcons,
@@ -91,6 +105,52 @@ describe('matrixModel', () => {
 		expect(MATRIX_EFFECT_SETTING_KEYS).toContain('effect_enabled');
 		expect(MATRIX_DATA_VISUALIZATION_SETTING_KEYS).toContain('data_visualization_source');
 		expect(MATRIX_DISPLAY_SETTING_KEYS).toContain('menu_enabled');
+	});
+
+	it('provides calibrated presets for data visualization source and metric choices', () => {
+		expect(getDefaultMatrixDataVisualizationMetric(MATRIX_DATA_SOURCE_SCD4X)).toBe(
+			MATRIX_DATA_METRIC_CO2
+		);
+		expect(getDefaultMatrixDataVisualizationMetric(MATRIX_DATA_SOURCE_BLE)).toBe(
+			MATRIX_DATA_METRIC_TEMPERATURE
+		);
+		expect(getDefaultMatrixDataVisualizationMetric(MATRIX_DATA_SOURCE_WIFI_RSSI)).toBe(
+			MATRIX_DATA_METRIC_SIGNAL_QUALITY
+		);
+
+		expect(
+			getMatrixDataVisualizationPreset(MATRIX_DATA_SOURCE_SCD4X, MATRIX_DATA_METRIC_HUMIDITY)
+		).toMatchObject({
+			data_visualization_mode: MATRIX_DATA_VIZ_MODE_GAUGE,
+			data_visualization_min: 20,
+			data_visualization_max: 80,
+			data_visualization_color_max: 0x00b7ff
+		});
+		expect(
+			getMatrixDataVisualizationPreset(MATRIX_DATA_SOURCE_WIFI_RSSI, MATRIX_DATA_METRIC_RSSI)
+		).toMatchObject({
+			data_visualization_mode: MATRIX_DATA_VIZ_MODE_TREND,
+			data_visualization_min: -90,
+			data_visualization_max: -35
+		});
+		expect(
+			getMatrixDataVisualizationPreset(
+				MATRIX_DATA_SOURCE_WIFI_RSSI,
+				MATRIX_DATA_METRIC_SIGNAL_QUALITY
+			)
+		).toMatchObject({
+			data_visualization_mode: MATRIX_DATA_VIZ_MODE_TREND,
+			data_visualization_min: 0,
+			data_visualization_max: 100
+		});
+		expect(
+			getMatrixDataVisualizationPreset(MATRIX_DATA_SOURCE_WIFI_CSI, MATRIX_DATA_METRIC_SIGNAL_QUALITY)
+		).toMatchObject({
+			data_visualization_mode: MATRIX_DATA_VIZ_MODE_HEATMAP,
+			data_visualization_min: 0,
+			data_visualization_max: 100,
+			data_visualization_brightness_max: 220
+		});
 	});
 
 	it('keeps the matrix effect speed range aligned with firmware', () => {

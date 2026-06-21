@@ -11,6 +11,19 @@ export type MatrixDataVisualizationMetric = 0 | 1 | 2 | 3 | 4 | 5;
 export type MatrixDataVisualizationMode = 0 | 1 | 2 | 3;
 export type MatrixDataVisualizationStaleBehavior = 0 | 1 | 2;
 
+export type MatrixDataVisualizationPreset = Pick<
+	MatrixSettings,
+	| 'data_visualization_mode'
+	| 'data_visualization_min'
+	| 'data_visualization_max'
+	| 'data_visualization_color_min'
+	| 'data_visualization_color_mid'
+	| 'data_visualization_color_max'
+	| 'data_visualization_brightness_min'
+	| 'data_visualization_brightness_max'
+	| 'data_visualization_smoothing'
+>;
+
 export type MatrixEffectCategoryDefinition = {
 	value: MatrixEffectCategoryId;
 	effectIds: number[];
@@ -42,8 +55,8 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	data_visualization_mode: 0,
 	data_visualization_min: 400,
 	data_visualization_max: 2000,
-	data_visualization_color_min: 0x0040ff,
-	data_visualization_color_mid: 0x00ff80,
+	data_visualization_color_min: 0x00ff80,
+	data_visualization_color_mid: 0xffd166,
 	data_visualization_color_max: 0xff3000,
 	data_visualization_brightness_min: 12,
 	data_visualization_brightness_max: 180,
@@ -148,6 +161,129 @@ export const MATRIX_DATA_VIZ_MODE_TREND = 3 satisfies MatrixDataVisualizationMod
 export const MATRIX_DATA_STALE_DIM = 0 satisfies MatrixDataVisualizationStaleBehavior;
 export const MATRIX_DATA_STALE_GRAY = 1 satisfies MatrixDataVisualizationStaleBehavior;
 export const MATRIX_DATA_STALE_BLANK = 2 satisfies MatrixDataVisualizationStaleBehavior;
+
+const MATRIX_DATA_PRESET_CO2 = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_GAUGE,
+	data_visualization_min: 400,
+	data_visualization_max: 2000,
+	data_visualization_color_min: 0x00ff80,
+	data_visualization_color_mid: 0xffd166,
+	data_visualization_color_max: 0xff3000,
+	data_visualization_brightness_min: 12,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 50
+} as const satisfies MatrixDataVisualizationPreset;
+
+const MATRIX_DATA_PRESET_TEMPERATURE = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_GAUGE,
+	data_visualization_min: 16,
+	data_visualization_max: 32,
+	data_visualization_color_min: 0x1e88e5,
+	data_visualization_color_mid: 0x00ff80,
+	data_visualization_color_max: 0xff3000,
+	data_visualization_brightness_min: 12,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 50
+} as const satisfies MatrixDataVisualizationPreset;
+
+const MATRIX_DATA_PRESET_HUMIDITY = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_GAUGE,
+	data_visualization_min: 20,
+	data_visualization_max: 80,
+	data_visualization_color_min: 0xffb000,
+	data_visualization_color_mid: 0x00ff80,
+	data_visualization_color_max: 0x00b7ff,
+	data_visualization_brightness_min: 12,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 50
+} as const satisfies MatrixDataVisualizationPreset;
+
+const MATRIX_DATA_PRESET_RSSI_TREND = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_TREND,
+	data_visualization_min: -90,
+	data_visualization_max: -35,
+	data_visualization_color_min: 0xff3000,
+	data_visualization_color_mid: 0xffd166,
+	data_visualization_color_max: 0x00ff80,
+	data_visualization_brightness_min: 10,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 60
+} as const satisfies MatrixDataVisualizationPreset;
+
+const MATRIX_DATA_PRESET_SIGNAL_QUALITY = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_TREND,
+	data_visualization_min: 0,
+	data_visualization_max: 100,
+	data_visualization_color_min: 0xff3000,
+	data_visualization_color_mid: 0xffd166,
+	data_visualization_color_max: 0x00ff80,
+	data_visualization_brightness_min: 10,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 55
+} as const satisfies MatrixDataVisualizationPreset;
+
+const MATRIX_DATA_PRESET_CSI = {
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_HEATMAP,
+	data_visualization_min: 0,
+	data_visualization_max: 100,
+	data_visualization_color_min: 0x0040ff,
+	data_visualization_color_mid: 0x00ff80,
+	data_visualization_color_max: 0xff3000,
+	data_visualization_brightness_min: 8,
+	data_visualization_brightness_max: 220,
+	data_visualization_smoothing: 35
+} as const satisfies MatrixDataVisualizationPreset;
+
+export function getDefaultMatrixDataVisualizationMetric(
+	source: MatrixDataVisualizationSource
+): MatrixDataVisualizationMetric {
+	switch (source) {
+		case MATRIX_DATA_SOURCE_BLE:
+			return MATRIX_DATA_METRIC_TEMPERATURE;
+		case MATRIX_DATA_SOURCE_WIFI_RSSI:
+			return MATRIX_DATA_METRIC_SIGNAL_QUALITY;
+		case MATRIX_DATA_SOURCE_WIFI_CSI:
+			return MATRIX_DATA_METRIC_CSI_MOTION;
+		case MATRIX_DATA_SOURCE_SCD4X:
+		default:
+			return MATRIX_DATA_METRIC_CO2;
+	}
+}
+
+export function getMatrixDataVisualizationPreset(
+	source: MatrixDataVisualizationSource,
+	metric: MatrixDataVisualizationMetric
+): MatrixDataVisualizationPreset {
+	switch (source) {
+		case MATRIX_DATA_SOURCE_BLE:
+			switch (metric) {
+				case MATRIX_DATA_METRIC_HUMIDITY:
+					return MATRIX_DATA_PRESET_HUMIDITY;
+				case MATRIX_DATA_METRIC_RSSI:
+					return MATRIX_DATA_PRESET_RSSI_TREND;
+				case MATRIX_DATA_METRIC_TEMPERATURE:
+				default:
+					return MATRIX_DATA_PRESET_TEMPERATURE;
+			}
+		case MATRIX_DATA_SOURCE_WIFI_RSSI:
+			return metric === MATRIX_DATA_METRIC_RSSI
+				? MATRIX_DATA_PRESET_RSSI_TREND
+				: MATRIX_DATA_PRESET_SIGNAL_QUALITY;
+		case MATRIX_DATA_SOURCE_WIFI_CSI:
+			return MATRIX_DATA_PRESET_CSI;
+		case MATRIX_DATA_SOURCE_SCD4X:
+		default:
+			switch (metric) {
+				case MATRIX_DATA_METRIC_TEMPERATURE:
+					return MATRIX_DATA_PRESET_TEMPERATURE;
+				case MATRIX_DATA_METRIC_HUMIDITY:
+					return MATRIX_DATA_PRESET_HUMIDITY;
+				case MATRIX_DATA_METRIC_CO2:
+				default:
+					return MATRIX_DATA_PRESET_CO2;
+			}
+	}
+}
 
 export const MATRIX_EFFECT_IDS = Array.from(
 	{ length: MATRIX_EFFECT_MODE_MAX + 1 },

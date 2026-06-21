@@ -49,8 +49,8 @@ namespace UI {
         constexpr uint8_t DEFAULT_DATA_VISUALIZATION_MODE = 0;        // Gauge
         constexpr float DEFAULT_DATA_VISUALIZATION_MIN = 400.0f;
         constexpr float DEFAULT_DATA_VISUALIZATION_MAX = 2000.0f;
-        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MIN = 0x0040FF;
-        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MID = 0x00FF80;
+        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MIN = 0x00FF80;
+        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MID = 0xFFD166;
         constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MAX = 0xFF3000;
         constexpr uint8_t DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MIN = 12;
         constexpr uint8_t DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MAX = 180;

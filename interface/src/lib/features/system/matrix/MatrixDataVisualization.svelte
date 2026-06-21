@@ -39,6 +39,8 @@
 		MATRIX_DATA_VIZ_MODE_HEATMAP,
 		MATRIX_DATA_VIZ_MODE_TREND,
 		fromMatrixHexColor,
+		getDefaultMatrixDataVisualizationMetric,
+		getMatrixDataVisualizationPreset,
 		toMatrixHexColor,
 		type MatrixDataVisualizationMetric,
 		type MatrixDataVisualizationMode,
@@ -59,8 +61,8 @@
 	let bleLoadError = $state('');
 	let calibrationBusy = $state(false);
 	let calibrationMessage = $state('');
-	let minHex = $state('#0040ff');
-	let midHex = $state('#00ff80');
+	let minHex = $state('#00ff80');
+	let midHex = $state('#ffd166');
 	let maxHex = $state('#ff3000');
 
 	const controlsDisabled = $derived(!canManage || !store.settings.data_visualization_enabled);
@@ -140,25 +142,18 @@
 		}))
 	]);
 
+	function applyPreset(source: MatrixDataVisualizationSource, metric: MatrixDataVisualizationMetric) {
+		const preset = getMatrixDataVisualizationPreset(source, metric);
+		Object.assign(store.settings, preset);
+		minHex = toMatrixHexColor(preset.data_visualization_color_min);
+		midHex = toMatrixHexColor(preset.data_visualization_color_mid);
+		maxHex = toMatrixHexColor(preset.data_visualization_color_max);
+	}
+
 	function setDefaultMetricForSource(source: MatrixDataVisualizationSource) {
-		switch (source) {
-			case MATRIX_DATA_SOURCE_BLE:
-				store.settings.data_visualization_metric = MATRIX_DATA_METRIC_TEMPERATURE;
-				break;
-			case MATRIX_DATA_SOURCE_WIFI_RSSI:
-				store.settings.data_visualization_metric = MATRIX_DATA_METRIC_RSSI;
-				break;
-			case MATRIX_DATA_SOURCE_WIFI_CSI:
-				store.settings.data_visualization_metric = MATRIX_DATA_METRIC_CSI_MOTION;
-				store.settings.data_visualization_mode = MATRIX_DATA_VIZ_MODE_HEATMAP;
-				store.settings.data_visualization_min = 0;
-				store.settings.data_visualization_max = 100;
-				break;
-			case MATRIX_DATA_SOURCE_SCD4X:
-			default:
-				store.settings.data_visualization_metric = MATRIX_DATA_METRIC_CO2;
-				break;
-		}
+		const metric = getDefaultMatrixDataVisualizationMetric(source);
+		store.settings.data_visualization_metric = metric;
+		applyPreset(source, metric);
 	}
 
 	function handleEnabledChange(e: Event) {
@@ -180,9 +175,11 @@
 
 	function handleMetricChange(e: Event) {
 		if (!canManage) return;
-		store.settings.data_visualization_metric = Number(
+		const metric = Number(
 			(e.currentTarget as HTMLSelectElement).value
 		) as MatrixDataVisualizationMetric;
+		store.settings.data_visualization_metric = metric;
+		applyPreset(selectedSource, metric);
 	}
 
 	function handleModeChange(e: Event) {
