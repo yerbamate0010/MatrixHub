@@ -1,9 +1,9 @@
 # MatrixHub Documentation
 
-This directory keeps the current, maintained documentation for MatrixHub. It is
-intentionally small: dated plans, checkpoint patches, diagnostic captures, and
-screenshot-heavy walkthroughs are kept out of docs so the remaining files can
-act as source-of-truth references.
+This directory keeps the maintained documentation for MatrixHub. It is
+intentionally small: dated implementation prompts, one-off validation reports,
+diagnostic captures, and screenshot-heavy walkthroughs should live outside
+`docs/` unless they are promoted into a maintained reference.
 
 ## Start Here
 
@@ -15,6 +15,27 @@ act as source-of-truth references.
   notes without static screenshot walkthroughs.
 - [Build speed report](main_docs/BUILD_SPEED_OPTIMIZATION.md) - measured
   PlatformIO build optimization notes for this Raspberry Pi 5 host.
+
+## Preserved Build Assets
+
+The following archives are intentionally kept in `docs/` because they were
+provided as build/device support material:
+
+- `esp32s3_8x8_Matrix_server_tls.zip`
+- `tools.zip`
+
+Do not delete or rewrite them during documentation cleanup unless the build and
+device provisioning flow has been updated to use a different source.
+
+## Future Work
+
+- Improve Wi-Fi CSI matrix visualization only if it becomes a product priority.
+  The current 8x8 display path is an MVP. A stronger future design should use a
+  display-only signal pipeline: fast EMA versus slow EMA, short median/Hampel
+  filtering for impulse noise, top-percentile clipping for static CSI peaks,
+  and persistence over several frames so small fast jitter is muted while
+  larger sustained room changes become visible. Keep this separate from CSI
+  alarm calibration and `wifi_csi_motion`.
 
 ## Maintenance Rules
 
