@@ -82,10 +82,14 @@
 	{isOpen}
 	onClose={handleCancel}
 	{title}
-	widthClass="w-full max-w-xs sm:max-w-sm md:max-w-md"
-	paddingClass="p-4"
-	bodyClass="min-h-0 flex-1 overflow-y-auto p-1"
-	actionsClass="flex justify-end gap-2"
+	widthClass="w-full max-w-[min(30rem,calc(100vw-2rem))]"
+	paddingClass="p-0"
+	headerClass="px-5 pt-5"
+	titleClass="text-base font-semibold text-base-content text-start break-words"
+	bodyClass="min-h-0 flex-1 overflow-y-auto px-5 pt-3 text-sm leading-relaxed"
+	actionsClass="flex flex-col-reverse gap-2 px-5 pb-5 pt-4 sm:flex-row sm:justify-end"
+	showHeaderDivider={false}
+	showActionsDivider={false}
 >
 	{#if message}
 		<p class="text-base-content mb-3 text-start break-words whitespace-pre-line">{message}</p>
@@ -106,13 +110,15 @@
 		<FormButton
 			label={finalLabels.cancel.label}
 			icon={finalLabels.cancel.icon}
-			class="btn-neutral"
+			variant="neutral"
+			class="w-full sm:w-auto"
 			onclick={handleCancel}
 		/>
 		<FormButton
 			label={finalLabels.confirm.label}
 			icon={finalLabels.confirm.icon}
-			class="btn-primary"
+			variant="primary"
+			class="w-full sm:w-auto"
 			onclick={handleConfirm}
 		/>
 	{/snippet}

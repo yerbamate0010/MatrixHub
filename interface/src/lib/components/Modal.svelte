@@ -11,6 +11,7 @@
 		widthClass?: string; // e.g. "max-w-lg", "max-w-3xl"
 		paddingClass?: string;
 		backdropClass?: string;
+		ariaLabel?: string;
 		closeOnOutsideClick?: boolean;
 		headerClass?: string;
 		titleClass?: string;
@@ -32,6 +33,7 @@
 		widthClass = 'max-w-lg',
 		paddingClass = 'p-4',
 		backdropClass = 'bg-black/50 backdrop-blur-sm',
+		ariaLabel = undefined,
 		closeOnOutsideClick = true,
 		headerClass = '',
 		titleClass = 'text-base-content text-start text-2xl font-bold break-words',
@@ -68,7 +70,15 @@
 	}
 </script>
 
-<ModalBase {isOpen} {onClose} {widthClass} {paddingClass} {backdropClass} {closeOnOutsideClick}>
+<ModalBase
+	{isOpen}
+	{onClose}
+	{widthClass}
+	{paddingClass}
+	{backdropClass}
+	ariaLabel={ariaLabel ?? title}
+	{closeOnOutsideClick}
+>
 	{#if header}
 		<div class={headerClass}>
 			{@render header()}

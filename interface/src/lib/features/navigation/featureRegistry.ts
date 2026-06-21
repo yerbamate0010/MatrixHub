@@ -63,6 +63,7 @@ type FeatureLeafDefinition = {
 	type: 'leaf';
 	id: NavigationLeafId;
 	href: string;
+	activePathPrefixes?: string[];
 	icon: Component;
 	label: FeatureLabelResolver;
 	guards?: NavigationGuard[];
@@ -312,6 +313,7 @@ const registry = [
 		type: 'leaf',
 		id: 'matrix_led',
 		href: '/system/matrix',
+		activePathPrefixes: ['/system/matrix'],
 		icon: menuIcons.GridDots,
 		label: m.menu_matrix_led
 	},
@@ -460,11 +462,22 @@ export function createHelpLinkGroups(
 }
 
 export function resolveFeatureTitle(pathname: string, locale?: string): string | null {
-	const leaf = registry.find((entry) => entry.type === 'leaf' && entry.href === pathname);
+	const leaf = registry.find(
+		(entry) => entry.type === 'leaf' && isFeaturePathActive(entry, pathname)
+	);
 	if (!leaf || leaf.type !== 'leaf') {
 		return null;
 	}
 	return resolveLabel(leaf.label, locale);
+}
+
+function isFeaturePathActive(entry: FeatureLeafDefinition, pathname: string) {
+	return (
+		entry.href === pathname ||
+		(entry.activePathPrefixes ?? []).some(
+			(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+		)
+	);
 }
 
 export function createNavigationTree(
@@ -472,8 +485,6 @@ export function createNavigationTree(
 	locale?: string,
 	currentPath?: string
 ) {
-	const isActive = (href: string) => currentPath === href;
-
 	return registry
 		.filter((entry) => entry.type === 'group' || entry.type === 'leaf')
 		.filter((entry) => entry.type === 'group' || isTopLevelLeaf(entry.id))
@@ -484,7 +495,7 @@ export function createNavigationTree(
 					icon: entry.icon,
 					href: entry.href,
 					feature: true,
-					active: isActive(entry.href),
+					active: currentPath ? isFeaturePathActive(entry, currentPath) : false,
 					disabledReason: resolveDisabledReason(entry.guards, context, locale) ?? undefined
 				};
 			}
@@ -496,7 +507,7 @@ export function createNavigationTree(
 					icon: child.icon,
 					href: child.href,
 					feature: true,
-					active: isActive(child.href),
+					active: currentPath ? isFeaturePathActive(child, currentPath) : false,
 					disabledReason: resolveDisabledReason(child.guards, context, locale) ?? undefined
 				};
 			});

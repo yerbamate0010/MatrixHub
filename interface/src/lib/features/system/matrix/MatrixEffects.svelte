@@ -257,8 +257,24 @@
 		{:else}
 			<ContentBox class="flex items-center justify-between">
 				<div>
-					<span class="font-bold text-sm">{m.matrix_effects_enable()}</span>
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="font-bold text-sm">{m.matrix_effects_enable()}</span>
+						<span
+							class="badge badge-sm {store.settings.effect_enabled
+								? 'badge-success'
+								: 'badge-ghost'}"
+						>
+							{store.settings.effect_enabled
+								? m.imu_state_enabled({ locale: i18n.languageTag })
+								: m.imu_state_disabled({ locale: i18n.languageTag })}
+						</span>
+					</div>
 					<p class="text-xs text-base-content/70">{m.matrix_effects_desc()}</p>
+					{#if !store.settings.effect_enabled}
+						<p class="mt-1 text-xs text-base-content/60">
+							{m.matrix_effects_disabled_hint()}
+						</p>
+					{/if}
 				</div>
 				<FormToggle
 					label=""
@@ -269,13 +285,7 @@
 				/>
 			</ContentBox>
 
-			<!-- Effect Settings (Greyed out if disabled) -->
-			<div
-				class="flex flex-col gap-1 transition-opacity duration-200 {store.settings.effect_enabled
-					? 'opacity-100'
-					: 'opacity-50'}"
-				aria-disabled={!store.settings.effect_enabled}
-			>
+			<div class="flex flex-col gap-1" aria-disabled={!store.settings.effect_enabled}>
 				<ContentBox>
 					<FormSelect
 						label={m.matrix_effect_category()}

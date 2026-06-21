@@ -62,22 +62,27 @@
 	{isOpen}
 	onClose={handleDismiss}
 	{title}
-	widthClass="min-w-fit max-w-md"
-	paddingClass="p-4"
-	bodyClass="min-h-0 flex-1 overflow-y-auto"
-	actionsClass="flex justify-end gap-2"
+	widthClass="w-full max-w-[min(30rem,calc(100vw-2rem))]"
+	paddingClass="p-0"
+	headerClass="px-5 pt-5"
+	titleClass="text-base font-semibold text-base-content text-start break-words"
+	bodyClass="min-h-0 flex-1 overflow-y-auto px-5 pt-3 text-sm leading-relaxed"
+	actionsClass="flex justify-end px-5 pb-5 pt-4"
+	showHeaderDivider={false}
+	showActionsDivider={false}
 >
 	{#if messageHtml}
-		<p class="text-base-content mb-1 text-start">{@html messageHtml}</p>
+		<p class="text-base-content text-start">{@html messageHtml}</p>
 	{:else}
-		<p class="text-base-content mb-1 text-start whitespace-pre-line">{message}</p>
+		<p class="text-base-content text-start whitespace-pre-line">{message}</p>
 	{/if}
 
 	{#snippet actions()}
 		<FormButton
 			label={dismissButton.label}
 			icon={dismissButton.icon}
-			class="btn-warning text-warning-content"
+			variant="primary"
+			class="w-full sm:w-auto"
 			onclick={handleDismiss}
 		/>
 	{/snippet}

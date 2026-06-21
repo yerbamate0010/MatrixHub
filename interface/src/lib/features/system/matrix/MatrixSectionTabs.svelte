@@ -8,17 +8,17 @@
 	const sections = $derived([
 		{
 			href: '/system/matrix',
-			label: m.menu_matrix_led(),
+			label: m.matrix_tab_display(),
 			icon: GridDots
 		},
 		{
 			href: '/system/matrix/alarms',
-			label: m.menu_matrix_alarms(),
+			label: m.matrix_tab_alarms(),
 			icon: Bell
 		},
 		{
 			href: '/system/matrix/effects',
-			label: m.menu_matrix_effects(),
+			label: m.matrix_tab_effects(),
 			icon: Wand
 		}
 	]);

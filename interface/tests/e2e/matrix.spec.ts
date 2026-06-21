@@ -98,8 +98,8 @@ test.describe('Matrix LED settings', () => {
 			timeout: 30_000
 		});
 		const matrixTabs = page.getByLabel('Matrix LED sections');
-		await expect(matrixTabs.getByRole('link', { name: 'Matrix Alarms' })).toBeVisible();
-		await expect(matrixTabs.getByRole('link', { name: 'LED Effects' })).toBeVisible();
+		await expect(matrixTabs.getByRole('link', { name: 'Alarms' })).toBeVisible();
+		await expect(matrixTabs.getByRole('link', { name: 'Effects' })).toBeVisible();
 
 		const brightnessSlider = page.getByLabel('Brightness');
 		await brightnessSlider.evaluate((input) => {
@@ -192,19 +192,18 @@ test.describe('Matrix LED settings', () => {
 			range.dispatchEvent(new Event('input', { bubbles: true }));
 		});
 
-		const dismissedDialogs: string[] = [];
-		page.once('dialog', async (dialog) => {
-			dismissedDialogs.push(dialog.message());
-			await dialog.dismiss();
-		});
 		await page.getByRole('link', { name: 'Charts' }).click();
+		const unsavedDialog = page.getByRole('dialog', { name: 'Unsaved changes' });
+		await expect(unsavedDialog).toBeVisible();
+		await expect(unsavedDialog.getByText('You have unsaved changes')).toBeVisible();
+		await unsavedDialog.getByRole('button', { name: 'Stay' }).click();
 		await expect(page).toHaveURL(/\/system\/matrix$/);
-		expect(dismissedDialogs[0]).toContain('unsaved changes');
 
-		page.once('dialog', async (dialog) => {
-			await dialog.accept();
-		});
 		await page.getByRole('link', { name: 'Charts' }).click();
+		await page
+			.getByRole('dialog', { name: 'Unsaved changes' })
+			.getByRole('button', { name: 'Leave page' })
+			.click();
 		await expect(page).toHaveURL(/\/charts$/);
 	});
 });

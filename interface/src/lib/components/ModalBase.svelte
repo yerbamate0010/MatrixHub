@@ -9,6 +9,7 @@
 		widthClass?: string;
 		paddingClass?: string;
 		backdropClass?: string;
+		ariaLabel?: string;
 		closeOnOutsideClick?: boolean;
 		children?: import('svelte').Snippet;
 	}
@@ -19,6 +20,7 @@
 		widthClass = 'max-w-lg',
 		paddingClass = 'p-4',
 		backdropClass = 'bg-black/50 backdrop-blur-sm',
+		ariaLabel = undefined,
 		closeOnOutsideClick = true,
 		children
 	}: Props = $props();
@@ -34,6 +36,7 @@
 		transition:fade={{ duration: 200 }}
 		role="dialog"
 		aria-modal="true"
+		aria-label={ariaLabel}
 		onclick={(e: MouseEvent) => {
 			if (closeOnOutsideClick && e.target === e.currentTarget) onClose();
 		}}
@@ -43,7 +46,7 @@
 		use:portal={'body'}
 	>
 		<div
-			class="bg-base-100 shadow-secondary/30 rounded-box flex max-h-full w-full flex-col justify-between shadow-lg overflow-hidden {widthClass} {paddingClass}"
+			class="border border-base-300/70 bg-base-100 shadow-secondary/30 rounded-box flex max-h-full w-full flex-col justify-between overflow-hidden shadow-xl {widthClass} {paddingClass}"
 			transition:fly={{ y: 20, duration: 300 }}
 			role="document"
 		>

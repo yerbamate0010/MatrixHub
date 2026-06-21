@@ -126,6 +126,7 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_brightness: () => 'Brightness',
 		matrix_rotation: () => 'Screen Rotation',
 		matrix_auto: () => 'Auto',
+		matrix_auto_desc: () => 'Use IMU orientation',
 		matrix_icon_editor_title: () => 'Icon Editor',
 		matrix_icon_editor_pixel: ({ index }: { index: string }) => `Pixel ${index}`,
 		matrix_icon_editor_select_color: ({ color }: { color: string }) => `Select ${color}`,
@@ -133,6 +134,7 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_effects_title: () => 'Visual Effects',
 		matrix_effects_enable: () => 'Enable Effects',
 		matrix_effects_desc: () => 'Runs when idle',
+		matrix_effects_disabled_hint: () => 'Effect setup is kept',
 		matrix_effect_category: () => 'Category',
 		matrix_effect_category_recommended: () => 'Recommended',
 		matrix_effect_category_calm: () => 'Calm',
@@ -154,7 +156,9 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_color_desc: () => 'Used by effects',
 		matrix_effect_color_primary: () => 'Primary color',
 		matrix_effect_color_secondary: () => 'Secondary color',
-		matrix_effect_color_tertiary: () => 'Tertiary color'
+		matrix_effect_color_tertiary: () => 'Tertiary color',
+		imu_state_enabled: () => 'Enabled',
+		imu_state_disabled: () => 'Disabled'
 	};
 });
 

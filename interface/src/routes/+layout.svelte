@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { beforeNavigate } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Modals } from 'svelte-modals';
 	import { appFeatures } from '$lib/stores/appFeatures.svelte';
@@ -11,12 +11,15 @@
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { unsavedChanges } from '$lib/stores/unsavedChanges.svelte';
+	import { confirm } from '$lib/utils/ui/dialogs';
 	import { markAppPerformance, measureAppPerformance } from '$lib/utils/performanceMarks';
 	import '../app.css';
 	import AppShell from './AppShell.svelte';
 	import Login from './login.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import * as m from '$lib/paraglide/messages.js';
+	import ArrowRight from '~icons/tabler/arrow-right';
+	import X from '~icons/tabler/x';
 
 	// Eagerly initialize the theme store for the whole app.
 	void themeStore;
@@ -28,12 +31,41 @@
 
 	let { children }: Props = $props();
 	const session = useSessionAccess();
+	let allowUnsavedNavigation = false;
 
 	if (browser) {
 		beforeNavigate((navigation) => {
+			if (allowUnsavedNavigation) {
+				allowUnsavedNavigation = false;
+				return;
+			}
 			if (!unsavedChanges.hasChanges) return;
-			if (window.confirm(m.unsaved_changes_confirm({ locale: i18n.languageTag }))) return;
+			const target = navigation.to;
+			if (!target || navigation.willUnload || target.route.id === null) return;
+
 			navigation.cancel();
+			confirm({
+				title: m.unsaved_changes_title({ locale: i18n.languageTag }),
+				message: m.unsaved_changes_confirm({ locale: i18n.languageTag }),
+				labels: {
+					cancel: {
+						label: m.unsaved_changes_stay({ locale: i18n.languageTag }),
+						icon: X
+					},
+					confirm: {
+						label: m.unsaved_changes_leave({ locale: i18n.languageTag }),
+						icon: ArrowRight
+					}
+				},
+				onConfirm: () => {
+					allowUnsavedNavigation = true;
+					if (navigation.type === 'popstate') {
+						history.go(navigation.delta);
+						return;
+					}
+					void goto(target.url);
+				}
+			});
 		});
 	}
 
