@@ -719,6 +719,7 @@ export interface CsiRuntimeMetrics {
   frontend_consumer_active: boolean;
   alarm_consumer_active: boolean;
   boot_consumer_active: boolean;
+  matrix_visualization_consumer_active: boolean;
   queue_depth: number;
   queue_capacity: number;
   queue_drops_total: number;

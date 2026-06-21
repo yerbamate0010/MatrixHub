@@ -165,7 +165,8 @@ void ServiceRegistry::initializeMatrixServices() {
                                                                    _server,
                                                                    _framework->getSecurityManager(),
                                                                    _powerManager.get(),
-                                                                   _matrixSettings.get());
+                                                                   _matrixSettings.get(),
+                                                                   _csiService.get());
     SERVICE_REGISTRY_INIT_RUNTIME::beginMatrixApi(matrixApi);
 }
 

@@ -5,6 +5,11 @@ export type MatrixEffectEngine = 0 | 1;
 export type MatrixEffectReactivityProvider = 0 | 1;
 export type MatrixEffectSpeedScale = 'ms' | 's' | 'm' | 'h';
 export type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seasonal' | 'all';
+export type MatrixBackgroundMode = 0 | 1;
+export type MatrixDataVisualizationSource = 0 | 1 | 2 | 3;
+export type MatrixDataVisualizationMetric = 0 | 1 | 2 | 3 | 4 | 5;
+export type MatrixDataVisualizationMode = 0 | 1 | 2 | 3;
+export type MatrixDataVisualizationStaleBehavior = 0 | 1 | 2;
 
 export type MatrixEffectCategoryDefinition = {
 	value: MatrixEffectCategoryId;
@@ -30,6 +35,21 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	effect_color_3: 0x0000ff,
 	effect_reactivity_provider: 0,
 	effect_reactivity_gain: 80,
+	background_mode: 0,
+	data_visualization_enabled: false,
+	data_visualization_source: 0,
+	data_visualization_metric: 0,
+	data_visualization_mode: 0,
+	data_visualization_min: 400,
+	data_visualization_max: 2000,
+	data_visualization_color_min: 0x0040ff,
+	data_visualization_color_mid: 0x00ff80,
+	data_visualization_color_max: 0xff3000,
+	data_visualization_brightness_min: 12,
+	data_visualization_brightness_max: 180,
+	data_visualization_smoothing: 50,
+	data_visualization_stale_behavior: 0,
+	data_visualization_device_id: '',
 	menu_enabled: true,
 	menu_text_color: 0xffffff,
 	menu_scroll_speed: 20
@@ -50,6 +70,7 @@ export const MATRIX_ALARM_SETTING_KEYS = [
 ] as const satisfies readonly MatrixSettingsKey[];
 
 export const MATRIX_EFFECT_SETTING_KEYS = [
+	'background_mode',
 	'effect_enabled',
 	'effect_engine',
 	'effect_mode',
@@ -59,6 +80,24 @@ export const MATRIX_EFFECT_SETTING_KEYS = [
 	'effect_color_3',
 	'effect_reactivity_provider',
 	'effect_reactivity_gain'
+] as const satisfies readonly MatrixSettingsKey[];
+
+export const MATRIX_DATA_VISUALIZATION_SETTING_KEYS = [
+	'background_mode',
+	'data_visualization_enabled',
+	'data_visualization_source',
+	'data_visualization_metric',
+	'data_visualization_mode',
+	'data_visualization_min',
+	'data_visualization_max',
+	'data_visualization_color_min',
+	'data_visualization_color_mid',
+	'data_visualization_color_max',
+	'data_visualization_brightness_min',
+	'data_visualization_brightness_max',
+	'data_visualization_smoothing',
+	'data_visualization_stale_behavior',
+	'data_visualization_device_id'
 ] as const satisfies readonly MatrixSettingsKey[];
 
 // Keep this aligned with the backend validator in MatrixConfigJson.cpp.
@@ -90,6 +129,25 @@ export const MATRIX_REACTIVITY_PROVIDER_NONE = 0 satisfies MatrixEffectReactivit
 export const MATRIX_REACTIVITY_PROVIDER_IMU = 1 satisfies MatrixEffectReactivityProvider;
 export const MATRIX_EFFECT_REACTIVITY_GAIN_MIN = 0;
 export const MATRIX_EFFECT_REACTIVITY_GAIN_MAX = 200;
+export const MATRIX_BACKGROUND_MODE_EFFECTS = 0 satisfies MatrixBackgroundMode;
+export const MATRIX_BACKGROUND_MODE_DATA_VISUALIZATION = 1 satisfies MatrixBackgroundMode;
+export const MATRIX_DATA_SOURCE_SCD4X = 0 satisfies MatrixDataVisualizationSource;
+export const MATRIX_DATA_SOURCE_BLE = 1 satisfies MatrixDataVisualizationSource;
+export const MATRIX_DATA_SOURCE_WIFI_RSSI = 2 satisfies MatrixDataVisualizationSource;
+export const MATRIX_DATA_SOURCE_WIFI_CSI = 3 satisfies MatrixDataVisualizationSource;
+export const MATRIX_DATA_METRIC_CO2 = 0 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_METRIC_TEMPERATURE = 1 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_METRIC_HUMIDITY = 2 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_METRIC_RSSI = 3 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_METRIC_SIGNAL_QUALITY = 4 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_METRIC_CSI_MOTION = 5 satisfies MatrixDataVisualizationMetric;
+export const MATRIX_DATA_VIZ_MODE_GAUGE = 0 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_CENTER_RIPPLE = 1 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_HEATMAP = 2 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_TREND = 3 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_STALE_DIM = 0 satisfies MatrixDataVisualizationStaleBehavior;
+export const MATRIX_DATA_STALE_GRAY = 1 satisfies MatrixDataVisualizationStaleBehavior;
+export const MATRIX_DATA_STALE_BLANK = 2 satisfies MatrixDataVisualizationStaleBehavior;
 
 export const MATRIX_EFFECT_IDS = Array.from(
 	{ length: MATRIX_EFFECT_MODE_MAX + 1 },

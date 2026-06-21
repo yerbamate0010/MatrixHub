@@ -5,10 +5,12 @@
 
 #include "MatrixSettingsService.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "../config/json/MatrixConfigJson.h"
 #include "../alarms/AlarmService.h"
+#include "../matrix/MatrixDataVisualizationTypes.h"
 #include "../matrix/MatrixEffectModes.h"
 #include "../system/logging/Logging.h"
 #include "../system/memory/SystemAllocator.h"
@@ -319,6 +321,28 @@ bool MatrixSettingsService::syncCachedStateLocked() {
         snapshot->config.effectReactivityProvider);
     snapshot->config.effectReactivityGain = normalizeMatrixEffectReactivityGain(
         snapshot->config.effectReactivityGain);
+    snapshot->config.backgroundMode = normalizeMatrixBackgroundMode(snapshot->config.backgroundMode);
+    snapshot->config.dataVisualizationSource =
+        normalizeMatrixDataSource(snapshot->config.dataVisualizationSource);
+    snapshot->config.dataVisualizationMetric =
+        normalizeMatrixDataMetric(snapshot->config.dataVisualizationMetric);
+    snapshot->config.dataVisualizationMode =
+        normalizeMatrixDataVizMode(snapshot->config.dataVisualizationMode);
+    snapshot->config.dataVisualizationStaleBehavior =
+        normalizeMatrixDataStaleBehavior(snapshot->config.dataVisualizationStaleBehavior);
+    snapshot->config.dataVisualizationColorMin =
+        normalizeMatrixDataColor(snapshot->config.dataVisualizationColorMin);
+    snapshot->config.dataVisualizationColorMid =
+        normalizeMatrixDataColor(snapshot->config.dataVisualizationColorMid);
+    snapshot->config.dataVisualizationColorMax =
+        normalizeMatrixDataColor(snapshot->config.dataVisualizationColorMax);
+    if (snapshot->config.dataVisualizationMax <= snapshot->config.dataVisualizationMin) {
+        snapshot->config.dataVisualizationMax = snapshot->config.dataVisualizationMin + 1.0f;
+    }
+    if (snapshot->config.dataVisualizationBrightnessMax < snapshot->config.dataVisualizationBrightnessMin) {
+        std::swap(snapshot->config.dataVisualizationBrightnessMax,
+                  snapshot->config.dataVisualizationBrightnessMin);
+    }
     _state = *snapshot;
     return true;
 }

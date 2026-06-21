@@ -17,6 +17,21 @@ function createMatrixPayload(overrides: Record<string, unknown> = {}) {
 		effect_color_3: 0x0000ff,
 		effect_reactivity_provider: 0,
 		effect_reactivity_gain: 80,
+		background_mode: 0,
+		data_visualization_enabled: false,
+		data_visualization_source: 0,
+		data_visualization_metric: 0,
+		data_visualization_mode: 0,
+		data_visualization_min: 400,
+		data_visualization_max: 2000,
+		data_visualization_color_min: 0x0040ff,
+		data_visualization_color_mid: 0x00ff80,
+		data_visualization_color_max: 0xff3000,
+		data_visualization_brightness_min: 12,
+		data_visualization_brightness_max: 180,
+		data_visualization_smoothing: 50,
+		data_visualization_stale_behavior: 0,
+		data_visualization_device_id: '',
 		custom_icons: [[], [], []],
 		menu_enabled: true,
 		menu_text_color: 0x1ffffff,
@@ -59,6 +74,43 @@ describe('device SDK matrix parser', () => {
 
 		expect(parsed?.effect_engine).toBe(1);
 		expect(parsed?.effect_mode).toBe(3);
+	});
+
+	it('normalizes matrix data visualization settings', () => {
+		const parsed = parseMatrixSettings(
+			createMatrixPayload({
+				background_mode: 9,
+				data_visualization_enabled: true,
+				data_visualization_source: 9,
+				data_visualization_metric: 9,
+				data_visualization_mode: 9,
+				data_visualization_min: 30,
+				data_visualization_max: 20,
+				data_visualization_color_min: 0x1abcdef,
+				data_visualization_color_mid: 0x1000000,
+				data_visualization_color_max: 0xffffffff,
+				data_visualization_brightness_min: 200,
+				data_visualization_brightness_max: 10,
+				data_visualization_smoothing: 255,
+				data_visualization_stale_behavior: 9,
+				data_visualization_device_id: 'AA:BB:CC:DD:EE:FF-extra'
+			})
+		);
+
+		expect(parsed?.background_mode).toBe(1);
+		expect(parsed?.data_visualization_enabled).toBe(true);
+		expect(parsed?.data_visualization_source).toBe(3);
+		expect(parsed?.data_visualization_metric).toBe(5);
+		expect(parsed?.data_visualization_mode).toBe(3);
+		expect(parsed?.data_visualization_max).toBe(31);
+		expect(parsed?.data_visualization_color_min).toBe(0xabcdef);
+		expect(parsed?.data_visualization_color_mid).toBe(0x000000);
+		expect(parsed?.data_visualization_color_max).toBe(0xffffff);
+		expect(parsed?.data_visualization_brightness_min).toBe(10);
+		expect(parsed?.data_visualization_brightness_max).toBe(200);
+		expect(parsed?.data_visualization_smoothing).toBe(100);
+		expect(parsed?.data_visualization_stale_behavior).toBe(2);
+		expect(parsed?.data_visualization_device_id).toBe('AA:BB:CC:DD:EE:FF');
 	});
 
 	it('accepts exactly three custom icon slots with empty or 64-pixel payloads', () => {

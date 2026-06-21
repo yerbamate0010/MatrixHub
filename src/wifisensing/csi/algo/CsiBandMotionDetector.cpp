@@ -554,8 +554,50 @@ CsiMotionSnapshot CsiBandMotionDetector::makeSnapshot(CsiMotionState state, cons
     if (score) {
         snapshot.selectedCarrierCount = score->selectedCarrierCount;
         snapshot.validCarrierCount = score->validCarrierCount;
+        fillVisualizationBins(snapshot, _width);
     }
     return snapshot;
+}
+
+void CsiBandMotionDetector::fillVisualizationBins(CsiMotionSnapshot& snapshot, uint16_t width) const {
+    if (!_storage || !_baselineReady || width == 0) {
+        snapshot.visualizationBinCount = 0;
+        return;
+    }
+
+    snapshot.visualizationBinCount = 64;
+    const float scale = _config.enterThreshold > 0.0f ? _config.enterThreshold : 6.0f;
+
+    for (uint8_t bin = 0; bin < 64; ++bin) {
+        const uint16_t start = static_cast<uint16_t>((static_cast<uint32_t>(bin) * width) / 64u);
+        uint16_t end = static_cast<uint16_t>(((static_cast<uint32_t>(bin + 1u) * width) / 64u));
+        if (end <= start) {
+            end = static_cast<uint16_t>(start + 1u);
+        }
+        if (end > width) {
+            end = width;
+        }
+
+        float sum = 0.0f;
+        uint16_t count = 0;
+        for (uint16_t i = start; i < end; ++i) {
+            if (_storage->valid[i] == 0) {
+                continue;
+            }
+            const float energy = _storage->energy[i];
+            const float mean = _storage->mean[i];
+            const float noise = _storage->noise[i] > _config.minNoise ? _storage->noise[i] : _config.minNoise;
+            if (!std::isfinite(energy) || !std::isfinite(mean) || !std::isfinite(noise)) {
+                continue;
+            }
+            sum += std::fabs(energy - mean) / noise;
+            count++;
+        }
+
+        const float avg = count > 0 ? sum / static_cast<float>(count) : 0.0f;
+        const float normalized = clampValue(avg / scale, 0.0f, 1.0f);
+        snapshot.visualizationBins[bin] = static_cast<uint8_t>(normalized * 255.0f);
+    }
 }
 
 #ifdef UNIT_TEST

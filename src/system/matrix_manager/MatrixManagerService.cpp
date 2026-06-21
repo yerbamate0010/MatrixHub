@@ -246,6 +246,10 @@ void MatrixManagerService::applyLayerToRenderer(const LayerContent& content) {
                 content.effectReactivityGain);
             break;
 
+        case CommandType::SHOW_DATA_VISUALIZATION:
+            _matrixService->showDataVisualization(content.dataVisualizationConfig, 0);
+            break;
+
         case CommandType::CLEAR:
             _matrixService->clear(false);
             break;

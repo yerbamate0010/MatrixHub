@@ -188,6 +188,29 @@ void test_motion_clears_after_clear_hold() {
     TEST_ASSERT_FALSE(snapshot.motion);
 }
 
+void test_visualization_bins_are_deterministic_and_return_to_baseline() {
+    CsiBandMotionDetector detector;
+    TEST_ASSERT_TRUE(detector.begin());
+    const CsiMotionConfig config = enabledConfig();
+    detector.configure(config);
+    trainBaseline(detector, config);
+
+    const CsiPacket disturbed = makePacketWithBand(kWidth, 10, 10, 17, 20);
+    const auto first = detector.process(disturbed, 2000);
+    const auto second = detector.process(disturbed, 2100);
+
+    TEST_ASSERT_EQUAL_UINT8(64, first.visualizationBinCount);
+    TEST_ASSERT_EQUAL_UINT8(64, second.visualizationBinCount);
+    TEST_ASSERT_GREATER_THAN_UINT8(0, first.visualizationBins[10]);
+    TEST_ASSERT_EQUAL_MEMORY(first.visualizationBins, second.visualizationBins, sizeof(first.visualizationBins));
+
+    const auto idle = detector.process(makePacket(kWidth, 10), 2300);
+    TEST_ASSERT_EQUAL_UINT8(64, idle.visualizationBinCount);
+    for (uint8_t i = 0; i < idle.visualizationBinCount; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(0, idle.visualizationBins[i]);
+    }
+}
+
 void test_global_noise_enters_noisy_environment() {
     CsiBandMotionDetector detector;
     TEST_ASSERT_TRUE(detector.begin());
@@ -357,6 +380,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_narrow_band_motion_triggers_after_hold);
     RUN_TEST(test_single_frame_spike_does_not_trigger);
     RUN_TEST(test_motion_clears_after_clear_hold);
+    RUN_TEST(test_visualization_bins_are_deterministic_and_return_to_baseline);
     RUN_TEST(test_global_noise_enters_noisy_environment);
     RUN_TEST(test_width_change_resets_baseline);
     RUN_TEST(test_dead_carriers_are_ignored);

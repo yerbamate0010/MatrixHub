@@ -48,8 +48,12 @@ void MatrixService::loop() {
                 _activeIcon = IconType::NONE;
                 {
                     // Single fetch under mutex (avoids redundant lock)
+                    auto bgViz = _state.getBackgroundDataVisualization();
                     auto bg = _state.getBackgroundEffect();
-                    if (!cmd.stopBackground && bg.active) {
+                    if (!cmd.stopBackground && bgViz.active) {
+                        _renderer.showDataVisualization(bgViz.config);
+                        ESP_LOGD(TAG, "Restored background data visualization (Clear)");
+                    } else if (!cmd.stopBackground && bg.active) {
                         if (bg.engine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D)) {
                             _renderer.showNative3DEffect(
                                 bg.mode,
@@ -132,6 +136,19 @@ void MatrixService::loop() {
                     _autoClearing = false;
                 }
                 break;
+
+            case CommandType::SHOW_DATA_VISUALIZATION:
+                _activeIcon = IconType::NONE;
+                _renderer.showDataVisualization(cmd.dataVisualizationConfig);
+
+                if (cmd.durationMs > 0) {
+                    _displayStartMs = now;
+                    _displayDurationMs = cmd.durationMs;
+                    _autoClearing = true;
+                } else {
+                    _autoClearing = false;
+                }
+                break;
                 
             default:
                 break;
@@ -148,8 +165,12 @@ void MatrixService::loop() {
             _activeIcon = IconType::NONE;
             
             // Restore background effect if active
+            auto bgViz = _state.getBackgroundDataVisualization();
             auto bg = _state.getBackgroundEffect();
-            if (bg.active) {
+            if (bgViz.active) {
+                _renderer.showDataVisualization(bgViz.config);
+                ESP_LOGD(TAG, "Restored background data visualization (Timeout)");
+            } else if (bg.active) {
                 if (bg.engine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D)) {
                     _renderer.showNative3DEffect(
                         bg.mode,
@@ -196,6 +217,10 @@ void MatrixService::clearBackgroundEffect() {
     _state.clearBackgroundEffect();
 }
 
+void MatrixService::clearBackgroundDataVisualization() {
+    _state.clearBackgroundDataVisualization();
+}
+
 void MatrixService::setBrightness(uint8_t brightness) {
     _state.setBrightness(brightness);
 }
@@ -217,6 +242,10 @@ void MatrixService::setScrollSpeed(uint16_t ms) {
 
 void MatrixService::setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
     _renderer.setEffectInput(input);
+}
+
+void MatrixService::setDataVisualizationInput(const MATRIX::MatrixDataVisualizationInput& input) {
+    _renderer.setDataVisualizationInput(input);
 }
 
 void MatrixService::showEffect(uint8_t mode,
@@ -242,6 +271,15 @@ void MatrixService::showEffect(uint8_t mode,
         engine,
         reactivityProvider,
         reactivityGain);
+}
+
+void MatrixService::showDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config, uint32_t durationMs) {
+    ESP_LOGD(TAG, "showDataVisualization source=%u metric=%u mode=%u duration=%lu",
+             config.source,
+             config.metric,
+             config.mode,
+             static_cast<unsigned long>(durationMs));
+    _state.requestDataVisualization(config, durationMs);
 }
 
 void MatrixService::showSolidColor(uint32_t color) {

@@ -1,6 +1,7 @@
 #include "MatrixLayerManager.h"
 
 #include <cstddef>
+#include <cstring>
 
 namespace MATRIX_MANAGER {
 
@@ -12,6 +13,11 @@ uint32_t computeLayerHash(const LayerContent& content) {
     auto mix = [&hash](uint32_t val) {
         hash ^= val;
         hash *= 16777619u;
+    };
+    auto mixFloat = [&mix](float val) {
+        uint32_t bits = 0;
+        std::memcpy(&bits, &val, sizeof(bits));
+        mix(bits);
     };
 
     mix(static_cast<uint32_t>(content.type));
@@ -25,6 +31,23 @@ uint32_t computeLayerHash(const LayerContent& content) {
     mix(content.effectColor3);
     mix(content.effectReactivityProvider);
     mix(content.effectReactivityGain);
+    mix(content.dataVisualizationConfig.enabled ? 1u : 0u);
+    mix(content.dataVisualizationConfig.source);
+    mix(content.dataVisualizationConfig.metric);
+    mix(content.dataVisualizationConfig.mode);
+    mixFloat(content.dataVisualizationConfig.minValue);
+    mixFloat(content.dataVisualizationConfig.maxValue);
+    mix(content.dataVisualizationConfig.colorMin);
+    mix(content.dataVisualizationConfig.colorMid);
+    mix(content.dataVisualizationConfig.colorMax);
+    mix(content.dataVisualizationConfig.brightnessMin);
+    mix(content.dataVisualizationConfig.brightnessMax);
+    mix(content.dataVisualizationConfig.smoothing);
+    mix(content.dataVisualizationConfig.staleBehavior);
+    for (size_t i = 0; i < MATRIX::kMatrixDataVizDeviceIdCapacity &&
+                       content.dataVisualizationConfig.deviceId[i] != '\0'; ++i) {
+        mix(static_cast<uint32_t>(content.dataVisualizationConfig.deviceId[i]));
+    }
 
     for (size_t i = 0; content.text[i] != '\0'; ++i) {
         mix(static_cast<uint32_t>(content.text[i]));

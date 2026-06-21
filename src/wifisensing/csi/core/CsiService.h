@@ -29,6 +29,7 @@ enum class CsiConsumer : uint8_t {
     Frontend = 0,
     AlarmSystem = 1,
     Boot = 2,
+    MatrixVisualization = 3,
 };
 
 struct CsiMetricsSnapshot {
@@ -39,6 +40,7 @@ struct CsiMetricsSnapshot {
     bool frontendConsumerActive = false;
     bool alarmConsumerActive = false;
     bool bootConsumerActive = false;
+    bool matrixVisualizationConsumerActive = false;
     size_t queueDepth = 0;
     size_t queueCapacity = 0;
     uint32_t queueDropsTotal = 0;

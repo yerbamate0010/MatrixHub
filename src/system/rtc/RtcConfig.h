@@ -84,8 +84,9 @@ constexpr uint32_t kMagicValid = 0xC0FFEE42;
  *  43 - Added WiFi CSI motion alarm retained settings (June 2026)
  *  44 - Added shared IMU runtime/settings state (June 2026)
  *  45 - Added Matrix native effect engine/provider settings (June 2026)
+ *  46 - Added Matrix data visualization background settings (June 2026)
  */
-constexpr uint32_t kSchemaVersion = 45;
+constexpr uint32_t kSchemaVersion = 46;
 
 // Shelly Constants moved to types/RtcShellyTypes.h
 

@@ -44,6 +44,7 @@ struct LayerContent {
     uint32_t effectColor3 = 0;
     uint8_t effectReactivityProvider = 0;
     uint8_t effectReactivityGain = 0;
+    MATRIX::MatrixDataVisualizationConfig dataVisualizationConfig{};
 
     void clear() {
         active = false;
@@ -60,6 +61,7 @@ struct LayerContent {
         effectColor3 = 0;
         effectReactivityProvider = 0;
         effectReactivityGain = 0;
+        dataVisualizationConfig = MATRIX::MatrixDataVisualizationConfig{};
     }
 };
 

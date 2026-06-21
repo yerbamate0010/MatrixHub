@@ -25,6 +25,7 @@ public:
                        uint8_t engine = 0,
                        uint8_t reactivityProvider = 0,
                        uint8_t reactivityGain = 0);
+    void requestDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config, uint32_t durationMs = 0);
     
     void setBrightness(uint8_t brightness);
     void setThermalBrightnessLimit(uint8_t limit);
@@ -50,6 +51,14 @@ public:
     BgEffect getBackgroundEffect() const;
     void clearBackgroundEffect();
 
+    struct BgDataVisualization {
+        bool active = false;
+        MATRIX::MatrixDataVisualizationConfig config{};
+    };
+
+    BgDataVisualization getBackgroundDataVisualization() const;
+    void clearBackgroundDataVisualization();
+
     // Custom Icon Management
     void setCustomIcon(IconType type, const uint32_t* bitmap);
     bool getCustomIcon(IconType type, uint32_t* outBuffer) const;
@@ -69,10 +78,11 @@ private:
         uint16_t textDirty        : 1;
         uint16_t colorDirty       : 1;
         uint16_t effectDirty      : 1;
+        uint16_t dataVisualizationDirty : 1;
         uint16_t brightnessDirty  : 1;
         uint16_t rotationDirty    : 1;
         uint16_t stopBackgroundOnClear : 1;
-    } _flags = {0,0,0,0,0,0,0,1};
+    } _flags = {0,0,0,0,0,0,0,0,1};
     
     // Pending Data
     
@@ -96,6 +106,8 @@ private:
     volatile uint32_t _pendingEffectDuration = 0;
     volatile uint8_t _pendingEffectReactivityProvider = 0;
     volatile uint8_t _pendingEffectReactivityGain = 0;
+    MATRIX::MatrixDataVisualizationConfig _pendingDataVisualizationConfig{};
+    volatile uint32_t _pendingDataVisualizationDuration = 0;
     
     volatile uint8_t _pendingBrightness = 0;
     volatile uint8_t _userTargetBrightness = 20; // Default fallback
@@ -104,6 +116,7 @@ private:
     
     // Background Effect Cache
     BgEffect _bgEffect;
+    BgDataVisualization _bgDataVisualization;
     
     // Custom Icon Storage (Volatile Cache)
     // 3 icons * 256 bytes = 768 bytes

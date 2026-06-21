@@ -187,6 +187,7 @@ CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
     snapshot.frontendConsumerActive = (mask & consumerBit(CsiConsumer::Frontend)) != 0;
     snapshot.alarmConsumerActive = (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0;
     snapshot.bootConsumerActive = (mask & consumerBit(CsiConsumer::Boot)) != 0;
+    snapshot.matrixVisualizationConsumerActive = (mask & consumerBit(CsiConsumer::MatrixVisualization)) != 0;
 
     snapshot.rxFramesTotal = _rxFramesTotal.load(std::memory_order_relaxed);
     snapshot.rxAcceptedTotal = _rxAcceptedTotal.load(std::memory_order_relaxed);

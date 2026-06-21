@@ -22,5 +22,6 @@ enum class MatrixMode {
     ACTIVE_ICON = 2,
     ACTIVE_TEXT = 3,
     ACTIVE_SOLID = 4,
-    ACTIVE_EFFECT = 5
+    ACTIVE_EFFECT = 5,
+    ACTIVE_DATA_VISUALIZATION = 6
 };

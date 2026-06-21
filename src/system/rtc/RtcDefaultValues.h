@@ -123,6 +123,20 @@ constexpr uint32_t EffectColor2 = UI::MATRIX::DEFAULT_EFFECT_COLOR_SECONDARY;
 constexpr uint32_t EffectColor3 = UI::MATRIX::DEFAULT_EFFECT_COLOR_TERTIARY;
 constexpr uint8_t EffectReactivityProvider = UI::MATRIX::DEFAULT_EFFECT_REACTIVITY_PROVIDER;
 constexpr uint8_t EffectReactivityGain = UI::MATRIX::DEFAULT_EFFECT_REACTIVITY_GAIN;
+constexpr uint8_t BackgroundMode = UI::MATRIX::DEFAULT_BACKGROUND_MODE;
+constexpr bool DataVisualizationEnabled = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_ENABLED;
+constexpr uint8_t DataVisualizationSource = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_SOURCE;
+constexpr uint8_t DataVisualizationMetric = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_METRIC;
+constexpr uint8_t DataVisualizationMode = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_MODE;
+constexpr float DataVisualizationMin = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_MIN;
+constexpr float DataVisualizationMax = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_MAX;
+constexpr uint32_t DataVisualizationColorMin = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_COLOR_MIN;
+constexpr uint32_t DataVisualizationColorMid = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_COLOR_MID;
+constexpr uint32_t DataVisualizationColorMax = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_COLOR_MAX;
+constexpr uint8_t DataVisualizationBrightnessMin = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MIN;
+constexpr uint8_t DataVisualizationBrightnessMax = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MAX;
+constexpr uint8_t DataVisualizationSmoothing = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_SMOOTHING;
+constexpr uint8_t DataVisualizationStaleBehavior = UI::MATRIX::DEFAULT_DATA_VISUALIZATION_STALE_BEHAVIOR;
 
 namespace Menu {
 constexpr uint32_t TextColor = UI::MATRIX::MENU_TEXT_COLOR_DEFAULT;

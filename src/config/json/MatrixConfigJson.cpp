@@ -7,6 +7,7 @@
 #include "../App.h"
 #include "../UiConfig.h"
 #include "../../matrix/MatrixCustomIconStore.h"
+#include "../../matrix/MatrixDataVisualizationTypes.h"
 #include "../../matrix/MatrixEffectModes.h"
 #include "../../system/rtc/RtcConfig.h"
 #include <algorithm>
@@ -104,6 +105,69 @@ void deserializeMatrix(JsonObject& obj, RTC::MatrixData& data) {
     }
     data.effectMode = MATRIX::normalizeMatrixEffectModeForEngine(data.effectMode, data.effectEngine);
 
+    // Background mode and sensor data visualization
+    if (obj[Keys::kBackgroundMode].is<uint8_t>()) {
+        data.backgroundMode = MATRIX::normalizeMatrixBackgroundMode(obj[Keys::kBackgroundMode].as<uint8_t>());
+    }
+    if (obj[Keys::kDataVisualizationEnabled].is<bool>()) {
+        data.dataVisualizationEnabled = obj[Keys::kDataVisualizationEnabled].as<bool>();
+    }
+    if (obj[Keys::kDataVisualizationSource].is<uint8_t>()) {
+        data.dataVisualizationSource = MATRIX::normalizeMatrixDataSource(
+            obj[Keys::kDataVisualizationSource].as<uint8_t>());
+    }
+    if (obj[Keys::kDataVisualizationMetric].is<uint8_t>()) {
+        data.dataVisualizationMetric = MATRIX::normalizeMatrixDataMetric(
+            obj[Keys::kDataVisualizationMetric].as<uint8_t>());
+    }
+    if (obj[Keys::kDataVisualizationMode].is<uint8_t>()) {
+        data.dataVisualizationMode = MATRIX::normalizeMatrixDataVizMode(
+            obj[Keys::kDataVisualizationMode].as<uint8_t>());
+    }
+    if (obj[Keys::kDataVisualizationMin].is<float>()) {
+        data.dataVisualizationMin = obj[Keys::kDataVisualizationMin].as<float>();
+    }
+    if (obj[Keys::kDataVisualizationMax].is<float>()) {
+        data.dataVisualizationMax = obj[Keys::kDataVisualizationMax].as<float>();
+    }
+    if (data.dataVisualizationMax <= data.dataVisualizationMin) {
+        data.dataVisualizationMax = data.dataVisualizationMin + 1.0f;
+    }
+    if (obj[Keys::kDataVisualizationColorMin].is<uint32_t>()) {
+        data.dataVisualizationColorMin = MATRIX::normalizeMatrixDataColor(
+            obj[Keys::kDataVisualizationColorMin].as<uint32_t>());
+    }
+    if (obj[Keys::kDataVisualizationColorMid].is<uint32_t>()) {
+        data.dataVisualizationColorMid = MATRIX::normalizeMatrixDataColor(
+            obj[Keys::kDataVisualizationColorMid].as<uint32_t>());
+    }
+    if (obj[Keys::kDataVisualizationColorMax].is<uint32_t>()) {
+        data.dataVisualizationColorMax = MATRIX::normalizeMatrixDataColor(
+            obj[Keys::kDataVisualizationColorMax].as<uint32_t>());
+    }
+    if (obj[Keys::kDataVisualizationBrightnessMin].is<uint8_t>()) {
+        data.dataVisualizationBrightnessMin = obj[Keys::kDataVisualizationBrightnessMin].as<uint8_t>();
+    }
+    if (obj[Keys::kDataVisualizationBrightnessMax].is<uint8_t>()) {
+        data.dataVisualizationBrightnessMax = obj[Keys::kDataVisualizationBrightnessMax].as<uint8_t>();
+    }
+    if (data.dataVisualizationBrightnessMax < data.dataVisualizationBrightnessMin) {
+        std::swap(data.dataVisualizationBrightnessMax, data.dataVisualizationBrightnessMin);
+    }
+    if (obj[Keys::kDataVisualizationSmoothing].is<uint8_t>()) {
+        data.dataVisualizationSmoothing = obj[Keys::kDataVisualizationSmoothing].as<uint8_t>();
+    }
+    if (obj[Keys::kDataVisualizationStaleBehavior].is<uint8_t>()) {
+        data.dataVisualizationStaleBehavior = MATRIX::normalizeMatrixDataStaleBehavior(
+            obj[Keys::kDataVisualizationStaleBehavior].as<uint8_t>());
+    }
+    if (obj[Keys::kDataVisualizationDeviceId].is<const char*>()) {
+        MATRIX::copyMatrixDataDeviceId(
+            data.dataVisualizationDeviceId,
+            sizeof(data.dataVisualizationDeviceId),
+            obj[Keys::kDataVisualizationDeviceId].as<const char*>());
+    }
+
     // Menu settings
     if (obj[Keys::kMenuTextColor].is<uint32_t>()) {
         data.menu.textColor = MATRIX::normalizeMatrixColor(obj[Keys::kMenuTextColor].as<uint32_t>());
@@ -133,6 +197,23 @@ void serializeMatrix(const RTC::MatrixData& data, JsonObject& obj) {
     obj[Keys::kEffectColor3] = data.effectColor3;
     obj[Keys::kEffectReactivityProvider] = data.effectReactivityProvider;
     obj[Keys::kEffectReactivityGain] = data.effectReactivityGain;
+
+    // Background mode and sensor data visualization
+    obj[Keys::kBackgroundMode] = data.backgroundMode;
+    obj[Keys::kDataVisualizationEnabled] = data.dataVisualizationEnabled;
+    obj[Keys::kDataVisualizationSource] = data.dataVisualizationSource;
+    obj[Keys::kDataVisualizationMetric] = data.dataVisualizationMetric;
+    obj[Keys::kDataVisualizationMode] = data.dataVisualizationMode;
+    obj[Keys::kDataVisualizationMin] = data.dataVisualizationMin;
+    obj[Keys::kDataVisualizationMax] = data.dataVisualizationMax;
+    obj[Keys::kDataVisualizationColorMin] = data.dataVisualizationColorMin;
+    obj[Keys::kDataVisualizationColorMid] = data.dataVisualizationColorMid;
+    obj[Keys::kDataVisualizationColorMax] = data.dataVisualizationColorMax;
+    obj[Keys::kDataVisualizationBrightnessMin] = data.dataVisualizationBrightnessMin;
+    obj[Keys::kDataVisualizationBrightnessMax] = data.dataVisualizationBrightnessMax;
+    obj[Keys::kDataVisualizationSmoothing] = data.dataVisualizationSmoothing;
+    obj[Keys::kDataVisualizationStaleBehavior] = data.dataVisualizationStaleBehavior;
+    obj[Keys::kDataVisualizationDeviceId] = data.dataVisualizationDeviceId;
 
     // Menu settings
     obj[Keys::kMenuTextColor] = data.menu.textColor;

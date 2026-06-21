@@ -31,7 +31,10 @@ void startMatrixTask(ServiceRegistry& services) {
         services.getImuService(),
         services.getImuManager(),
         services.getMatrixService(),
-        services.getMatrixManager());
+        services.getMatrixManager(),
+        services.getBleService(),
+        services.getWifiSensingService(),
+        services.getCsiService());
 }
 
 void startSensorPipeline(ServiceRegistry& services) {

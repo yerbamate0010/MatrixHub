@@ -9,6 +9,7 @@ import {
 	MATRIX_ALARM_SETTING_KEYS,
 	MATRIX_DISPLAY_SETTING_KEYS,
 	MATRIX_EFFECT_SETTING_KEYS,
+	MATRIX_DATA_VISUALIZATION_SETTING_KEYS,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
 	MATRIX_NATIVE_3D_EFFECT_IDS,
@@ -75,17 +76,20 @@ describe('matrixModel', () => {
 		]);
 	});
 
-	it('defines non-overlapping matrix settings sections for UI pages', () => {
+	it('defines matrix settings sections for UI pages with only background mode shared', () => {
 		const sections = [
 			MATRIX_DISPLAY_SETTING_KEYS,
 			MATRIX_ALARM_SETTING_KEYS,
-			MATRIX_EFFECT_SETTING_KEYS
+			MATRIX_EFFECT_SETTING_KEYS,
+			MATRIX_DATA_VISUALIZATION_SETTING_KEYS
 		];
 		const keys = sections.flat();
+		const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
 
-		expect(new Set(keys).size).toBe(keys.length);
+		expect(duplicates).toEqual(['background_mode']);
 		expect(MATRIX_ALARM_SETTING_KEYS).toEqual(['alarm_mode', 'custom_icons']);
 		expect(MATRIX_EFFECT_SETTING_KEYS).toContain('effect_enabled');
+		expect(MATRIX_DATA_VISUALIZATION_SETTING_KEYS).toContain('data_visualization_source');
 		expect(MATRIX_DISPLAY_SETTING_KEYS).toContain('menu_enabled');
 	});
 

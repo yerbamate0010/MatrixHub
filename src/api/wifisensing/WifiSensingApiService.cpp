@@ -243,6 +243,7 @@ esp_err_t WifiSensingApiService::handleGetStatus(PsychicRequest* request) {
     writer.key("frontend_consumer_active"); writer.value(csi.frontendConsumerActive); writer.raw(",");
     writer.key("alarm_consumer_active"); writer.value(csi.alarmConsumerActive); writer.raw(",");
     writer.key("boot_consumer_active"); writer.value(csi.bootConsumerActive); writer.raw(",");
+    writer.key("matrix_visualization_consumer_active"); writer.value(csi.matrixVisualizationConsumerActive); writer.raw(",");
     writer.key("queue_depth"); writer.value(static_cast<unsigned long>(csi.queueDepth)); writer.raw(",");
     writer.key("queue_capacity"); writer.value(static_cast<unsigned long>(csi.queueCapacity)); writer.raw(",");
     writer.key("queue_drops_total"); writer.value(static_cast<unsigned long>(csi.queueDropsTotal)); writer.raw(",");

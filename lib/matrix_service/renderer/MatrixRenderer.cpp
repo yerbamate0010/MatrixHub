@@ -24,6 +24,10 @@ void MatrixRenderer::blackout() {
         _nativeEngine.reset();
         _nativeEffectRunning = false;
     }
+    if (_dataVisualizationRunning) {
+        _dataVisualizationEngine.reset();
+        _dataVisualizationRunning = false;
+    }
 
     _scrolling = false;
     _activeIcon = IconType::NONE;
@@ -88,6 +92,11 @@ void MatrixRenderer::loop() {
             _matrix->drawBitmap(_nativeFrame);
             _matrix->show();
         }
+    } else if (_dataVisualizationRunning) {
+        if (_dataVisualizationEngine.render(millis(), _dataVisualizationFrame, MATRIX::kMatrixDataVizPixelCount)) {
+            _matrix->drawBitmap(_dataVisualizationFrame);
+            _matrix->show();
+        }
     }
 }
 
@@ -106,6 +115,10 @@ void MatrixRenderer::showText(const char* text, uint32_t color) {
     if (_nativeEffectRunning) {
         _nativeEngine.reset();
         _nativeEffectRunning = false;
+    }
+    if (_dataVisualizationRunning) {
+        _dataVisualizationEngine.reset();
+        _dataVisualizationRunning = false;
     }
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
@@ -153,6 +166,7 @@ void MatrixRenderer::showSolid(uint32_t color) {
     
     if (_effectRunning) { _matrix->stop(); _effectRunning = false; }
     if (_nativeEffectRunning) { _nativeEngine.reset(); _nativeEffectRunning = false; }
+    if (_dataVisualizationRunning) { _dataVisualizationEngine.reset(); _dataVisualizationRunning = false; }
     _scrolling = false;
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
@@ -185,7 +199,7 @@ void MatrixRenderer::setRotation(uint8_t rotation) {
             _matrix->fillScreen(0);  // Clear stale pixels; scroll continues from current _x
         }
         // Re-render static icon after rotation change
-        if (!_scrolling && !_effectRunning && !_nativeEffectRunning && _activeIcon != IconType::NONE) {
+        if (!_scrolling && !_effectRunning && !_nativeEffectRunning && !_dataVisualizationRunning && _activeIcon != IconType::NONE) {
             _matrix->fillScreen(0);
             IconDrawer::draw(_matrix, _activeIcon, _hasActiveIconBitmap ? _activeIconBitmap : nullptr);
             _matrix->show();
@@ -200,7 +214,7 @@ void MatrixRenderer::setScrollSpeed(uint16_t ms) {
 }
 
 bool MatrixRenderer::isActive() const {
-    return _scrolling || _effectRunning || _nativeEffectRunning;
+    return _scrolling || _effectRunning || _nativeEffectRunning || _dataVisualizationRunning;
 }
 
 void MatrixRenderer::showIcon(IconType icon, const uint32_t* customBitmap) {
@@ -212,6 +226,7 @@ void MatrixRenderer::showIcon(IconType icon, const uint32_t* customBitmap) {
     
     if (_effectRunning) { _matrix->stop(); _effectRunning = false; }
     if (_nativeEffectRunning) { _nativeEngine.reset(); _nativeEffectRunning = false; }
+    if (_dataVisualizationRunning) { _dataVisualizationEngine.reset(); _dataVisualizationRunning = false; }
     _scrolling = false;
     _activeIcon = icon;
     
@@ -238,6 +253,10 @@ void MatrixRenderer::showEffect(uint8_t mode, uint32_t speed, uint32_t color, ui
     if (_nativeEffectRunning) {
         _nativeEngine.reset();
         _nativeEffectRunning = false;
+    }
+    if (_dataVisualizationRunning) {
+        _dataVisualizationEngine.reset();
+        _dataVisualizationRunning = false;
     }
     uint32_t colors[] = { color, color2, color3 };
     // Guard the renderer too, so invalid values from stale state or a future
@@ -280,6 +299,10 @@ void MatrixRenderer::showNative3DEffect(uint8_t mode,
         _matrix->stop();
         _effectRunning = false;
     }
+    if (_dataVisualizationRunning) {
+        _dataVisualizationEngine.reset();
+        _dataVisualizationRunning = false;
+    }
     _scrolling = false;
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
@@ -303,4 +326,32 @@ void MatrixRenderer::showNative3DEffect(uint8_t mode,
 
 void MatrixRenderer::setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
     _nativeEngine.setInput(input);
+}
+
+void MatrixRenderer::showDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config) {
+    if (!_matrix) return;
+    if (isDisplayMuted()) {
+        blackout();
+        return;
+    }
+
+    if (_effectRunning) {
+        _matrix->stop();
+        _effectRunning = false;
+    }
+    if (_nativeEffectRunning) {
+        _nativeEngine.reset();
+        _nativeEffectRunning = false;
+    }
+    _scrolling = false;
+    _activeIcon = IconType::NONE;
+    _hasActiveIconBitmap = false;
+
+    _dataVisualizationEngine.configure(config);
+    _dataVisualizationRunning = true;
+    memset(_dataVisualizationFrame, 0, sizeof(_dataVisualizationFrame));
+}
+
+void MatrixRenderer::setDataVisualizationInput(const MATRIX::MatrixDataVisualizationInput& input) {
+    _dataVisualizationEngine.setInput(input);
 }

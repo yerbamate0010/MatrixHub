@@ -42,6 +42,22 @@ namespace UI {
         constexpr uint32_t DEFAULT_EFFECT_COLOR_TERTIARY = 0x0000FF;  // Blue
         constexpr uint8_t DEFAULT_EFFECT_REACTIVITY_PROVIDER = 0;     // None
         constexpr uint8_t DEFAULT_EFFECT_REACTIVITY_GAIN = 80;
+        constexpr uint8_t DEFAULT_BACKGROUND_MODE = 0;                // Effects
+        constexpr bool DEFAULT_DATA_VISUALIZATION_ENABLED = false;
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_SOURCE = 0;      // SCD4x
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_METRIC = 0;      // CO2
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_MODE = 0;        // Gauge
+        constexpr float DEFAULT_DATA_VISUALIZATION_MIN = 400.0f;
+        constexpr float DEFAULT_DATA_VISUALIZATION_MAX = 2000.0f;
+        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MIN = 0x0040FF;
+        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MID = 0x00FF80;
+        constexpr uint32_t DEFAULT_DATA_VISUALIZATION_COLOR_MAX = 0xFF3000;
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MIN = 12;
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_BRIGHTNESS_MAX = 180;
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_SMOOTHING = 50;
+        constexpr uint8_t DEFAULT_DATA_VISUALIZATION_STALE_BEHAVIOR = 0; // Dim
+        constexpr uint32_t DATA_VISUALIZATION_INPUT_INTERVAL_MS = 250;
+        constexpr uint32_t DATA_VISUALIZATION_BLE_STALE_MS = 5UL * 60UL * 1000UL;
 
         constexpr uint32_t AUTO_ROTATE_INTERVAL_MS = 500;
         constexpr float AUTO_ROTATE_THRESHOLD_G = 0.65f;

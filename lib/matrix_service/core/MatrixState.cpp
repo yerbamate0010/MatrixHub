@@ -23,6 +23,7 @@ void MatrixState::requestIcon(IconType icon, uint32_t durationMs) {
     _flags.textDirty = false;
     _flags.colorDirty = false;
     _flags.effectDirty = false;
+    _flags.dataVisualizationDirty = false;
 }
 
 void MatrixState::requestText(const char* text, uint32_t color, uint32_t durationMs) {
@@ -35,6 +36,7 @@ void MatrixState::requestText(const char* text, uint32_t color, uint32_t duratio
     _currentMode = MatrixMode::ACTIVE_TEXT;
     _flags.colorDirty = false;
     _flags.effectDirty = false;
+    _flags.dataVisualizationDirty = false;
 }
 
 void MatrixState::requestClear(bool stopBackground) {
@@ -44,6 +46,7 @@ void MatrixState::requestClear(bool stopBackground) {
     
     if (stopBackground) {
         _bgEffect.active = false;
+        _bgDataVisualization.active = false;
     }
     _currentMode = MatrixMode::OFF;
 }
@@ -75,10 +78,12 @@ void MatrixState::requestEffect(uint8_t mode,
     _pendingEffectReactivityProvider = reactivityProvider;
     _pendingEffectReactivityGain = reactivityGain;
     _flags.effectDirty = true;
+    _flags.dataVisualizationDirty = false;
     
     // Background effect logic
     if (durationMs == 0) {
         _bgEffect.active = true;
+        _bgDataVisualization.active = false;
         _bgEffect.mode = mode;
         _bgEffect.engine = engine;
         _bgEffect.speed = speed;
@@ -89,6 +94,21 @@ void MatrixState::requestEffect(uint8_t mode,
         _bgEffect.reactivityGain = reactivityGain;
     }
     _currentMode = MatrixMode::ACTIVE_EFFECT;
+}
+
+void MatrixState::requestDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config, uint32_t durationMs) {
+    SYSTEM::ScopeLock lock(_mutex);
+    _pendingDataVisualizationConfig = config;
+    _pendingDataVisualizationDuration = durationMs;
+    _flags.dataVisualizationDirty = true;
+    _flags.effectDirty = false;
+
+    if (durationMs == 0) {
+        _bgDataVisualization.active = true;
+        _bgDataVisualization.config = config;
+        _bgEffect.active = false;
+    }
+    _currentMode = MatrixMode::ACTIVE_DATA_VISUALIZATION;
 }
 
 void MatrixState::setBrightness(uint8_t brightness) {
@@ -170,6 +190,7 @@ bool MatrixState::poll(MatrixCommand& cmd) {
         _flags.textDirty = false;
         _flags.colorDirty = false;
         _flags.effectDirty = false;
+        _flags.dataVisualizationDirty = false;
         return true;
     }
     
@@ -211,6 +232,14 @@ bool MatrixState::poll(MatrixCommand& cmd) {
         _flags.effectDirty = false;
         return true;
     }
+
+    if (_flags.dataVisualizationDirty) {
+        cmd.type = CommandType::SHOW_DATA_VISUALIZATION;
+        cmd.dataVisualizationConfig = _pendingDataVisualizationConfig;
+        cmd.durationMs = _pendingDataVisualizationDuration;
+        _flags.dataVisualizationDirty = false;
+        return true;
+    }
     
     return false;
 }
@@ -225,6 +254,18 @@ MatrixState::BgEffect MatrixState::getBackgroundEffect() const {
 void MatrixState::clearBackgroundEffect() {
     SYSTEM::ScopeLock lock(_mutex);
     _bgEffect.active = false;
+}
+
+MatrixState::BgDataVisualization MatrixState::getBackgroundDataVisualization() const {
+    BgDataVisualization copy;
+    SYSTEM::ScopeLock lock(_mutex);
+    copy = _bgDataVisualization;
+    return copy;
+}
+
+void MatrixState::clearBackgroundDataVisualization() {
+    SYSTEM::ScopeLock lock(_mutex);
+    _bgDataVisualization.active = false;
 }
 
 void MatrixState::setCustomIcon(IconType type, const uint32_t* bitmap) {

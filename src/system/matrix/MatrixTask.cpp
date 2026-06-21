@@ -8,12 +8,19 @@
 #include "../../sensors/imu/ImuService.h"
 #include "../../sensors/imu/ImuManager.h"
 #include "../../sensors/imu/ImuTypes.h"
+#include "../../sensors/runtime/SensorState.h"
+#include "../../ble/BleService.h"
+#include "../../wifisensing/WifiSensingService.h"
+#include "../../wifisensing/csi/core/CsiService.h"
 #include "../watchdog/TaskWatchdog.h"
 #include "../../matrix/menu/MatrixMenuService.h"
+#include "../../matrix/MatrixDataVisualizationTypes.h"
 #include "../../../lib/matrix_service/effects/MatrixFxTypes.h"
 #include "../../system/logging/Logging.h"
 
 #include <atomic>
+#include <cmath>
+#include <cstring>
 #undef LOG_TAG
 #define LOG_TAG "MatrixTask"
 
@@ -28,6 +35,8 @@ uint32_t MatrixTask::_lastImuCheckMs = 0;
 bool MatrixTask::_lastAutoRotateEnabled = false;
 uint8_t MatrixTask::_lastAppliedAutoRotation = 0xFF;
 bool MatrixTask::_lastMatrixEffectsImuEnabled = false;
+bool MatrixTask::_lastMatrixDataVizCsiEnabled = false;
+uint32_t MatrixTask::_lastDataVisualizationInputMs = 0;
 
 namespace {
 
@@ -61,9 +70,95 @@ bool waitForTaskSuspended(TaskHandle_t taskHandle, SemaphoreHandle_t stopAck, Ti
     return eTaskGetState(taskHandle) == eSuspended;
 }
 
+float clampf(float value, float minValue, float maxValue) {
+    if (!std::isfinite(value)) {
+        return minValue;
+    }
+    if (value < minValue) {
+        return minValue;
+    }
+    if (value > maxValue) {
+        return maxValue;
+    }
+    return value;
+}
+
+float rssiQuality(int8_t rssi) {
+    return clampf((static_cast<float>(rssi) + 100.0f) * 2.0f, 0.0f, 100.0f);
+}
+
+uint8_t normalizedByte(float value, float minValue, float maxValue) {
+    if (maxValue <= minValue) {
+        maxValue = minValue + 1.0f;
+    }
+    const float scaled = clampf((value - minValue) / (maxValue - minValue), 0.0f, 1.0f);
+    return static_cast<uint8_t>(std::lround(scaled * 255.0f));
+}
+
+MATRIX::MatrixDataVisualizationConfig buildDataVisualizationConfig(const RTC::MatrixData& matrixConfig) {
+    MATRIX::MatrixDataVisualizationConfig config;
+    config.enabled = matrixConfig.dataVisualizationEnabled;
+    config.source = MATRIX::normalizeMatrixDataSource(matrixConfig.dataVisualizationSource);
+    config.metric = MATRIX::normalizeMatrixDataMetric(matrixConfig.dataVisualizationMetric);
+    config.mode = MATRIX::normalizeMatrixDataVizMode(matrixConfig.dataVisualizationMode);
+    config.minValue = matrixConfig.dataVisualizationMin;
+    config.maxValue = matrixConfig.dataVisualizationMax > matrixConfig.dataVisualizationMin
+        ? matrixConfig.dataVisualizationMax
+        : matrixConfig.dataVisualizationMin + 1.0f;
+    config.colorMin = MATRIX::normalizeMatrixDataColor(matrixConfig.dataVisualizationColorMin);
+    config.colorMid = MATRIX::normalizeMatrixDataColor(matrixConfig.dataVisualizationColorMid);
+    config.colorMax = MATRIX::normalizeMatrixDataColor(matrixConfig.dataVisualizationColorMax);
+    config.brightnessMin = matrixConfig.dataVisualizationBrightnessMin;
+    config.brightnessMax = matrixConfig.dataVisualizationBrightnessMax;
+    if (config.brightnessMax < config.brightnessMin) {
+        const uint8_t tmp = config.brightnessMax;
+        config.brightnessMax = config.brightnessMin;
+        config.brightnessMin = tmp;
+    }
+    config.smoothing = matrixConfig.dataVisualizationSmoothing;
+    config.staleBehavior = MATRIX::normalizeMatrixDataStaleBehavior(matrixConfig.dataVisualizationStaleBehavior);
+    MATRIX::copyMatrixDataDeviceId(config.deviceId, sizeof(config.deviceId), matrixConfig.dataVisualizationDeviceId);
+    return config;
+}
+
+void fillRssiBins(WIFISENSING::WifiSensingService* wifiSensingService, MATRIX::MatrixDataVisualizationInput& input) {
+    if (!wifiSensingService) {
+        return;
+    }
+    WIFISENSING::RssiSample samples[MATRIX::kMatrixDataVizPixelCount];
+    const uint16_t count = wifiSensingService->getSamples(samples, MATRIX::kMatrixDataVizPixelCount);
+    if (count == 0) {
+        return;
+    }
+
+    input.binCount = static_cast<uint8_t>(count > MATRIX::kMatrixDataVizPixelCount
+        ? MATRIX::kMatrixDataVizPixelCount
+        : count);
+    for (uint8_t i = 0; i < input.binCount; ++i) {
+        input.bins[i] = normalizedByte(rssiQuality(samples[i].rssi), 0.0f, 100.0f);
+    }
+}
+
+void fillCsiBins(const WIFISENSING::CSI::CsiMotionSnapshot& snapshot,
+                 MATRIX::MatrixDataVisualizationInput& input) {
+    input.binCount = snapshot.visualizationBinCount > MATRIX::kMatrixDataVizPixelCount
+        ? MATRIX::kMatrixDataVizPixelCount
+        : snapshot.visualizationBinCount;
+    for (uint8_t i = 0; i < input.binCount; ++i) {
+        input.bins[i] = snapshot.visualizationBins[i];
+    }
+}
+
 } // namespace
 
-void MatrixTask::start(MatrixMenuService* menu, ImuService* imuService, IMU::ImuManager* imuManager, MatrixService* matrixService, MATRIX_MANAGER::MatrixManagerService* matrixManager) {
+void MatrixTask::start(MatrixMenuService* menu,
+                       ImuService* imuService,
+                       IMU::ImuManager* imuManager,
+                       MatrixService* matrixService,
+                       MATRIX_MANAGER::MatrixManagerService* matrixManager,
+                       BLE::BleService* bleService,
+                       WIFISENSING::WifiSensingService* wifiSensingService,
+                       WIFISENSING::CSI::CsiService* csiService) {
     if (_taskHandle) {
         if (!_isRunning.load()) {
             (void)reapStoppedTask(0);
@@ -81,6 +176,9 @@ void MatrixTask::start(MatrixMenuService* menu, ImuService* imuService, IMU::Imu
     params.imuManager = imuManager;
     params.matrixService = matrixService;
     params.matrixManager = matrixManager;
+    params.bleService = bleService;
+    params.wifiSensingService = wifiSensingService;
+    params.csiService = csiService;
 
     if (!_stopAck) {
         _stopAck = xSemaphoreCreateBinary();
@@ -187,6 +285,8 @@ void MatrixTask::resetAutoRotationState() {
     _lastAutoRotateEnabled = false;
     _lastAppliedAutoRotation = 0xFF;
     _lastMatrixEffectsImuEnabled = false;
+    _lastMatrixDataVizCsiEnabled = false;
+    _lastDataVisualizationInputMs = 0;
 }
 
 void MatrixTask::taskLoop(void* param) {
@@ -196,6 +296,9 @@ void MatrixTask::taskLoop(void* param) {
     IMU::ImuManager* imuManager = params->imuManager;
     MatrixService* matrixService = params->matrixService;
     MATRIX_MANAGER::MatrixManagerService* matrixManager = params->matrixManager;
+    BLE::BleService* bleService = params->bleService;
+    WIFISENSING::WifiSensingService* wifiSensingService = params->wifiSensingService;
+    WIFISENSING::CSI::CsiService* csiService = params->csiService;
 
     // Initial delay for power stabilization
     vTaskDelay(pdMS_TO_TICKS(UI::BOOT::TASK_STARTUP_DELAY_MS));
@@ -214,6 +317,7 @@ void MatrixTask::taskLoop(void* param) {
         // Auto-Rotation evaluation
         evaluateAutoRotation(imuService, imuManager, matrixService);
         evaluateEffectInput(imuService, imuManager, matrixService);
+        evaluateDataVisualizationInput(bleService, wifiSensingService, csiService, matrixService);
 
         // Matrix Manager: resolve layers before rendering
         if (matrixManager) matrixManager->update();
@@ -330,6 +434,136 @@ void MatrixTask::evaluateEffectInput(ImuService* imuService, IMU::ImuManager* im
     }
 
     matrixService->setEffectInput(input);
+}
+
+void MatrixTask::evaluateDataVisualizationInput(BLE::BleService* bleService,
+                                                WIFISENSING::WifiSensingService* wifiSensingService,
+                                                WIFISENSING::CSI::CsiService* csiService,
+                                                MatrixService* matrixService) {
+    const auto& matrixConfig = RTC::getConfig().matrix;
+    const MATRIX::MatrixDataVisualizationConfig vizConfig = buildDataVisualizationConfig(matrixConfig);
+    const bool wantsDataVisualization =
+        matrixConfig.backgroundMode == static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization) &&
+        vizConfig.enabled;
+    const bool wantsCsi =
+        wantsDataVisualization &&
+        vizConfig.source == static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi);
+
+    if (wantsCsi != _lastMatrixDataVizCsiEnabled) {
+        LOGI("Matrix data visualization CSI input %s", wantsCsi ? "ON" : "OFF");
+        if (csiService) {
+            csiService->setConsumerActive(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, wantsCsi);
+        } else {
+            LOGW("CSI service missing - matrix data visualization consumer not updated");
+        }
+        _lastMatrixDataVizCsiEnabled = wantsCsi;
+    }
+
+    if (!matrixService || !wantsDataVisualization) {
+        return;
+    }
+
+    const uint32_t now = millis();
+    if (_lastDataVisualizationInputMs != 0 &&
+        (now - _lastDataVisualizationInputMs) < UI::MATRIX::DATA_VISUALIZATION_INPUT_INTERVAL_MS) {
+        return;
+    }
+    _lastDataVisualizationInputMs = now;
+
+    MATRIX::MatrixDataVisualizationInput input;
+    input.timestampMs = now;
+
+    const auto source = static_cast<MATRIX::MatrixDataSource>(vizConfig.source);
+    const auto metric = static_cast<MATRIX::MatrixDataMetric>(vizConfig.metric);
+
+    switch (source) {
+        case MATRIX::MatrixDataSource::Scd4x: {
+            const SensorSnapshot snapshot = SENSORS::SensorState::getLastGoodSnapshot();
+            input.valid = snapshot.timestamp_ms != 0;
+            input.stale = !input.valid;
+            switch (metric) {
+                case MATRIX::MatrixDataMetric::Temperature:
+                    input.value = snapshot.temp;
+                    break;
+                case MATRIX::MatrixDataMetric::Humidity:
+                    input.value = snapshot.humid;
+                    break;
+                case MATRIX::MatrixDataMetric::Co2:
+                default:
+                    input.value = static_cast<float>(snapshot.co2);
+                    break;
+            }
+            break;
+        }
+
+        case MATRIX::MatrixDataSource::BleThermometer: {
+            float temp = 0.0f;
+            float humid = 0.0f;
+            uint8_t batt = 0;
+            int8_t rssi = -127;
+            uint32_t lastSeen = 0;
+            const char* selectedMac = vizConfig.deviceId[0] != '\0' ? vizConfig.deviceId : nullptr;
+            bool ok = false;
+            if (selectedMac) {
+                ok = bleService && bleService->getCachedDeviceData(selectedMac, temp, humid, batt, rssi, lastSeen);
+            } else if (bleService) {
+                const char* cachedMac = nullptr;
+                ok = bleService->getCachedDeviceDataAt(0, cachedMac, temp, humid, batt, rssi, lastSeen);
+            }
+            input.valid = ok;
+            input.stale = !ok || lastSeen == 0 || (now - lastSeen) > UI::MATRIX::DATA_VISUALIZATION_BLE_STALE_MS;
+            switch (metric) {
+                case MATRIX::MatrixDataMetric::Humidity:
+                    input.value = humid;
+                    break;
+                case MATRIX::MatrixDataMetric::Rssi:
+                case MATRIX::MatrixDataMetric::SignalQuality:
+                    input.value = metric == MATRIX::MatrixDataMetric::SignalQuality
+                        ? rssiQuality(rssi)
+                        : static_cast<float>(rssi);
+                    break;
+                case MATRIX::MatrixDataMetric::Temperature:
+                default:
+                    input.value = temp;
+                    break;
+            }
+            input.secondary = static_cast<float>(batt);
+            break;
+        }
+
+        case MATRIX::MatrixDataSource::WifiRssi: {
+            if (wifiSensingService) {
+                const WIFISENSING::RssiStats stats = wifiSensingService->getStats();
+                input.valid = stats.sampleCount > 0;
+                input.stale = !input.valid;
+                if (metric == MATRIX::MatrixDataMetric::SignalQuality) {
+                    input.value = rssiQuality(stats.current);
+                } else {
+                    input.value = static_cast<float>(stats.current);
+                }
+                input.secondary = stats.variance;
+                fillRssiBins(wifiSensingService, input);
+            }
+            break;
+        }
+
+        case MATRIX::MatrixDataSource::WifiCsi: {
+            if (csiService) {
+                const WIFISENSING::CSI::CsiMetricsSnapshot metrics = csiService->getMetricsSnapshot();
+                const auto& motion = metrics.motion;
+                input.calibrationReady = motion.baselineReady;
+                input.needsCalibration = motion.needsCalibration;
+                input.valid = metrics.enabled && motion.baselineReady;
+                input.stale = !input.valid || metrics.lastPacketMs == 0 || (now - metrics.lastPacketMs) > 5000;
+                input.value = clampf(motion.confidence * 100.0f, 0.0f, 100.0f);
+                input.secondary = motion.score;
+                fillCsiBins(motion, input);
+            }
+            break;
+        }
+    }
+
+    matrixService->setDataVisualizationInput(input);
 }
 
 } // namespace MATRIX

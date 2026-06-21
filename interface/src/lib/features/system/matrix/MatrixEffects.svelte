@@ -14,6 +14,7 @@
 		MATRIX_EFFECT_ENGINE_NATIVE_3D,
 		MATRIX_REACTIVITY_PROVIDER_IMU,
 		MATRIX_REACTIVITY_PROVIDER_NONE,
+		MATRIX_BACKGROUND_MODE_EFFECTS,
 		MATRIX_EFFECT_REACTIVITY_GAIN_MAX,
 		MATRIX_EFFECT_REACTIVITY_GAIN_MIN,
 		type MatrixEffectSpeedScale,
@@ -230,6 +231,15 @@
 		}
 	}
 
+	function handleEffectEnabledChange(e: Event) {
+		if (!canManage) return;
+		const enabled = (e.currentTarget as HTMLInputElement).checked;
+		store.settings.effect_enabled = enabled;
+		if (enabled) {
+			store.settings.background_mode = MATRIX_BACKGROUND_MODE_EFFECTS;
+		}
+	}
+
 	function selectReactivityProvider(nextProvider: MatrixEffectReactivityProvider) {
 		if (!canManage) return;
 		store.settings.effect_reactivity_provider = nextProvider;
@@ -364,6 +374,7 @@
 					disabled={!canManage}
 					ariaLabel={m.matrix_effects_enable({ locale: i18n.languageTag })}
 					plain={true}
+					onchange={handleEffectEnabledChange}
 				/>
 			</ContentBox>
 

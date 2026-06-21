@@ -6,6 +6,7 @@
 
 #include "../alarms/AlarmService.h"
 #include "../system/matrix_manager/MatrixManagerService.h"
+#include "MatrixDataVisualizationTypes.h"
 #include "menu/MatrixMenuService.h"
 #include "MatrixSettingsTypes.h"
 
@@ -31,7 +32,42 @@ public:
             _matrixService->setRotation(state.config.rotation);
         }
 
-        if (state.config.effectEnabled) {
+        const bool wantsDataVisualization =
+            state.config.backgroundMode == static_cast<uint8_t>(MatrixBackgroundMode::DataVisualization) &&
+            state.config.dataVisualizationEnabled;
+        const bool wantsEffects =
+            state.config.backgroundMode == static_cast<uint8_t>(MatrixBackgroundMode::Effects) &&
+            state.config.effectEnabled;
+
+        if (wantsDataVisualization) {
+            MatrixDataVisualizationConfig config;
+            config.enabled = state.config.dataVisualizationEnabled;
+            config.source = state.config.dataVisualizationSource;
+            config.metric = state.config.dataVisualizationMetric;
+            config.mode = state.config.dataVisualizationMode;
+            config.minValue = state.config.dataVisualizationMin;
+            config.maxValue = state.config.dataVisualizationMax;
+            config.colorMin = state.config.dataVisualizationColorMin;
+            config.colorMid = state.config.dataVisualizationColorMid;
+            config.colorMax = state.config.dataVisualizationColorMax;
+            config.brightnessMin = state.config.dataVisualizationBrightnessMin;
+            config.brightnessMax = state.config.dataVisualizationBrightnessMax;
+            config.smoothing = state.config.dataVisualizationSmoothing;
+            config.staleBehavior = state.config.dataVisualizationStaleBehavior;
+            copyMatrixDataDeviceId(config.deviceId, sizeof(config.deviceId), state.config.dataVisualizationDeviceId);
+
+            _matrixService->clearBackgroundEffect();
+            if (_matrixManager) {
+                MATRIX_MANAGER::LayerContent bgContent;
+                bgContent.active = true;
+                bgContent.type = CommandType::SHOW_DATA_VISUALIZATION;
+                bgContent.dataVisualizationConfig = config;
+                _matrixManager->setLayer(MATRIX_MANAGER::Layer::BACKGROUND, bgContent);
+            } else {
+                _matrixService->showDataVisualization(config, 0);
+            }
+        } else if (wantsEffects) {
+            _matrixService->clearBackgroundDataVisualization();
             if (_matrixManager) {
                 // In layered mode the background effect must be published as the
                 // BACKGROUND layer, not pushed directly to the renderer.
@@ -65,6 +101,7 @@ public:
             // Regression note: clearing only Layer::BACKGROUND made the UI say
             // "effects disabled" while the old animation could still come back.
             _matrixService->clearBackgroundEffect();
+            _matrixService->clearBackgroundDataVisualization();
             if (_matrixManager) {
                 // Keep all visible-state decisions inside the layer manager.
                 // Clearing the renderer directly here can blank higher layers

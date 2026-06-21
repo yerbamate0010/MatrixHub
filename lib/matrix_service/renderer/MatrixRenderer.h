@@ -5,6 +5,7 @@
 #include "../types/MatrixTypes.h"
 #include "../../src/config/System.h" // For UI constants
 #include "../effects/MatrixFxEngine3D.h"
+#include "../visualization/MatrixDataVisualizationEngine.h"
 #include "IconDrawer.h"
 #include "TextDrawer.h"
 
@@ -28,6 +29,8 @@ public:
                             uint8_t reactivityProvider,
                             uint8_t reactivityGain);
     void setEffectInput(const MATRIX_FX::MatrixFxInput& input);
+    void showDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config);
+    void setDataVisualizationInput(const MATRIX::MatrixDataVisualizationInput& input);
     void clear();
     void setBrightness(uint8_t brightness);
     void setRotation(uint8_t rotation);
@@ -48,6 +51,7 @@ private:
     bool _scrolling;
     bool _effectRunning;
     bool _nativeEffectRunning = false;
+    bool _dataVisualizationRunning = false;
     IconType _activeIcon = IconType::NONE;
     bool _hasActiveIconBitmap = false;
     uint32_t _activeIconBitmap[64];
@@ -63,4 +67,6 @@ private:
     uint32_t _lastEffectServiceMs = 0;
     uint32_t _nativeFrame[MATRIX_FX::kMatrixFxPixelCount] = {};
     MATRIX_FX::MatrixFxEngine3D _nativeEngine;
+    uint32_t _dataVisualizationFrame[MATRIX::kMatrixDataVizPixelCount] = {};
+    MATRIX_VIZ::MatrixDataVisualizationEngine _dataVisualizationEngine;
 };

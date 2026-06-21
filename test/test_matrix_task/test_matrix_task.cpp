@@ -9,8 +9,12 @@
 #include "../../src/system/logging/Logging.h"
 #include "../../src/system/rtc/RtcConfig.h"
 #include "../../src/system/watchdog/TaskWatchdog.h"
+#include "../../src/ble/BleService.h"
+#include "../../src/sensors/runtime/SensorState.h"
 #include "../../src/sensors/imu/ImuManager.h"
 #include "../../src/sensors/imu/ImuService.h"
+#include "../../src/wifisensing/WifiSensingService.h"
+#include "../../src/wifisensing/csi/core/CsiService.h"
 #include "../../test/stubs/esp_heap_caps.h"
 
 namespace RTC {
@@ -99,6 +103,15 @@ IMU::ImuSample g_sample{};
 uint32_t g_setConsumerCalls = 0;
 bool g_lastConsumerActive = false;
 IMU::Consumer g_lastConsumer = IMU::Consumer::AutoRotate;
+SensorSnapshot g_sensorSnapshot{};
+WIFISENSING::RssiStats g_rssiStats{};
+WIFISENSING::CSI::CsiMetricsSnapshot g_csiMetrics{};
+uint32_t g_csiConsumerCalls = 0;
+bool g_lastCsiConsumerActive = false;
+WIFISENSING::CSI::CsiConsumer g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
+char g_lastBleRequestedMac[18] = {};
+uint32_t g_bleSelectedLookupCalls = 0;
+uint32_t g_bleSlotLookupCalls = 0;
 
 }  // namespace
 
@@ -139,6 +152,90 @@ void ImuManager::setConsumerActive(Consumer consumer, bool active) {
 
 }  // namespace IMU
 
+namespace SENSORS {
+
+SensorSnapshot SensorState::getLastGoodSnapshot() {
+    return g_sensorSnapshot;
+}
+
+}  // namespace SENSORS
+
+namespace BLE {
+
+bool BleService::getCachedDeviceData(
+    const char* mac,
+    float& outTemp,
+    float& outHumid,
+    uint8_t& outBatt,
+    int8_t& outRssi,
+    uint32_t& outLastSeen) const {
+    g_bleSelectedLookupCalls++;
+    std::strncpy(g_lastBleRequestedMac, mac ? mac : "", sizeof(g_lastBleRequestedMac) - 1);
+    g_lastBleRequestedMac[sizeof(g_lastBleRequestedMac) - 1] = '\0';
+    outTemp = 21.5f;
+    outHumid = 44.0f;
+    outBatt = 90;
+    outRssi = -55;
+    outLastSeen = TEST_STUBS::ARDUINO::millisValue;
+    return true;
+}
+
+bool BleService::getCachedDeviceDataAt(
+    size_t slotIndex,
+    const char*& outMac,
+    float& outTemp,
+    float& outHumid,
+    uint8_t& outBatt,
+    int8_t& outRssi,
+    uint32_t& outLastSeen) const {
+    (void)slotIndex;
+    g_bleSlotLookupCalls++;
+    static const char* kMac = "11:22:33:44:55:66";
+    outMac = kMac;
+    outTemp = 19.0f;
+    outHumid = 50.0f;
+    outBatt = 80;
+    outRssi = -70;
+    outLastSeen = TEST_STUBS::ARDUINO::millisValue;
+    return true;
+}
+
+}  // namespace BLE
+
+namespace WIFISENSING {
+
+RssiStats WifiSensingService::getStats() const {
+    return g_rssiStats;
+}
+
+uint16_t WifiSensingService::getSamples(RssiSample* outBuffer, uint16_t maxCount) const {
+    if (!outBuffer || maxCount == 0) {
+        return 0;
+    }
+    const uint16_t count = maxCount > 4 ? 4 : maxCount;
+    for (uint16_t i = 0; i < count; ++i) {
+        outBuffer[i].rssi = static_cast<int8_t>(-70 + i * 5);
+        outBuffer[i].timestampMs = TEST_STUBS::ARDUINO::millisValue;
+    }
+    return count;
+}
+
+namespace CSI {
+
+bool CsiService::setConsumerActive(CsiConsumer consumer, bool active) {
+    g_lastCsiConsumer = consumer;
+    g_lastCsiConsumerActive = active;
+    g_csiConsumerCalls++;
+    return active;
+}
+
+CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
+    return g_csiMetrics;
+}
+
+}  // namespace CSI
+}  // namespace WIFISENSING
+
 #include "../../src/system/matrix/MatrixTask.cpp"
 
 namespace MATRIX {
@@ -167,6 +264,15 @@ void resetState() {
     g_setConsumerCalls = 0;
     g_lastConsumerActive = false;
     g_lastConsumer = IMU::Consumer::AutoRotate;
+    g_sensorSnapshot = SensorSnapshot{};
+    g_rssiStats = WIFISENSING::RssiStats{};
+    g_csiMetrics = WIFISENSING::CSI::CsiMetricsSnapshot{};
+    g_csiConsumerCalls = 0;
+    g_lastCsiConsumerActive = false;
+    g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
+    std::memset(g_lastBleRequestedMac, 0, sizeof(g_lastBleRequestedMac));
+    g_bleSelectedLookupCalls = 0;
+    g_bleSlotLookupCalls = 0;
     MATRIX::MatrixTask::resetAutoRotationState();
 }
 
@@ -276,6 +382,104 @@ void test_effect_input_disables_imu_consumer_when_provider_no_longer_needs_it() 
     TEST_ASSERT_FALSE(matrix.lastEffectInput.imuValid);
 }
 
+void test_data_visualization_scd4x_sets_sensor_input() {
+    MatrixService matrix;
+
+    RTC::mockStore.matrix.backgroundMode =
+        static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    RTC::mockStore.matrix.dataVisualizationEnabled = true;
+    RTC::mockStore.matrix.dataVisualizationSource =
+        static_cast<uint8_t>(MATRIX::MatrixDataSource::Scd4x);
+    RTC::mockStore.matrix.dataVisualizationMetric =
+        static_cast<uint8_t>(MATRIX::MatrixDataMetric::Co2);
+    RTC::mockStore.matrix.dataVisualizationMin = 400.0f;
+    RTC::mockStore.matrix.dataVisualizationMax = 2000.0f;
+    g_sensorSnapshot.co2 = 812;
+    g_sensorSnapshot.temp = 22.0f;
+    g_sensorSnapshot.humid = 45.0f;
+    g_sensorSnapshot.timestamp_ms = 900;
+    TEST_STUBS::ARDUINO::millisValue = 1000;
+
+    MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, nullptr, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
+    TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
+    TEST_ASSERT_FALSE(matrix.lastDataVisualizationInput.stale);
+    TEST_ASSERT_EQUAL_FLOAT(812.0f, matrix.lastDataVisualizationInput.value);
+    TEST_ASSERT_EQUAL_UINT32(1000, matrix.lastDataVisualizationInput.timestampMs);
+}
+
+void test_data_visualization_ble_uses_selected_device_as_single_source() {
+    MatrixService matrix;
+    auto* ble = reinterpret_cast<BLE::BleService*>(0x1);
+
+    RTC::mockStore.matrix.backgroundMode =
+        static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    RTC::mockStore.matrix.dataVisualizationEnabled = true;
+    RTC::mockStore.matrix.dataVisualizationSource =
+        static_cast<uint8_t>(MATRIX::MatrixDataSource::BleThermometer);
+    RTC::mockStore.matrix.dataVisualizationMetric =
+        static_cast<uint8_t>(MATRIX::MatrixDataMetric::Humidity);
+    std::strncpy(
+        RTC::mockStore.matrix.dataVisualizationDeviceId,
+        "AA:BB:CC:DD:EE:FF",
+        sizeof(RTC::mockStore.matrix.dataVisualizationDeviceId) - 1);
+    TEST_STUBS::ARDUINO::millisValue = 2000;
+
+    MATRIX::MatrixTask::evaluateDataVisualizationInput(ble, nullptr, nullptr, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(1, g_bleSelectedLookupCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, g_bleSlotLookupCalls);
+    TEST_ASSERT_EQUAL_STRING("AA:BB:CC:DD:EE:FF", g_lastBleRequestedMac);
+    TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
+    TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
+    TEST_ASSERT_FALSE(matrix.lastDataVisualizationInput.stale);
+    TEST_ASSERT_EQUAL_FLOAT(44.0f, matrix.lastDataVisualizationInput.value);
+    TEST_ASSERT_EQUAL_FLOAT(90.0f, matrix.lastDataVisualizationInput.secondary);
+}
+
+void test_data_visualization_csi_enables_consumer_and_forwards_bins() {
+    MatrixService matrix;
+    auto* csi = reinterpret_cast<WIFISENSING::CSI::CsiService*>(0x1);
+
+    RTC::mockStore.matrix.backgroundMode =
+        static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    RTC::mockStore.matrix.dataVisualizationEnabled = true;
+    RTC::mockStore.matrix.dataVisualizationSource =
+        static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi);
+    RTC::mockStore.matrix.dataVisualizationMetric =
+        static_cast<uint8_t>(MATRIX::MatrixDataMetric::CsiMotion);
+    g_csiMetrics.enabled = true;
+    g_csiMetrics.lastPacketMs = 900;
+    g_csiMetrics.motion.baselineReady = true;
+    g_csiMetrics.motion.confidence = 0.5f;
+    g_csiMetrics.motion.visualizationBinCount = 64;
+    for (uint8_t i = 0; i < 64; ++i) {
+        g_csiMetrics.motion.visualizationBins[i] = i;
+    }
+    TEST_STUBS::ARDUINO::millisValue = 1000;
+
+    MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(1, g_csiConsumerCalls);
+    TEST_ASSERT_EQUAL(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, g_lastCsiConsumer);
+    TEST_ASSERT_TRUE(g_lastCsiConsumerActive);
+    TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
+    TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
+    TEST_ASSERT_EQUAL_FLOAT(50.0f, matrix.lastDataVisualizationInput.value);
+    TEST_ASSERT_EQUAL_UINT8(64, matrix.lastDataVisualizationInput.binCount);
+    TEST_ASSERT_EQUAL_UINT8(0, matrix.lastDataVisualizationInput.bins[0]);
+    TEST_ASSERT_EQUAL_UINT8(63, matrix.lastDataVisualizationInput.bins[63]);
+
+    RTC::mockStore.matrix.backgroundMode =
+        static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::Effects);
+    TEST_STUBS::ARDUINO::millisValue = 1300;
+    MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(2, g_csiConsumerCalls);
+    TEST_ASSERT_FALSE(g_lastCsiConsumerActive);
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -284,6 +488,9 @@ int main(int argc, char** argv) {
     RUN_TEST(test_auto_rotate_reapplies_rotation_after_toggle);
     RUN_TEST(test_effect_input_activates_imu_consumer_for_native_3d_provider);
     RUN_TEST(test_effect_input_disables_imu_consumer_when_provider_no_longer_needs_it);
+    RUN_TEST(test_data_visualization_scd4x_sets_sensor_input);
+    RUN_TEST(test_data_visualization_ble_uses_selected_device_as_single_source);
+    RUN_TEST(test_data_visualization_csi_enables_consumer_and_forwards_bins);
     return UNITY_END();
 }
 

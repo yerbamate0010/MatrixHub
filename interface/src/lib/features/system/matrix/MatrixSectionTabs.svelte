@@ -3,6 +3,7 @@
 	import GridDots from '~icons/tabler/grid-dots';
 	import Bell from '~icons/tabler/bell';
 	import Wand from '~icons/tabler/wand';
+	import ChartBar from '~icons/tabler/chart-bar';
 	import * as m from '$lib/paraglide/messages.js';
 
 	const sections = $derived([
@@ -20,6 +21,11 @@
 			href: '/system/matrix/effects',
 			label: m.matrix_tab_effects(),
 			icon: Wand
+		},
+		{
+			href: '/system/matrix/data',
+			label: m.matrix_tab_data_visualization(),
+			icon: ChartBar
 		}
 	]);
 </script>

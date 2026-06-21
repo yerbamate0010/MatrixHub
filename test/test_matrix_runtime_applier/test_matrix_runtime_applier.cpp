@@ -114,7 +114,9 @@ MatrixService g_matrixService;
 void resetState() {
     g_matrixService.clearCalls = 0;
     g_matrixService.clearBackgroundEffectCalls = 0;
+    g_matrixService.clearBackgroundDataVisualizationCalls = 0;
     g_matrixService.showEffectCalls = 0;
+    g_matrixService.showDataVisualizationCalls = 0;
     g_matrixService.showTextCalls = 0;
     g_matrixService.lastScrollSpeed = 0;
     MATRIX_MANAGER::g_setLayerCalls = 0;
@@ -156,6 +158,7 @@ void test_apply_without_manager_clears_renderer_when_effects_disabled() {
     // Fallback mode without a layer manager still owns the renderer directly.
     TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearCalls);
     TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundDataVisualizationCalls);
     TEST_ASSERT_EQUAL_UINT32(0, MATRIX_MANAGER::g_clearLayerCalls);
 }
 
@@ -170,6 +173,7 @@ void test_apply_with_manager_clears_background_layer_without_direct_renderer_cle
     // renderer, otherwise higher layers like MENU disappear until re-published.
     TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.clearCalls);
     TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundDataVisualizationCalls);
     TEST_ASSERT_EQUAL_UINT32(1, MATRIX_MANAGER::g_clearLayerCalls);
     TEST_ASSERT_EQUAL_UINT8(
         static_cast<uint8_t>(MATRIX_MANAGER::Layer::BACKGROUND),
@@ -200,11 +204,64 @@ void test_apply_with_manager_sets_background_layer_when_effects_enabled() {
     TEST_ASSERT_EQUAL_UINT8(125, MATRIX_MANAGER::g_lastSetContent.effectReactivityGain);
 }
 
+void test_apply_with_manager_sets_data_visualization_background_layer() {
+    MATRIX_MANAGER::MatrixManagerService manager(&g_matrixService);
+    MATRIX::MatrixRuntimeApplier applier(&g_matrixService, nullptr, &manager, nullptr);
+
+    MATRIX::MatrixSettingsState state = makeState(true);
+    state.config.backgroundMode = static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    state.config.dataVisualizationEnabled = true;
+    state.config.dataVisualizationSource = static_cast<uint8_t>(MATRIX::MatrixDataSource::BleThermometer);
+    state.config.dataVisualizationMetric = static_cast<uint8_t>(MATRIX::MatrixDataMetric::Temperature);
+    state.config.dataVisualizationMode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap);
+    state.config.dataVisualizationMin = 18.0f;
+    state.config.dataVisualizationMax = 28.0f;
+    state.config.dataVisualizationColorMin = 0x001122;
+    state.config.dataVisualizationColorMid = 0x334455;
+    state.config.dataVisualizationColorMax = 0x667788;
+    state.config.dataVisualizationBrightnessMin = 9;
+    state.config.dataVisualizationBrightnessMax = 99;
+    state.config.dataVisualizationSmoothing = 30;
+    state.config.dataVisualizationStaleBehavior =
+        static_cast<uint8_t>(MATRIX::MatrixDataStaleBehavior::Gray);
+    MATRIX::copyMatrixDataDeviceId(
+        state.config.dataVisualizationDeviceId,
+        sizeof(state.config.dataVisualizationDeviceId),
+        "AA:BB:CC:DD:EE:FF");
+
+    applier.apply(state);
+
+    TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.showEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, MATRIX_MANAGER::g_setLayerCalls);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(MATRIX_MANAGER::Layer::BACKGROUND),
+        static_cast<uint8_t>(MATRIX_MANAGER::g_lastSetLayer));
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(CommandType::SHOW_DATA_VISUALIZATION),
+        static_cast<uint8_t>(MATRIX_MANAGER::g_lastSetContent.type));
+    const auto& config = MATRIX_MANAGER::g_lastSetContent.dataVisualizationConfig;
+    TEST_ASSERT_TRUE(config.enabled);
+    TEST_ASSERT_EQUAL_UINT8(
+        static_cast<uint8_t>(MATRIX::MatrixDataSource::BleThermometer),
+        config.source);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap), config.mode);
+    TEST_ASSERT_EQUAL_FLOAT(18.0f, config.minValue);
+    TEST_ASSERT_EQUAL_FLOAT(28.0f, config.maxValue);
+    TEST_ASSERT_EQUAL_HEX32(0x001122, config.colorMin);
+    TEST_ASSERT_EQUAL_HEX32(0x334455, config.colorMid);
+    TEST_ASSERT_EQUAL_HEX32(0x667788, config.colorMax);
+    TEST_ASSERT_EQUAL_UINT8(9, config.brightnessMin);
+    TEST_ASSERT_EQUAL_UINT8(99, config.brightnessMax);
+    TEST_ASSERT_EQUAL_STRING("AA:BB:CC:DD:EE:FF", config.deviceId);
+}
+
 int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_apply_without_manager_clears_renderer_when_effects_disabled);
     RUN_TEST(test_apply_with_manager_clears_background_layer_without_direct_renderer_clear);
     RUN_TEST(test_apply_with_manager_sets_background_layer_when_effects_enabled);
+    RUN_TEST(test_apply_with_manager_sets_data_visualization_background_layer);
     return UNITY_END();
 }
 

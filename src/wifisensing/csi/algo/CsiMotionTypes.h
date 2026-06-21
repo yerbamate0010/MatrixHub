@@ -90,6 +90,8 @@ struct CsiMotionSnapshot {
     uint16_t selectedCarrierCount = 0;
     uint16_t validCarrierCount = 0;
     uint8_t bandCount = 0;
+    uint8_t visualizationBins[64] = {};
+    uint8_t visualizationBinCount = 0;
     CsiMotionResetReason lastResetReason = CsiMotionResetReason::None;
 };
 

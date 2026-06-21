@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "types/MatrixTypes.h"
+#include "../../../src/matrix/MatrixDataVisualizationTypes.h"
 
 enum class CommandType {
     NONE = 0,
@@ -10,6 +11,7 @@ enum class CommandType {
     SHOW_TEXT,
     SHOW_SOLID,
     SHOW_EFFECT,
+    SHOW_DATA_VISUALIZATION,
     SET_BRIGHTNESS,
     SET_ROTATION
 };
@@ -25,5 +27,6 @@ struct MatrixCommand {
     uint32_t value32 = 0;
     uint32_t value32_2 = 0;
     uint32_t value32_3 = 0;
+    MATRIX::MatrixDataVisualizationConfig dataVisualizationConfig{};
     bool stopBackground = true;
 };

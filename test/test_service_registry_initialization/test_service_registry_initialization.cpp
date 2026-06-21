@@ -119,6 +119,7 @@ inline PsychicHttpServer* lastMatrixApiServer = nullptr;
 inline SecurityManager* lastMatrixApiSecurity = nullptr;
 inline POWER::PowerManager* lastMatrixApiPowerManager = nullptr;
 inline MATRIX::MatrixSettingsService* lastMatrixApiSettings = nullptr;
+inline WIFISENSING::CSI::CsiService* lastMatrixApiCsiService = nullptr;
 inline int beginMatrixApiCalls = 0;
 inline API::MatrixApiService* fakeMatrixApiPtr = reinterpret_cast<API::MatrixApiService*>(0x42424242);
 
@@ -271,6 +272,7 @@ void reset() {
     lastMatrixApiSecurity = nullptr;
     lastMatrixApiPowerManager = nullptr;
     lastMatrixApiSettings = nullptr;
+    lastMatrixApiCsiService = nullptr;
     beginMatrixApiCalls = 0;
     fakeMatrixApiPtr = reinterpret_cast<API::MatrixApiService*>(0x42424242);
 
@@ -528,7 +530,8 @@ API::MatrixApiService* initMatrixApi(
     PsychicHttpServer* server,
     SecurityManager* securityManager,
     POWER::PowerManager* powerManager,
-    MATRIX::MatrixSettingsService* matrixSettings) {
+    MATRIX::MatrixSettingsService* matrixSettings,
+    WIFISENSING::CSI::CsiService* csiService) {
     TEST_SERVICE_REGISTRY_INIT::calls.push("initMatrixApi");
     TEST_SERVICE_REGISTRY_INIT::initMatrixApiCalls++;
     TEST_ASSERT_NOT_NULL(api);
@@ -536,6 +539,7 @@ API::MatrixApiService* initMatrixApi(
     TEST_SERVICE_REGISTRY_INIT::lastMatrixApiSecurity = securityManager;
     TEST_SERVICE_REGISTRY_INIT::lastMatrixApiPowerManager = powerManager;
     TEST_SERVICE_REGISTRY_INIT::lastMatrixApiSettings = matrixSettings;
+    TEST_SERVICE_REGISTRY_INIT::lastMatrixApiCsiService = csiService;
     return TEST_SERVICE_REGISTRY_INIT::fakeMatrixApiPtr;
 }
 
@@ -769,6 +773,8 @@ void test_initializeBusinessServices_creates_owned_services_and_starts_shelly_wh
                                              TEST_SERVICE_REGISTRY_INIT::fakeObjectPtr<POWER::PowerManager>());
     TEST_SERVICE_REGISTRY_INIT::setUniquePtr(registry._alarmService,
                                              TEST_SERVICE_REGISTRY_INIT::fakeObjectPtr<ALARMS::AlarmService>());
+    TEST_SERVICE_REGISTRY_INIT::setUniquePtr(registry._csiService,
+                                             TEST_SERVICE_REGISTRY_INIT::fakeObjectPtr<WIFISENSING::CSI::CsiService>());
     TEST_SERVICE_REGISTRY_INIT::setUniquePtr(
         registry._wifiSensingService,
         reinterpret_cast<WIFISENSING::WifiSensingService*>(0x2222));
@@ -982,6 +988,8 @@ void test_initializeMatrixServices_wires_menu_settings_and_api_in_order() {
                           TEST_SERVICE_REGISTRY_INIT::lastMatrixApiPowerManager);
     TEST_ASSERT_EQUAL_PTR(registry._matrixSettings.get(),
                           TEST_SERVICE_REGISTRY_INIT::lastMatrixApiSettings);
+    TEST_ASSERT_EQUAL_PTR(registry._csiService.get(),
+                          TEST_SERVICE_REGISTRY_INIT::lastMatrixApiCsiService);
     TEST_ASSERT_EQUAL_INT(1, TEST_SERVICE_REGISTRY_INIT::beginMatrixApiCalls);
 
     const std::vector<std::string> expected = {

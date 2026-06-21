@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "../types/MatrixTypes.h"
+#include "../../../src/matrix/MatrixDataVisualizationTypes.h"
 
 enum class CommandType {
     NONE,
@@ -10,6 +11,7 @@ enum class CommandType {
     SHOW_TEXT,
     SHOW_SOLID,
     SHOW_EFFECT,
+    SHOW_DATA_VISUALIZATION,
     SET_BRIGHTNESS,
     SET_ROTATION
 };
@@ -30,6 +32,7 @@ struct MatrixCommand {
     uint32_t value32_3 = 0; // EffectColor3
     uint8_t effectReactivityProvider = 0;
     uint8_t effectReactivityGain = 0;
+    MATRIX::MatrixDataVisualizationConfig dataVisualizationConfig{};
     
     // Flags
     bool stopBackground = true;

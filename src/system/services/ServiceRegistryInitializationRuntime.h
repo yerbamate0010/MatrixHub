@@ -200,7 +200,8 @@ API::MatrixApiService* initMatrixApi(
     PsychicHttpServer* server,
     SecurityManager* securityManager,
     POWER::PowerManager* powerManager,
-    MATRIX::MatrixSettingsService* matrixSettings);
+    MATRIX::MatrixSettingsService* matrixSettings,
+    WIFISENSING::CSI::CsiService* csiService);
 void beginMatrixApi(API::MatrixApiService* api);
 // Kept separate from ApiServicesInitializer because macro/airmouse regressions
 // were hidden in forwarded arguments and begin sequencing, so we want one

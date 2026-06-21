@@ -141,6 +141,89 @@ void test_serialize_matrix_writes_effect_engine_and_reactivity_fields() {
     TEST_ASSERT_EQUAL_UINT8(125, obj[CONFIG::Keys::kEffectReactivityGain].as<uint8_t>());
 }
 
+void test_deserialize_matrix_normalizes_data_visualization_fields() {
+    JsonDocument doc;
+    doc[CONFIG::Keys::kBackgroundMode] = 9;
+    doc[CONFIG::Keys::kDataVisualizationEnabled] = true;
+    doc[CONFIG::Keys::kDataVisualizationSource] = 9;
+    doc[CONFIG::Keys::kDataVisualizationMetric] = 9;
+    doc[CONFIG::Keys::kDataVisualizationMode] = 9;
+    doc[CONFIG::Keys::kDataVisualizationMin] = 30.0f;
+    doc[CONFIG::Keys::kDataVisualizationMax] = 20.0f;
+    doc[CONFIG::Keys::kDataVisualizationColorMin] = 0x1ABCDEF;
+    doc[CONFIG::Keys::kDataVisualizationColorMid] = 0x1000000;
+    doc[CONFIG::Keys::kDataVisualizationColorMax] = 0xFFFFFFFF;
+    doc[CONFIG::Keys::kDataVisualizationBrightnessMin] = 200;
+    doc[CONFIG::Keys::kDataVisualizationBrightnessMax] = 10;
+    doc[CONFIG::Keys::kDataVisualizationStaleBehavior] = 9;
+    doc[CONFIG::Keys::kDataVisualizationDeviceId] = "AA:BB:CC:DD:EE:FF-extra";
+
+    RTC::MatrixData data{};
+    JsonObject obj = doc.as<JsonObject>();
+    CONFIG::JSON::deserializeMatrix(obj, data);
+
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::Effects), data.backgroundMode);
+    TEST_ASSERT_TRUE(data.dataVisualizationEnabled);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataSource::Scd4x), data.dataVisualizationSource);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataMetric::Co2), data.dataVisualizationMetric);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Gauge), data.dataVisualizationMode);
+    TEST_ASSERT_EQUAL_FLOAT(30.0f, data.dataVisualizationMin);
+    TEST_ASSERT_EQUAL_FLOAT(31.0f, data.dataVisualizationMax);
+    TEST_ASSERT_EQUAL_HEX32(0xABCDEF, data.dataVisualizationColorMin);
+    TEST_ASSERT_EQUAL_HEX32(0x000000, data.dataVisualizationColorMid);
+    TEST_ASSERT_EQUAL_HEX32(0xFFFFFF, data.dataVisualizationColorMax);
+    TEST_ASSERT_EQUAL_UINT8(10, data.dataVisualizationBrightnessMin);
+    TEST_ASSERT_EQUAL_UINT8(200, data.dataVisualizationBrightnessMax);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataStaleBehavior::Dim),
+                            data.dataVisualizationStaleBehavior);
+    TEST_ASSERT_EQUAL_STRING("AA:BB:CC:DD:EE:FF", data.dataVisualizationDeviceId);
+}
+
+void test_serialize_matrix_writes_data_visualization_fields() {
+    RTC::MatrixData data{};
+    data.backgroundMode = static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    data.dataVisualizationEnabled = true;
+    data.dataVisualizationSource = static_cast<uint8_t>(MATRIX::MatrixDataSource::BleThermometer);
+    data.dataVisualizationMetric = static_cast<uint8_t>(MATRIX::MatrixDataMetric::Humidity);
+    data.dataVisualizationMode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Trend);
+    data.dataVisualizationMin = 10.0f;
+    data.dataVisualizationMax = 90.0f;
+    data.dataVisualizationColorMin = 0x102030;
+    data.dataVisualizationColorMid = 0x405060;
+    data.dataVisualizationColorMax = 0x708090;
+    data.dataVisualizationBrightnessMin = 3;
+    data.dataVisualizationBrightnessMax = 99;
+    data.dataVisualizationSmoothing = 25;
+    data.dataVisualizationStaleBehavior = static_cast<uint8_t>(MATRIX::MatrixDataStaleBehavior::Gray);
+    MATRIX::copyMatrixDataDeviceId(
+        data.dataVisualizationDeviceId,
+        sizeof(data.dataVisualizationDeviceId),
+        "11:22:33:44:55:66");
+
+    JsonDocument doc;
+    JsonObject obj = doc.to<JsonObject>();
+    CONFIG::JSON::serializeMatrix(data, obj);
+
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization),
+                            obj[CONFIG::Keys::kBackgroundMode].as<uint8_t>());
+    TEST_ASSERT_TRUE(obj[CONFIG::Keys::kDataVisualizationEnabled].as<bool>());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataSource::BleThermometer),
+                            obj[CONFIG::Keys::kDataVisualizationSource].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataMetric::Humidity),
+                            obj[CONFIG::Keys::kDataVisualizationMetric].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Trend),
+                            obj[CONFIG::Keys::kDataVisualizationMode].as<uint8_t>());
+    TEST_ASSERT_EQUAL_FLOAT(10.0f, obj[CONFIG::Keys::kDataVisualizationMin].as<float>());
+    TEST_ASSERT_EQUAL_FLOAT(90.0f, obj[CONFIG::Keys::kDataVisualizationMax].as<float>());
+    TEST_ASSERT_EQUAL_HEX32(0x102030, obj[CONFIG::Keys::kDataVisualizationColorMin].as<uint32_t>());
+    TEST_ASSERT_EQUAL_HEX32(0x405060, obj[CONFIG::Keys::kDataVisualizationColorMid].as<uint32_t>());
+    TEST_ASSERT_EQUAL_HEX32(0x708090, obj[CONFIG::Keys::kDataVisualizationColorMax].as<uint32_t>());
+    TEST_ASSERT_EQUAL_UINT8(3, obj[CONFIG::Keys::kDataVisualizationBrightnessMin].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(99, obj[CONFIG::Keys::kDataVisualizationBrightnessMax].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(25, obj[CONFIG::Keys::kDataVisualizationSmoothing].as<uint8_t>());
+    TEST_ASSERT_EQUAL_STRING("11:22:33:44:55:66", obj[CONFIG::Keys::kDataVisualizationDeviceId].as<const char*>());
+}
+
 void test_load_matrix_psram_normalizes_custom_icon_pixels() {
     JsonDocument doc;
     JsonArray icons = doc[CONFIG::Keys::kCustomIcons].to<JsonArray>();
@@ -166,6 +249,8 @@ int main(int argc, char** argv) {
     RUN_TEST(test_deserialize_matrix_normalizes_rgb888_colors);
     RUN_TEST(test_deserialize_matrix_normalizes_native_3d_effect_fields);
     RUN_TEST(test_serialize_matrix_writes_effect_engine_and_reactivity_fields);
+    RUN_TEST(test_deserialize_matrix_normalizes_data_visualization_fields);
+    RUN_TEST(test_serialize_matrix_writes_data_visualization_fields);
     RUN_TEST(test_load_matrix_psram_normalizes_custom_icon_pixels);
     return UNITY_END();
 }

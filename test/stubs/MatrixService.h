@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "types/MatrixTypes.h"
 #include "../../lib/matrix_service/effects/MatrixFxTypes.h"
+#include "../../src/matrix/MatrixDataVisualizationTypes.h"
 
 class MatrixService {
 public:
@@ -20,6 +21,10 @@ public:
     void setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
         lastEffectInput = input;
         setEffectInputCalls++;
+    }
+    void setDataVisualizationInput(const MATRIX::MatrixDataVisualizationInput& input) {
+        lastDataVisualizationInput = input;
+        setDataVisualizationInputCalls++;
     }
     void showEffect(uint8_t mode,
                     uint32_t speed,
@@ -42,11 +47,17 @@ public:
         showEffectCalls++;
     }
     void showSolidColor(uint16_t color) {}
+    void showDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config, uint32_t duration = 0) {
+        (void)duration;
+        lastDataVisualizationConfig = config;
+        showDataVisualizationCalls++;
+    }
     void clear(bool stopBackground = true) {
         lastClearStopBackground = stopBackground;
         clearCalls++;
     }
     void clearBackgroundEffect() { clearBackgroundEffectCalls++; }
+    void clearBackgroundDataVisualization() { clearBackgroundDataVisualizationCalls++; }
     void setBrightness(uint8_t brightness) {}
     void setScrollSpeed(uint16_t speed) { lastScrollSpeed = speed; }
     uint8_t lastLimit = 255;
@@ -68,8 +79,10 @@ public:
     uint32_t lastTextColor = 0;
     uint32_t showTextCalls = 0;
     uint32_t showEffectCalls = 0;
+    uint32_t showDataVisualizationCalls = 0;
     uint32_t clearCalls = 0;
     uint32_t clearBackgroundEffectCalls = 0;
+    uint32_t clearBackgroundDataVisualizationCalls = 0;
     bool lastClearStopBackground = false;
     uint8_t lastEffectMode = 0;
     uint32_t lastEffectSpeed = 0;
@@ -83,6 +96,9 @@ public:
     uint8_t lastRotation = 0;
     uint32_t setRotationCalls = 0;
     uint32_t setEffectInputCalls = 0;
+    uint32_t setDataVisualizationInputCalls = 0;
     MATRIX_FX::MatrixFxInput lastEffectInput{};
+    MATRIX::MatrixDataVisualizationConfig lastDataVisualizationConfig{};
+    MATRIX::MatrixDataVisualizationInput lastDataVisualizationInput{};
     bool customIconAssigned[4] = {false, false, false, false};
 };

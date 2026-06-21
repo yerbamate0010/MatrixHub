@@ -16,6 +16,21 @@ export interface MatrixSettings {
 	effect_color_3: number;
 	effect_reactivity_provider: number;
 	effect_reactivity_gain: number;
+	background_mode: number;
+	data_visualization_enabled: boolean;
+	data_visualization_source: number;
+	data_visualization_metric: number;
+	data_visualization_mode: number;
+	data_visualization_min: number;
+	data_visualization_max: number;
+	data_visualization_color_min: number;
+	data_visualization_color_mid: number;
+	data_visualization_color_max: number;
+	data_visualization_brightness_min: number;
+	data_visualization_brightness_max: number;
+	data_visualization_smoothing: number;
+	data_visualization_stale_behavior: number;
+	data_visualization_device_id: string;
 	custom_icons?: number[][];
 	// Menu settings
 	menu_enabled: boolean;
@@ -44,5 +59,15 @@ export class MatrixApiService {
 			signal: AbortSignal.timeout(MatrixApiService.SAVE_TIMEOUT_MS),
 			schema: MatrixSettingsSchema
 		});
+	}
+
+	async calibrateCsiDataVisualization(): Promise<{ ok: boolean; status?: string }> {
+		return this.client.post<{ ok: boolean; status?: string }>(
+			'/api/matrix/data-visualization/csi/calibrate',
+			{},
+			{
+				signal: AbortSignal.timeout(MatrixApiService.SAVE_TIMEOUT_MS)
+			}
+		);
 	}
 }

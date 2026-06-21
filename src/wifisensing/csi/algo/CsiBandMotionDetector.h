@@ -49,6 +49,7 @@ private:
     bool updateNoisyGate(const ScoreResult& score, uint32_t nowMs);
     void updateBaselineEwma(uint16_t width);
     CsiMotionSnapshot makeSnapshot(CsiMotionState state, const ScoreResult* score = nullptr);
+    void fillVisualizationBins(CsiMotionSnapshot& snapshot, uint16_t width) const;
 
     CsiMotionStorage* _storage = nullptr;
     CsiMotionConfig _config;

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../RtcDefaultValues.h"
+#include "../../../matrix/MatrixDataVisualizationTypes.h"
 #include <cstdint>
 
 namespace RTC {
@@ -62,6 +63,23 @@ struct __attribute__((packed)) MatrixData {
     uint32_t effectColor3 = Defaults::Matrix::EffectColor3;
     uint8_t effectReactivityProvider = Defaults::Matrix::EffectReactivityProvider;
     uint8_t effectReactivityGain = Defaults::Matrix::EffectReactivityGain;
+
+    // Background mode and sensor data visualization
+    uint8_t backgroundMode = Defaults::Matrix::BackgroundMode;
+    bool dataVisualizationEnabled = Defaults::Matrix::DataVisualizationEnabled;
+    uint8_t dataVisualizationSource = Defaults::Matrix::DataVisualizationSource;
+    uint8_t dataVisualizationMetric = Defaults::Matrix::DataVisualizationMetric;
+    uint8_t dataVisualizationMode = Defaults::Matrix::DataVisualizationMode;
+    float dataVisualizationMin = Defaults::Matrix::DataVisualizationMin;
+    float dataVisualizationMax = Defaults::Matrix::DataVisualizationMax;
+    uint32_t dataVisualizationColorMin = Defaults::Matrix::DataVisualizationColorMin;
+    uint32_t dataVisualizationColorMid = Defaults::Matrix::DataVisualizationColorMid;
+    uint32_t dataVisualizationColorMax = Defaults::Matrix::DataVisualizationColorMax;
+    uint8_t dataVisualizationBrightnessMin = Defaults::Matrix::DataVisualizationBrightnessMin;
+    uint8_t dataVisualizationBrightnessMax = Defaults::Matrix::DataVisualizationBrightnessMax;
+    uint8_t dataVisualizationSmoothing = Defaults::Matrix::DataVisualizationSmoothing;
+    uint8_t dataVisualizationStaleBehavior = Defaults::Matrix::DataVisualizationStaleBehavior;
+    char dataVisualizationDeviceId[MATRIX::kMatrixDataVizDeviceIdCapacity] = {};
     
     // Menu settings
     MenuSettings menu;

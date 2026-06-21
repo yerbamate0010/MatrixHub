@@ -47,6 +47,39 @@ void test_request_effect_carries_engine_reactivity_and_background_cache() {
     TEST_ASSERT_EQUAL_UINT8(125, bg.reactivityGain);
 }
 
+void test_request_data_visualization_carries_config_and_replaces_effect_background() {
+    MatrixState state;
+    MatrixCommand command;
+
+    state.requestEffect(3, 850, 0x010203, 0x040506, 0x070809, 0, 1, 1, 125);
+    TEST_ASSERT_TRUE(state.poll(command));
+    TEST_ASSERT_TRUE(state.getBackgroundEffect().active);
+
+    MATRIX::MatrixDataVisualizationConfig config;
+    config.enabled = true;
+    config.source = static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi);
+    config.metric = static_cast<uint8_t>(MATRIX::MatrixDataMetric::CsiMotion);
+    config.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap);
+    config.minValue = 0.0f;
+    config.maxValue = 100.0f;
+    MATRIX::copyMatrixDataDeviceId(config.deviceId, sizeof(config.deviceId), "AA:BB:CC:DD:EE:FF");
+
+    state.requestDataVisualization(config, 0);
+
+    TEST_ASSERT_TRUE(state.poll(command));
+    TEST_ASSERT_EQUAL(static_cast<int>(CommandType::SHOW_DATA_VISUALIZATION), static_cast<int>(command.type));
+    TEST_ASSERT_TRUE(command.dataVisualizationConfig.enabled);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi),
+                            command.dataVisualizationConfig.source);
+    TEST_ASSERT_EQUAL_STRING("AA:BB:CC:DD:EE:FF", command.dataVisualizationConfig.deviceId);
+
+    TEST_ASSERT_FALSE(state.getBackgroundEffect().active);
+    const auto bgViz = state.getBackgroundDataVisualization();
+    TEST_ASSERT_TRUE(bgViz.active);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap),
+                            bgViz.config.mode);
+}
+
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
@@ -54,5 +87,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_request_text_preserves_payload_up_to_command_buffer_size);
     RUN_TEST(test_request_effect_carries_engine_reactivity_and_background_cache);
+    RUN_TEST(test_request_data_visualization_carries_config_and_replaces_effect_background);
     return UNITY_END();
 }

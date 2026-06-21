@@ -47,6 +47,7 @@ describe('WifiSensingApiService', () => {
 				frontend_consumer_active: true,
 				alarm_consumer_active: false,
 				boot_consumer_active: false,
+				matrix_visualization_consumer_active: false,
 				queue_depth: 0,
 				queue_capacity: 16,
 				queue_drops_total: 0,

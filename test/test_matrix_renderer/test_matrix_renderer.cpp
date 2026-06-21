@@ -1,6 +1,7 @@
 #include <unity.h>
 
 #include "../../lib/matrix_service/effects/MatrixFxEngine3D.cpp"
+#include "../../lib/matrix_service/visualization/MatrixDataVisualizationEngine.cpp"
 #include "../../lib/matrix_service/renderer/MatrixRenderer.cpp"
 
 void IconDrawer::draw(LedMatrix* matrix, IconType icon, const uint32_t* customBitmap) {
@@ -109,6 +110,33 @@ void test_native_3d_effect_renders_bitmap_without_starting_legacy_fx() {
     TEST_ASSERT_EQUAL_UINT32(1, matrix().showCalls);
 }
 
+void test_data_visualization_renders_bitmap_without_starting_legacy_fx() {
+    MatrixRenderer renderer;
+    renderer.begin(5);
+    matrix().resetCounters();
+
+    MATRIX::MatrixDataVisualizationConfig config;
+    config.enabled = true;
+    config.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Gauge);
+    config.minValue = 0.0f;
+    config.maxValue = 100.0f;
+    renderer.showDataVisualization(config);
+
+    MATRIX::MatrixDataVisualizationInput input;
+    input.valid = true;
+    input.value = 50.0f;
+    input.timestampMs = 1;
+    renderer.setDataVisualizationInput(input);
+    renderer.loop();
+
+    TEST_ASSERT_TRUE(renderer.isActive());
+    TEST_ASSERT_EQUAL_UINT32(0, matrix().startCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, matrix().serviceCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, matrix().drawBitmapCalls);
+    TEST_ASSERT_FALSE(matrix().lastBitmapWasNull);
+    TEST_ASSERT_EQUAL_UINT32(1, matrix().showCalls);
+}
+
 void test_brightness_zero_blacks_out_and_blocks_effect_rendering() {
     MatrixRenderer renderer;
     renderer.begin(5);
@@ -140,6 +168,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_show_text_same_text_same_color_is_deduplicated);
     RUN_TEST(test_show_text_after_effect_renders_immediately);
     RUN_TEST(test_native_3d_effect_renders_bitmap_without_starting_legacy_fx);
+    RUN_TEST(test_data_visualization_renders_bitmap_without_starting_legacy_fx);
     RUN_TEST(test_brightness_zero_blacks_out_and_blocks_effect_rendering);
     return UNITY_END();
 }

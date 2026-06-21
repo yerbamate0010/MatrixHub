@@ -6,6 +6,7 @@
 #include "renderer/MatrixRenderer.h"
 #include "core/MatrixState.h"
 #include "effects/MatrixFxTypes.h"
+#include "../../src/matrix/MatrixDataVisualizationTypes.h"
 
 class MatrixService {
 public:
@@ -43,11 +44,13 @@ public:
      * path can otherwise resurrect the stale cached effect from MatrixState.
      */
     void clearBackgroundEffect();
+    void clearBackgroundDataVisualization();
     void setBrightness(uint8_t brightness);
     void setThermalBrightnessLimit(uint8_t limit);
     void setRotation(uint8_t rotation);
     void setScrollSpeed(uint16_t ms);
     void setEffectInput(const MATRIX_FX::MatrixFxInput& input);
+    void setDataVisualizationInput(const MATRIX::MatrixDataVisualizationInput& input);
 
     // Forces a solid color (Active Mode - blocks passive updates)
     void showSolidColor(uint32_t color);
@@ -76,6 +79,7 @@ public:
                     uint8_t engine = static_cast<uint8_t>(MATRIX_FX::EffectEngine::LegacyWs2812Fx),
                     uint8_t reactivityProvider = static_cast<uint8_t>(MATRIX_FX::ReactiveProvider::None),
                     uint8_t reactivityGain = MATRIX_FX::kDefaultReactivityGain);
+    void showDataVisualization(const MATRIX::MatrixDataVisualizationConfig& config, uint32_t durationMs = 0);
 
 
 

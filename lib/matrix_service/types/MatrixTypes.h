@@ -30,5 +30,6 @@ enum class MatrixMode {
     ACTIVE_ICON = 2,  // User/Alarm Icon being shown
     ACTIVE_TEXT = 3,  // User/Alarm Text being shown
     ACTIVE_SOLID = 4, // User/Alarm Solid Color being shown
-    ACTIVE_EFFECT = 5 // WS2812FX Effect running
+    ACTIVE_EFFECT = 5, // WS2812FX Effect running
+    ACTIVE_DATA_VISUALIZATION = 6
 };

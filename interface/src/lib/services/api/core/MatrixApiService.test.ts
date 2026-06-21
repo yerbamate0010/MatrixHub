@@ -27,6 +27,21 @@ function createMatrixSettings(overrides: Partial<MatrixSettings> = {}): MatrixSe
 		effect_color_3: 0x0000ff,
 		effect_reactivity_provider: 0,
 		effect_reactivity_gain: 80,
+		background_mode: 0,
+		data_visualization_enabled: false,
+		data_visualization_source: 0,
+		data_visualization_metric: 0,
+		data_visualization_mode: 0,
+		data_visualization_min: 400,
+		data_visualization_max: 2000,
+		data_visualization_color_min: 0x0040ff,
+		data_visualization_color_mid: 0x00ff80,
+		data_visualization_color_max: 0xff3000,
+		data_visualization_brightness_min: 12,
+		data_visualization_brightness_max: 180,
+		data_visualization_smoothing: 50,
+		data_visualization_stale_behavior: 0,
+		data_visualization_device_id: '',
 		custom_icons: [[], [], []],
 		menu_enabled: true,
 		menu_text_color: 0xffffff,
@@ -68,5 +83,18 @@ describe('MatrixApiService', () => {
 			expect.objectContaining({ schema: MatrixSettingsSchema })
 		);
 		expect(result).toBe(payload);
+	});
+
+	it('requests CSI data visualization calibration', async () => {
+		mockClient.post.mockResolvedValue({ ok: true, status: 'calibration_requested' });
+
+		const result = await service.calibrateCsiDataVisualization();
+
+		expect(mockClient.post).toHaveBeenCalledWith(
+			'/api/matrix/data-visualization/csi/calibrate',
+			{},
+			expect.objectContaining({ signal: expect.any(AbortSignal) })
+		);
+		expect(result).toEqual({ ok: true, status: 'calibration_requested' });
 	});
 });
