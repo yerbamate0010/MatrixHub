@@ -80,6 +80,7 @@ public:
     void setCsiCallback(CsiCallback cb);
     void setMotionCallback(MotionCallback cb);
     void setMotionConfig(const CsiMotionConfig& config);
+    void setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config);
     void requestMotionCalibration();
     CsiMotionSnapshot getMotionSnapshot() const;
 
@@ -128,6 +129,7 @@ public:
     void publishMotionSnapshot(const CsiMotionSnapshot& snapshot);
     void maybePublishMotion(const CsiMotionSnapshot& snapshot, uint32_t nowMs);
     void publishMotionBoolean(bool motion, uint32_t nowMs);
+    void refreshMotionConfigFromConsumers();
     bool reapStoppedProcessingTask(TickType_t waitTicks);
     void destroyProcessingTaskResources();
     void resetRuntimeMetrics();
@@ -167,6 +169,8 @@ public:
     uint32_t _lastBatchesRateTotal = 0;
 
     CsiBandMotionDetector _motionDetector;
+    CsiMotionConfig _alarmMotionConfig;
+    CsiMotionConfig _matrixVisualizationMotionConfig;
     CsiMotionConfig _pendingMotionConfig;
     std::atomic<bool> _motionConfigDirty{false};
     std::atomic<bool> _motionCalibrationRequested{false};

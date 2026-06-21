@@ -23,6 +23,16 @@ uint8_t countActiveConsumers(uint32_t mask) {
     return count;
 }
 
+CsiMotionConfig withMatrixVisualizationDefaults(CsiMotionConfig config) {
+    config.enabled = true;
+    if (config.bandCount == 0) {
+        config.bandCount = 1;
+        config.bands[0].start = 0;
+        config.bands[0].end = MAX_CSI_SUBCARRIERS - 1;
+    }
+    return config;
+}
+
 } // namespace
 
 CsiService::CsiService() {
@@ -127,22 +137,42 @@ void CsiService::setMotionConfig(const CsiMotionConfig& config) {
             LOGW("Failed to update CSI motion config");
             return;
         }
-        _pendingMotionConfig = config;
-        _motionConfigDirty.store(true, std::memory_order_release);
+        _alarmMotionConfig = config;
+        if (_matrixVisualizationMotionConfig.enabled) {
+            _matrixVisualizationMotionConfig = withMatrixVisualizationDefaults(config);
+        }
     } else {
-        _pendingMotionConfig = config;
-        _motionConfigDirty.store(true, std::memory_order_release);
-    }
-
-    if (!config.enabled) {
-        CsiMotionSnapshot disabled;
-        disabled.state = CsiMotionState::Disabled;
-        publishMotionSnapshot(disabled);
-        publishMotionBoolean(false, millis());
-        _motionCalibrationRequested.store(false, std::memory_order_release);
+        _alarmMotionConfig = config;
+        if (_matrixVisualizationMotionConfig.enabled) {
+            _matrixVisualizationMotionConfig = withMatrixVisualizationDefaults(config);
+        }
     }
 
     setConsumerActive(CsiConsumer::AlarmSystem, config.enabled);
+    refreshMotionConfigFromConsumers();
+}
+
+void CsiService::setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config) {
+    CsiMotionConfig nextConfig = config;
+    if (active) {
+        nextConfig = withMatrixVisualizationDefaults(nextConfig);
+    } else {
+        nextConfig.enabled = false;
+    }
+
+    if (_motionConfigMutex) {
+        SYSTEM::ScopeLock lock(_motionConfigMutex, pdMS_TO_TICKS(200));
+        if (!lock.isLocked()) {
+            LOGW("Failed to update matrix CSI motion config");
+            return;
+        }
+        _matrixVisualizationMotionConfig = nextConfig;
+    } else {
+        _matrixVisualizationMotionConfig = nextConfig;
+    }
+
+    setConsumerActive(CsiConsumer::MatrixVisualization, active);
+    refreshMotionConfigFromConsumers();
 }
 
 void CsiService::requestMotionCalibration() {
@@ -281,6 +311,62 @@ void CsiService::publishMotionBoolean(bool motion, uint32_t nowMs) {
     _lastMotionCallbackMs = nowMs;
     if (callback) {
         callback(motion);
+    }
+}
+
+void CsiService::refreshMotionConfigFromConsumers() {
+    CsiMotionConfig selectedConfig;
+
+    if (_motionConfigMutex) {
+        SYSTEM::ScopeLock lock(_motionConfigMutex, pdMS_TO_TICKS(200));
+        if (!lock.isLocked()) {
+            LOGW("Failed to refresh CSI motion config");
+            return;
+        }
+
+        const uint32_t mask = _activeConsumers.load(std::memory_order_relaxed);
+        const bool alarmActive =
+            (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0 && _alarmMotionConfig.enabled;
+        const bool matrixActive =
+            (mask & consumerBit(CsiConsumer::MatrixVisualization)) != 0 &&
+            _matrixVisualizationMotionConfig.enabled;
+
+        if (alarmActive) {
+            selectedConfig = _alarmMotionConfig;
+        } else if (matrixActive) {
+            selectedConfig = _matrixVisualizationMotionConfig;
+        } else {
+            selectedConfig.enabled = false;
+        }
+
+        _pendingMotionConfig = selectedConfig;
+        _motionConfigDirty.store(true, std::memory_order_release);
+    } else {
+        const uint32_t mask = _activeConsumers.load(std::memory_order_relaxed);
+        const bool alarmActive =
+            (mask & consumerBit(CsiConsumer::AlarmSystem)) != 0 && _alarmMotionConfig.enabled;
+        const bool matrixActive =
+            (mask & consumerBit(CsiConsumer::MatrixVisualization)) != 0 &&
+            _matrixVisualizationMotionConfig.enabled;
+
+        if (alarmActive) {
+            selectedConfig = _alarmMotionConfig;
+        } else if (matrixActive) {
+            selectedConfig = _matrixVisualizationMotionConfig;
+        } else {
+            selectedConfig.enabled = false;
+        }
+
+        _pendingMotionConfig = selectedConfig;
+        _motionConfigDirty.store(true, std::memory_order_release);
+    }
+
+    if (!selectedConfig.enabled) {
+        CsiMotionSnapshot disabled;
+        disabled.state = CsiMotionState::Disabled;
+        publishMotionSnapshot(disabled);
+        publishMotionBoolean(false, millis());
+        _motionCalibrationRequested.store(false, std::memory_order_release);
     }
 }
 

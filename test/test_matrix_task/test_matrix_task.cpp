@@ -109,6 +109,9 @@ WIFISENSING::CSI::CsiMetricsSnapshot g_csiMetrics{};
 uint32_t g_csiConsumerCalls = 0;
 bool g_lastCsiConsumerActive = false;
 WIFISENSING::CSI::CsiConsumer g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
+uint32_t g_matrixCsiConfigCalls = 0;
+bool g_lastMatrixCsiActive = false;
+WIFISENSING::CSI::CsiMotionConfig g_lastMatrixCsiConfig{};
 char g_lastBleRequestedMac[18] = {};
 uint32_t g_bleSelectedLookupCalls = 0;
 uint32_t g_bleSlotLookupCalls = 0;
@@ -155,6 +158,10 @@ void ImuManager::setConsumerActive(Consumer consumer, bool active) {
 namespace SENSORS {
 
 SensorSnapshot SensorState::getLastGoodSnapshot() {
+    return g_sensorSnapshot;
+}
+
+SensorSnapshot SensorState::getSnapshot() {
     return g_sensorSnapshot;
 }
 
@@ -233,6 +240,14 @@ CsiMetricsSnapshot CsiService::getMetricsSnapshot() const {
     return g_csiMetrics;
 }
 
+void CsiService::setMatrixVisualizationMotionConfig(bool active, const CsiMotionConfig& config) {
+    g_matrixCsiConfigCalls++;
+    g_lastCsiConsumer = CsiConsumer::MatrixVisualization;
+    g_lastCsiConsumerActive = active;
+    g_lastMatrixCsiActive = active;
+    g_lastMatrixCsiConfig = config;
+}
+
 }  // namespace CSI
 }  // namespace WIFISENSING
 
@@ -270,6 +285,9 @@ void resetState() {
     g_csiConsumerCalls = 0;
     g_lastCsiConsumerActive = false;
     g_lastCsiConsumer = WIFISENSING::CSI::CsiConsumer::Frontend;
+    g_matrixCsiConfigCalls = 0;
+    g_lastMatrixCsiActive = false;
+    g_lastMatrixCsiConfig = WIFISENSING::CSI::CsiMotionConfig{};
     std::memset(g_lastBleRequestedMac, 0, sizeof(g_lastBleRequestedMac));
     g_bleSelectedLookupCalls = 0;
     g_bleSlotLookupCalls = 0;
@@ -409,6 +427,32 @@ void test_data_visualization_scd4x_sets_sensor_input() {
     TEST_ASSERT_EQUAL_UINT32(1000, matrix.lastDataVisualizationInput.timestampMs);
 }
 
+void test_data_visualization_scd4x_keeps_stale_retained_value() {
+    MatrixService matrix;
+
+    RTC::mockStore.matrix.backgroundMode =
+        static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    RTC::mockStore.matrix.dataVisualizationEnabled = true;
+    RTC::mockStore.matrix.dataVisualizationSource =
+        static_cast<uint8_t>(MATRIX::MatrixDataSource::Scd4x);
+    RTC::mockStore.matrix.dataVisualizationMetric =
+        static_cast<uint8_t>(MATRIX::MatrixDataMetric::Humidity);
+    RTC::mockStore.matrix.dataVisualizationMin = 20.0f;
+    RTC::mockStore.matrix.dataVisualizationMax = 80.0f;
+    g_sensorSnapshot.co2 = 700;
+    g_sensorSnapshot.temp = 22.0f;
+    g_sensorSnapshot.humid = 54.0f;
+    g_sensorSnapshot.timestamp_ms = 1000;
+    TEST_STUBS::ARDUINO::millisValue = 1000 + SENSOR::SNAPSHOT_TIMEOUT_MS + 1;
+
+    MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, nullptr, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
+    TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
+    TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.stale);
+    TEST_ASSERT_EQUAL_FLOAT(54.0f, matrix.lastDataVisualizationInput.value);
+}
+
 void test_data_visualization_ble_uses_selected_device_as_single_source() {
     MatrixService matrix;
     auto* ble = reinterpret_cast<BLE::BleService*>(0x1);
@@ -461,9 +505,12 @@ void test_data_visualization_csi_enables_consumer_and_forwards_bins() {
 
     MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
 
-    TEST_ASSERT_EQUAL_UINT32(1, g_csiConsumerCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, g_csiConsumerCalls);
+    TEST_ASSERT_EQUAL_UINT32(1, g_matrixCsiConfigCalls);
     TEST_ASSERT_EQUAL(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, g_lastCsiConsumer);
     TEST_ASSERT_TRUE(g_lastCsiConsumerActive);
+    TEST_ASSERT_TRUE(g_lastMatrixCsiActive);
+    TEST_ASSERT_TRUE(g_lastMatrixCsiConfig.enabled);
     TEST_ASSERT_EQUAL_UINT32(1, matrix.setDataVisualizationInputCalls);
     TEST_ASSERT_TRUE(matrix.lastDataVisualizationInput.valid);
     TEST_ASSERT_EQUAL_FLOAT(50.0f, matrix.lastDataVisualizationInput.value);
@@ -476,7 +523,7 @@ void test_data_visualization_csi_enables_consumer_and_forwards_bins() {
     TEST_STUBS::ARDUINO::millisValue = 1300;
     MATRIX::MatrixTask::evaluateDataVisualizationInput(nullptr, nullptr, csi, &matrix);
 
-    TEST_ASSERT_EQUAL_UINT32(2, g_csiConsumerCalls);
+    TEST_ASSERT_EQUAL_UINT32(2, g_matrixCsiConfigCalls);
     TEST_ASSERT_FALSE(g_lastCsiConsumerActive);
 }
 
@@ -489,6 +536,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_effect_input_activates_imu_consumer_for_native_3d_provider);
     RUN_TEST(test_effect_input_disables_imu_consumer_when_provider_no_longer_needs_it);
     RUN_TEST(test_data_visualization_scd4x_sets_sensor_input);
+    RUN_TEST(test_data_visualization_scd4x_keeps_stale_retained_value);
     RUN_TEST(test_data_visualization_ble_uses_selected_device_as_single_source);
     RUN_TEST(test_data_visualization_csi_enables_consumer_and_forwards_bins);
     return UNITY_END();

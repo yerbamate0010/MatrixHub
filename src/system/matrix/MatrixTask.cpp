@@ -9,6 +9,7 @@
 #include "../../sensors/imu/ImuManager.h"
 #include "../../sensors/imu/ImuTypes.h"
 #include "../../sensors/runtime/SensorState.h"
+#include "../../sensors/runtime/SensorSnapshotHealth.h"
 #include "../../ble/BleService.h"
 #include "../../wifisensing/WifiSensingService.h"
 #include "../../wifisensing/csi/core/CsiService.h"
@@ -87,6 +88,15 @@ float rssiQuality(int8_t rssi) {
     return clampf((static_cast<float>(rssi) + 100.0f) * 2.0f, 0.0f, 100.0f);
 }
 
+bool hasScd4xReading(const SensorSnapshot& snapshot) {
+    return snapshot.co2 >= SENSOR::SCD4X::CO2_MIN_PPM &&
+           snapshot.co2 <= SENSOR::SCD4X::CO2_MAX_PPM &&
+           std::isfinite(snapshot.temp) &&
+           std::isfinite(snapshot.humid) &&
+           snapshot.humid >= SENSOR::SCD4X::HUMID_MIN_PCT &&
+           snapshot.humid <= SENSOR::SCD4X::HUMID_MAX_PCT;
+}
+
 uint8_t normalizedByte(float value, float minValue, float maxValue) {
     if (maxValue <= minValue) {
         maxValue = minValue + 1.0f;
@@ -147,6 +157,30 @@ void fillCsiBins(const WIFISENSING::CSI::CsiMotionSnapshot& snapshot,
     for (uint8_t i = 0; i < input.binCount; ++i) {
         input.bins[i] = snapshot.visualizationBins[i];
     }
+}
+
+WIFISENSING::CSI::CsiMotionConfig buildMatrixCsiMotionConfig(const RTC::WifiSensingData& state) {
+    WIFISENSING::CSI::CsiMotionConfig config;
+    config.enabled = true;
+    config.bandCount = state.csiAlarmBandCount > WIFISENSING::CSI::MAX_CSI_ALARM_BANDS
+                           ? WIFISENSING::CSI::MAX_CSI_ALARM_BANDS
+                           : state.csiAlarmBandCount;
+    for (uint8_t i = 0; i < config.bandCount; ++i) {
+        config.bands[i].start = state.csiAlarmBandStart[i];
+        config.bands[i].end = state.csiAlarmBandEnd[i];
+    }
+    config.baselineFrames = state.csiBaselineFrames;
+    config.topK = state.csiTopK;
+    config.enterThreshold = state.csiEnterThreshold;
+    config.clearThreshold = state.csiClearThreshold;
+    config.holdMs = state.csiHoldMs;
+    config.clearHoldMs = state.csiClearHoldMs;
+    config.minNoise = state.csiMinNoise;
+    config.minEnergy = state.csiMinEnergy;
+    config.noisyScoreThreshold = state.csiNoisyThreshold;
+    config.autoRecalibration = state.csiAutoRecalibration;
+    config.sensitivity = state.csiSensitivity;
+    return config;
 }
 
 } // namespace
@@ -452,7 +486,9 @@ void MatrixTask::evaluateDataVisualizationInput(BLE::BleService* bleService,
     if (wantsCsi != _lastMatrixDataVizCsiEnabled) {
         LOGI("Matrix data visualization CSI input %s", wantsCsi ? "ON" : "OFF");
         if (csiService) {
-            csiService->setConsumerActive(WIFISENSING::CSI::CsiConsumer::MatrixVisualization, wantsCsi);
+            csiService->setMatrixVisualizationMotionConfig(
+                wantsCsi,
+                buildMatrixCsiMotionConfig(RTC::getConfig().wifiSensing));
         } else {
             LOGW("CSI service missing - matrix data visualization consumer not updated");
         }
@@ -478,9 +514,10 @@ void MatrixTask::evaluateDataVisualizationInput(BLE::BleService* bleService,
 
     switch (source) {
         case MATRIX::MatrixDataSource::Scd4x: {
-            const SensorSnapshot snapshot = SENSORS::SensorState::getLastGoodSnapshot();
-            input.valid = snapshot.timestamp_ms != 0;
-            input.stale = !input.valid;
+            const SensorSnapshot snapshot = SENSORS::SensorState::getSnapshot();
+            input.valid = hasScd4xReading(snapshot);
+            input.stale = !input.valid ||
+                !SENSORS::isSnapshotFresh(snapshot.timestamp_ms, now, SENSOR::SNAPSHOT_TIMEOUT_MS);
             switch (metric) {
                 case MATRIX::MatrixDataMetric::Temperature:
                     input.value = snapshot.temp;

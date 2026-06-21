@@ -72,6 +72,7 @@ inline void reset() {
 }
 
 inline uint32_t millis() { return TEST_STUBS::ARDUINO::millisValue; }
+inline uint32_t micros() { return TEST_STUBS::ARDUINO::millisValue * 1000; }
 // Notification mocks
 inline void xTaskNotifyGive(TaskHandle_t xTaskToNotify) {}
 inline uint32_t ulTaskNotifyTake(BaseType_t xClearCountOnExit, TickType_t xTicksToWait) { return 1; }

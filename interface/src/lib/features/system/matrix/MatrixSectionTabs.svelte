@@ -5,6 +5,7 @@
 	import Wand from '~icons/tabler/wand';
 	import ChartBar from '~icons/tabler/chart-bar';
 	import * as m from '$lib/paraglide/messages.js';
+	import { MATRIX_DISPLAY_TAB_PATH, isMatrixTabPath, rememberMatrixTabPath } from './matrixNavigation';
 
 	const sections = $derived([
 		{
@@ -28,6 +29,13 @@
 			icon: ChartBar
 		}
 	]);
+
+	$effect(() => {
+		const path = page.url.pathname;
+		if (path !== MATRIX_DISPLAY_TAB_PATH && isMatrixTabPath(path)) {
+			rememberMatrixTabPath(path);
+		}
+	});
 </script>
 
 <nav class="tabs tabs-box mb-3 w-full sm:mb-4 sm:w-auto" aria-label={m.matrix_nav_label()}>
@@ -37,6 +45,7 @@
 			class="tab gap-2 text-sm"
 			class:tab-active={page.url.pathname === section.href}
 			aria-current={page.url.pathname === section.href ? 'page' : undefined}
+			onclick={() => rememberMatrixTabPath(section.href)}
 		>
 			<section.icon class="h-4 w-4" />
 			<span>{section.label}</span>

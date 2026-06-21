@@ -37,6 +37,9 @@ enum class MatrixDataVizMode : uint8_t {
     CenterRipple = 1,
     Heatmap = 2,
     Trend = 3,
+    SpectrumBars = 4,
+    PerimeterMeter = 5,
+    Pulse = 6,
 };
 
 enum class MatrixDataStaleBehavior : uint8_t {
@@ -81,7 +84,7 @@ constexpr uint8_t kMatrixDataSourceMax =
 constexpr uint8_t kMatrixDataMetricMax =
     static_cast<uint8_t>(MatrixDataMetric::CsiMotion);
 constexpr uint8_t kMatrixDataVizModeMax =
-    static_cast<uint8_t>(MatrixDataVizMode::Trend);
+    static_cast<uint8_t>(MatrixDataVizMode::Pulse);
 constexpr uint8_t kMatrixDataStaleBehaviorMax =
     static_cast<uint8_t>(MatrixDataStaleBehavior::Blank);
 

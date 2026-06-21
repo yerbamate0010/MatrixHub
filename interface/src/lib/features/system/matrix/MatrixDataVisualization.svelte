@@ -37,6 +37,9 @@
 		MATRIX_DATA_VIZ_MODE_CENTER_RIPPLE,
 		MATRIX_DATA_VIZ_MODE_GAUGE,
 		MATRIX_DATA_VIZ_MODE_HEATMAP,
+		MATRIX_DATA_VIZ_MODE_PERIMETER_METER,
+		MATRIX_DATA_VIZ_MODE_PULSE,
+		MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS,
 		MATRIX_DATA_VIZ_MODE_TREND,
 		fromMatrixHexColor,
 		getDefaultMatrixDataVisualizationMetric,
@@ -97,7 +100,10 @@
 		{ value: MATRIX_DATA_VIZ_MODE_GAUGE, label: m.matrix_data_viz_mode_gauge() },
 		{ value: MATRIX_DATA_VIZ_MODE_CENTER_RIPPLE, label: m.matrix_data_viz_mode_center_ripple() },
 		{ value: MATRIX_DATA_VIZ_MODE_HEATMAP, label: m.matrix_data_viz_mode_heatmap() },
-		{ value: MATRIX_DATA_VIZ_MODE_TREND, label: m.matrix_data_viz_mode_trend() }
+		{ value: MATRIX_DATA_VIZ_MODE_TREND, label: m.matrix_data_viz_mode_trend() },
+		{ value: MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS, label: m.matrix_data_viz_mode_spectrum_bars() },
+		{ value: MATRIX_DATA_VIZ_MODE_PERIMETER_METER, label: m.matrix_data_viz_mode_perimeter_meter() },
+		{ value: MATRIX_DATA_VIZ_MODE_PULSE, label: m.matrix_data_viz_mode_pulse() }
 	]);
 
 	const staleOptions = $derived([
@@ -367,10 +373,13 @@
 				</ContentBox>
 
 				<ContentBox>
-					<div class="flex items-center justify-between gap-3">
+					<div class="flex items-start justify-between gap-3">
 						<span class="font-bold text-sm">{m.matrix_data_viz_colors()}</span>
-						<div class="flex flex-col gap-1">
-							<div class="flex items-center justify-end gap-2">
+						<div class="flex min-w-0 flex-col gap-2">
+							<div class="grid grid-cols-[minmax(6rem,1fr)_auto_auto] items-center gap-2">
+								<span class="truncate text-xs text-base-content/80">
+									{m.matrix_data_viz_color_low()}
+								</span>
 								<span class="font-mono text-xs opacity-70">{minHex}</span>
 								<FormColorInput
 									value={minHex}
@@ -379,7 +388,10 @@
 									oninput={handleColorMin}
 								/>
 							</div>
-							<div class="flex items-center justify-end gap-2">
+							<div class="grid grid-cols-[minmax(6rem,1fr)_auto_auto] items-center gap-2">
+								<span class="truncate text-xs text-base-content/80">
+									{m.matrix_data_viz_color_mid_label()}
+								</span>
 								<span class="font-mono text-xs opacity-70">{midHex}</span>
 								<FormColorInput
 									value={midHex}
@@ -388,7 +400,10 @@
 									oninput={handleColorMid}
 								/>
 							</div>
-							<div class="flex items-center justify-end gap-2">
+							<div class="grid grid-cols-[minmax(6rem,1fr)_auto_auto] items-center gap-2">
+								<span class="truncate text-xs text-base-content/80">
+									{m.matrix_data_viz_color_high()}
+								</span>
 								<span class="font-mono text-xs opacity-70">{maxHex}</span>
 								<FormColorInput
 									value={maxHex}

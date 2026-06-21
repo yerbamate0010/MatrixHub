@@ -118,7 +118,7 @@ export const MatrixSettingsSchema = z.object({
 	data_visualization_enabled: z.boolean(),
 	data_visualization_source: z.number().int().min(0).max(3),
 	data_visualization_metric: z.number().int().min(0).max(5),
-	data_visualization_mode: z.number().int().min(0).max(3),
+	data_visualization_mode: z.number().int().min(0).max(6),
 	data_visualization_min: z.number(),
 	data_visualization_max: z.number(),
 	data_visualization_color_min: MatrixColorSchema,

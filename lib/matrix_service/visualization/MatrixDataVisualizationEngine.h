@@ -25,10 +25,13 @@ private:
     static uint8_t channel(uint32_t color, uint8_t shift);
     static uint32_t rgb(uint8_t r, uint8_t g, uint8_t b);
     static uint8_t xy(uint8_t x, uint8_t y);
+    static uint8_t perimeterX(uint8_t index);
+    static uint8_t perimeterY(uint8_t index);
 
     uint8_t currentValueNorm();
     uint8_t effectiveBrightness(uint8_t normalized, bool stale) const;
     uint32_t colorFor(uint8_t normalized, uint8_t brightness) const;
+    uint8_t binForColumn(uint8_t column, uint8_t fallback) const;
     bool shouldBlank() const;
     void clear(uint32_t* outFrame) const;
     void fillStaleGray(uint32_t* outFrame) const;
@@ -37,8 +40,11 @@ private:
 
     void renderGauge(uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
     void renderCenterRipple(uint32_t nowMs, uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
-    void renderHeatmap(uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
+    void renderHeatmap(uint32_t* outFrame, uint8_t normalized, uint8_t brightness, bool stale);
     void renderTrend(uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
+    void renderSpectrumBars(uint32_t nowMs, uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
+    void renderPerimeterMeter(uint32_t nowMs, uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
+    void renderPulse(uint32_t nowMs, uint32_t* outFrame, uint8_t normalized, uint8_t brightness);
 
     MATRIX::MatrixDataVisualizationConfig _config{};
     MATRIX::MatrixDataVisualizationInput _input{};

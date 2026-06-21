@@ -150,8 +150,12 @@ namespace TASKS {
     constexpr UBaseType_t PRIO_SENSOR_LOGGING= 3;
     constexpr BaseType_t CORE_SENSOR_LOGGING = 0; // Core 0: isolate I2C ISR from RMT/WS2812 on Core 1
 
-    constexpr uint32_t STACK_WIFI_SENSING    = STACK_LARGE; // HWM: 4.8KB — keep large for deep SSL callback chains
-    constexpr uint32_t STACK_WIFI_SENSING_RSSI = STACK_WIFI_SENSING;
+    constexpr uint32_t STACK_WIFI_SENSING    = STACK_LARGE; // Default/internal WiFi sensing stack size.
+    // The RSSI runner uses a PSRAM-backed static stack, so give it more room
+    // without spending internal DRAM.
+    constexpr uint32_t STACK_WIFI_SENSING_RSSI = STACK_HUGE;
+    // CSI processing keeps an internal stack because it drives networking-facing
+    // code paths; keep it on the tighter internal budget.
     constexpr uint32_t STACK_WIFI_SENSING_CSI  = STACK_WIFI_SENSING;
     // Level 3: Shedable background workload (CORE_PRO) — CSI is a non-critical gadget.
     constexpr UBaseType_t PRIO_WIFI_SENSING  = 3;
@@ -239,7 +243,11 @@ namespace TASKS {
     constexpr BaseType_t CORE_SHELLY         = CORE_PRO;
 
     // --- UI & Visual Tasks ---
-    constexpr uint32_t STACK_MATRIX_TASK     = STACK_SMALL;
+    // MatrixTask now owns LED rendering plus Matrix data visualization inputs
+    // (BLE/RSSI/CSI). CSI activation can run a deeper service path from this
+    // task, so keep generous PSRAM-backed headroom instead of sizing it like a
+    // tiny renderer.
+    constexpr uint32_t STACK_MATRIX_TASK     = STACK_HUGE;
     // CORE_APP isolation: MatrixTask (prio 2) must preempt AirMouse/Macro/Thermal (prio 1)
     // to avoid LED jitter. Do not change these priorities without a full scheduler audit.
     // After moving httpd/heartbeat off CORE_APP, the remaining visible jitter
@@ -257,7 +265,7 @@ namespace TASKS {
     constexpr BaseType_t CORE_THERMAL_MONITOR  = CORE_APP;
 
     // --- IMU Sampler Task ---
-    constexpr uint32_t STACK_IMU_SAMPLER      = STACK_SMALL;
+    constexpr uint32_t STACK_IMU_SAMPLER      = STACK_MEDIUM_PLUS;
     // Keep the IMU sampler on CORE_PRO to avoid I2C vs RMT contention on CORE_APP,
     // but keep it below critical network tasks so WiFi/TLS remain responsive.
     // Level 4: Stable I/O & streaming (CORE_PRO).
@@ -265,7 +273,7 @@ namespace TASKS {
     constexpr BaseType_t CORE_IMU_SAMPLER     = CORE_PRO;
 
     // --- Air Mouse Task ---
-    constexpr uint32_t STACK_AIR_MOUSE       = STACK_MEDIUM;
+    constexpr uint32_t STACK_AIR_MOUSE       = STACK_LARGE;
     // Keep AirMouse at loopTask priority on CORE_APP. After raising IMU I2C to
     // 400 kHz, a higher priority caused AirMouse bursts to dominate loopTask.
     constexpr UBaseType_t PRIO_AIR_MOUSE     = 1;

@@ -18,6 +18,10 @@
 namespace SENSORS {
 
 namespace {
+    constexpr uint8_t kI2cProbeAttempts = 2;
+    constexpr uint8_t kStopPeriodicAttempts = 3;
+    constexpr uint32_t kI2cRetryDelayMs = 100;
+
     // Error code helper
     const char* errorCodeToString(int16_t error) {
         switch (error) {
@@ -25,8 +29,65 @@ namespace {
             case -1: return "I2C_NACK";
             case -2: return "I2C_TIMEOUT";
             case -3: return "CRC_ERROR";
+            case 0x010C: return "I2C_ADDRESS_NACK";
+            case 0x010D: return "I2C_DATA_NACK";
+            case 0x010E: return "I2C_OTHER";
             default: return "UNKNOWN";
         }
+    }
+
+    void resetScd4xWireBus() {
+        Wire1.end();
+        UTILS::HARDWARE::I2cUtils::recoverBus(I2C_SCD4X::SDA_PIN, I2C_SCD4X::SCL_PIN);
+        Wire1.begin(I2C_SCD4X::SDA_PIN, I2C_SCD4X::SCL_PIN);
+        Wire1.setTimeOut(100); // Prevent infinite wait on NACK/stretch
+    }
+
+    bool probeScd4xAddress(bool logInit) {
+        for (uint8_t attempt = 1; attempt <= kI2cProbeAttempts; ++attempt) {
+            Wire1.beginTransmission(I2C_SCD4X::I2C_ADDRESS);
+            const uint8_t wireError = Wire1.endTransmission();
+            if (wireError == 0) {
+                return true;
+            }
+
+            if (logInit) {
+                LOGW("SCD4x I2C probe failed (attempt %u/%u, Wire error=%u)",
+                     attempt,
+                     kI2cProbeAttempts,
+                     wireError);
+            }
+
+            resetScd4xWireBus();
+            vTaskDelay(pdMS_TO_TICKS(kI2cRetryDelayMs));
+        }
+
+        return false;
+    }
+
+    int16_t stopPeriodicMeasurementWithRetry(SensirionI2cScd4x& scd4x, bool logInit) {
+        int16_t lastError = 0;
+
+        for (uint8_t attempt = 1; attempt <= kStopPeriodicAttempts; ++attempt) {
+            lastError = scd4x.stopPeriodicMeasurement();
+            if (lastError == 0) {
+                return 0;
+            }
+
+            if (logInit) {
+                LOGW("stopPeriodicMeasurement failed (attempt %u/%u): %d (%s)",
+                     attempt,
+                     kStopPeriodicAttempts,
+                     lastError,
+                     errorCodeToString(lastError));
+            }
+
+            resetScd4xWireBus();
+            scd4x.begin(Wire1, I2C_SCD4X::I2C_ADDRESS);
+            vTaskDelay(pdMS_TO_TICKS(kI2cRetryDelayMs));
+        }
+
+        return lastError;
     }
 
     bool shouldLogThrottled(uint32_t nowMs, uint32_t& lastLogMs, uint32_t intervalMs, uint32_t& suppressed) {
@@ -80,11 +141,7 @@ bool Scd4xSensorService::begin() {
         LOGW("Initializing I2C_SCD4X (Wire1) on SCL=%d, SDA=%d", I2C_SCD4X::SCL_PIN, I2C_SCD4X::SDA_PIN);
     }
 
-    // [Fix] I2C Bus Recovery: Toggle SCL to release SDA if slave is stuck
-    UTILS::HARDWARE::I2cUtils::recoverBus(I2C_SCD4X::SDA_PIN, I2C_SCD4X::SCL_PIN);
-
-    Wire1.begin(I2C_SCD4X::SDA_PIN, I2C_SCD4X::SCL_PIN);
-    Wire1.setTimeOut(100); // [Fix] Prevent infinite wait on NACK/stretch
+    resetScd4xWireBus();
     
     // SCD4x needs at least 1000ms after power-on before it can respond to I2C
     if (logInit) {
@@ -93,12 +150,20 @@ bool Scd4xSensorService::begin() {
     vTaskDelay(pdMS_TO_TICKS(SENSOR::SCD4X::POWER_UP_DELAY_MS));
     
     _scd4x.begin(Wire1, I2C_SCD4X::I2C_ADDRESS);
-    
-    int16_t error = _scd4x.stopPeriodicMeasurement();
+
+    if (!probeScd4xAddress(logInit)) {
+        if (logInit) {
+            LOGW("SCD4x I2C address 0x%02X not detected. Marking as missing.", I2C_SCD4X::I2C_ADDRESS);
+        }
+        _sensorPresent = false;
+        _initialized = true;
+        return true;
+    }
+
+    int16_t error = stopPeriodicMeasurementWithRetry(_scd4x, logInit);
     if (error != 0) {
         if (logInit) {
-            LOGW("stopPeriodicMeasurement returned %d (sensor missing?)", error);
-            LOGW("SCD4x init failed. Marking as missing.");
+            LOGW("SCD4x init failed after stopPeriodicMeasurement retries. Marking as missing.");
         }
         _sensorPresent = false;
         _initialized = true;

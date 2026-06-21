@@ -101,7 +101,7 @@ describe('device SDK matrix parser', () => {
 		expect(parsed?.data_visualization_enabled).toBe(true);
 		expect(parsed?.data_visualization_source).toBe(3);
 		expect(parsed?.data_visualization_metric).toBe(5);
-		expect(parsed?.data_visualization_mode).toBe(3);
+		expect(parsed?.data_visualization_mode).toBe(6);
 		expect(parsed?.data_visualization_max).toBe(31);
 		expect(parsed?.data_visualization_color_min).toBe(0xabcdef);
 		expect(parsed?.data_visualization_color_mid).toBe(0x000000);

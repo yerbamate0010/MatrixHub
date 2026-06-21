@@ -120,10 +120,19 @@ bool MatrixDataVisualizationEngine::render(uint32_t nowMs, uint32_t* outFrame, s
             renderCenterRipple(nowMs, outFrame, normalized, brightness);
             break;
         case MATRIX::MatrixDataVizMode::Heatmap:
-            renderHeatmap(outFrame, normalized, brightness);
+            renderHeatmap(outFrame, normalized, brightness, stale);
             break;
         case MATRIX::MatrixDataVizMode::Trend:
             renderTrend(outFrame, normalized, brightness);
+            break;
+        case MATRIX::MatrixDataVizMode::SpectrumBars:
+            renderSpectrumBars(nowMs, outFrame, normalized, brightness);
+            break;
+        case MATRIX::MatrixDataVizMode::PerimeterMeter:
+            renderPerimeterMeter(nowMs, outFrame, normalized, brightness);
+            break;
+        case MATRIX::MatrixDataVizMode::Pulse:
+            renderPulse(nowMs, outFrame, normalized, brightness);
             break;
         case MATRIX::MatrixDataVizMode::Gauge:
         default:
@@ -167,6 +176,34 @@ uint8_t MatrixDataVisualizationEngine::xy(uint8_t x, uint8_t y) {
     return static_cast<uint8_t>(y * kWidth + x);
 }
 
+uint8_t MatrixDataVisualizationEngine::perimeterX(uint8_t index) {
+    index = static_cast<uint8_t>(index % 28u);
+    if (index < 8u) {
+        return index;
+    }
+    if (index < 15u) {
+        return 7u;
+    }
+    if (index < 22u) {
+        return static_cast<uint8_t>(21u - index);
+    }
+    return 0u;
+}
+
+uint8_t MatrixDataVisualizationEngine::perimeterY(uint8_t index) {
+    index = static_cast<uint8_t>(index % 28u);
+    if (index < 8u) {
+        return 7u;
+    }
+    if (index < 15u) {
+        return static_cast<uint8_t>(14u - index);
+    }
+    if (index < 22u) {
+        return 0u;
+    }
+    return static_cast<uint8_t>(index - 21u);
+}
+
 uint8_t MatrixDataVisualizationEngine::currentValueNorm() {
     const float raw = _input.valid ? _input.value : _config.minValue;
     if (!_hasSmoothed) {
@@ -190,6 +227,29 @@ uint8_t MatrixDataVisualizationEngine::effectiveBrightness(uint8_t normalized, b
 
 uint32_t MatrixDataVisualizationEngine::colorFor(uint8_t normalized, uint8_t brightness) const {
     return scaleColor(gradientColor(_config.colorMin, _config.colorMid, _config.colorMax, normalized), brightness);
+}
+
+uint8_t MatrixDataVisualizationEngine::binForColumn(uint8_t column, uint8_t fallback) const {
+    if (_input.binCount == 0) {
+        return fallback;
+    }
+
+    const uint8_t start = static_cast<uint8_t>((static_cast<uint16_t>(column) * _input.binCount) / kWidth);
+    uint8_t end = static_cast<uint8_t>((static_cast<uint16_t>(column + 1u) * _input.binCount) / kWidth);
+    if (end <= start) {
+        end = static_cast<uint8_t>(start + 1u);
+    }
+    if (end > _input.binCount) {
+        end = _input.binCount;
+    }
+
+    uint16_t sum = 0;
+    uint8_t count = 0;
+    for (uint8_t i = start; i < end; ++i) {
+        sum += _input.bins[i];
+        count++;
+    }
+    return count > 0 ? static_cast<uint8_t>(sum / count) : fallback;
 }
 
 bool MatrixDataVisualizationEngine::shouldBlank() const {
@@ -258,14 +318,18 @@ void MatrixDataVisualizationEngine::renderCenterRipple(
     }
 }
 
-void MatrixDataVisualizationEngine::renderHeatmap(uint32_t* outFrame, uint8_t normalized, uint8_t brightness) {
+void MatrixDataVisualizationEngine::renderHeatmap(
+    uint32_t* outFrame,
+    uint8_t normalized,
+    uint8_t brightness,
+    bool stale) {
     if (_input.binCount > 0) {
         for (uint8_t i = 0; i < kPixels; ++i) {
             const uint8_t srcIndex = static_cast<uint8_t>((static_cast<uint16_t>(i) * _input.binCount) / kPixels);
             const uint8_t bin = _input.bins[srcIndex < _input.binCount ? srcIndex : (_input.binCount - 1u)];
             const uint8_t effective = static_cast<uint8_t>(
                 (static_cast<uint16_t>(bin) * 3u + static_cast<uint16_t>(normalized)) / 4u);
-            outFrame[i] = colorFor(effective, effectiveBrightness(effective, false));
+            outFrame[i] = colorFor(effective, effectiveBrightness(effective, stale));
         }
         return;
     }
@@ -286,16 +350,99 @@ void MatrixDataVisualizationEngine::renderTrend(uint32_t* outFrame, uint8_t norm
         return;
     }
 
+    const uint8_t available = _trendFilled ? kPixels : _trendHead;
     for (uint8_t x = 0; x < kWidth; ++x) {
-        uint16_t sum = 0;
-        for (uint8_t y = 0; y < kHeight; ++y) {
-            sum += trendAt(static_cast<uint8_t>(x * kHeight + y));
+        if (available < kWidth && x < static_cast<uint8_t>(kWidth - available)) {
+            continue;
         }
-        const uint8_t colValue = static_cast<uint8_t>(sum / kHeight);
-        const uint8_t yLit = static_cast<uint8_t>(7u - ((static_cast<uint16_t>(colValue) * 7u) / 255u));
-        for (uint8_t y = yLit; y < kHeight; ++y) {
-            const uint8_t fade = static_cast<uint8_t>(255u - ((static_cast<uint16_t>(y - yLit) * 120u) / 7u));
-            outFrame[xy(x, y)] = colorFor(colValue, static_cast<uint8_t>((static_cast<uint16_t>(brightness) * fade) / 255u));
+        const uint8_t sampleIndex = available >= kWidth
+            ? static_cast<uint8_t>(available - kWidth + x)
+            : static_cast<uint8_t>(x - (kWidth - available));
+        const uint8_t colValue = trendAt(sampleIndex);
+        const uint8_t yPoint = static_cast<uint8_t>(7u - ((static_cast<uint16_t>(colValue) * 7u) / 255u));
+        outFrame[xy(x, yPoint)] = colorFor(colValue, brightness);
+        if (yPoint < 7u) {
+            outFrame[xy(x, static_cast<uint8_t>(yPoint + 1u))] =
+                colorFor(colValue, static_cast<uint8_t>((static_cast<uint16_t>(brightness) * 96u) / 255u));
+        }
+        if (yPoint > 0u) {
+            outFrame[xy(x, static_cast<uint8_t>(yPoint - 1u))] =
+                colorFor(colValue, static_cast<uint8_t>((static_cast<uint16_t>(brightness) * 64u) / 255u));
+        }
+    }
+}
+
+void MatrixDataVisualizationEngine::renderSpectrumBars(
+    uint32_t nowMs,
+    uint32_t* outFrame,
+    uint8_t normalized,
+    uint8_t brightness) {
+    const float phase = static_cast<float>((nowMs / 80u) % 256u) / 255.0f;
+    for (uint8_t x = 0; x < kWidth; ++x) {
+        const float wave = 0.5f + 0.5f * std::sin((phase + static_cast<float>(x) * 0.13f) * 2.0f * kPi);
+        const uint8_t fallback = clampByte(static_cast<int>(
+            static_cast<float>(normalized) * (0.55f + 0.45f * wave)));
+        const uint8_t value = binForColumn(x, fallback);
+        const uint8_t height = static_cast<uint8_t>(
+            (static_cast<uint16_t>(value) * kHeight + 127u) / 255u);
+        const uint8_t colBrightness = static_cast<uint8_t>(
+            (static_cast<uint16_t>(brightness) * (128u + value)) / 383u);
+
+        for (uint8_t n = 0; n < height; ++n) {
+            const uint8_t y = static_cast<uint8_t>(kHeight - 1u - n);
+            const uint8_t localNorm = static_cast<uint8_t>(
+                (static_cast<uint16_t>(n) * 255u) / (kHeight - 1u));
+            outFrame[xy(x, y)] = colorFor(localNorm > value ? value : localNorm, colBrightness);
+        }
+    }
+}
+
+void MatrixDataVisualizationEngine::renderPerimeterMeter(
+    uint32_t nowMs,
+    uint32_t* outFrame,
+    uint8_t normalized,
+    uint8_t brightness) {
+    constexpr uint8_t kPerimeterPixels = 28;
+    const uint8_t lit = static_cast<uint8_t>(
+        (static_cast<uint16_t>(normalized) * kPerimeterPixels + 127u) / 255u);
+    const uint8_t sweep = static_cast<uint8_t>((nowMs / 96u) % kPerimeterPixels);
+
+    for (uint8_t i = 0; i < lit; ++i) {
+        const uint8_t index = static_cast<uint8_t>((i + sweep) % kPerimeterPixels);
+        const uint8_t localNorm = static_cast<uint8_t>(
+            (static_cast<uint16_t>(i) * 255u) / (kPerimeterPixels - 1u));
+        outFrame[xy(perimeterX(index), perimeterY(index))] =
+            colorFor(localNorm > normalized ? normalized : localNorm, brightness);
+    }
+
+    const uint8_t glow = static_cast<uint8_t>((static_cast<uint16_t>(brightness) * 72u) / 255u);
+    const uint32_t centerColor = colorFor(normalized, glow);
+    outFrame[xy(3, 3)] = centerColor;
+    outFrame[xy(4, 3)] = centerColor;
+    outFrame[xy(3, 4)] = centerColor;
+    outFrame[xy(4, 4)] = centerColor;
+}
+
+void MatrixDataVisualizationEngine::renderPulse(
+    uint32_t nowMs,
+    uint32_t* outFrame,
+    uint8_t normalized,
+    uint8_t brightness) {
+    const float phase = static_cast<float>((nowMs / 48u) % 256u) / 255.0f;
+    const float valuePhase = static_cast<float>(normalized) / 255.0f;
+    const float centerX = 3.5f;
+    const float centerY = 3.5f;
+    for (uint8_t y = 0; y < kHeight; ++y) {
+        for (uint8_t x = 0; x < kWidth; ++x) {
+            const float dx = static_cast<float>(x) - centerX;
+            const float dy = static_cast<float>(y) - centerY;
+            const float dist = std::sqrt(dx * dx + dy * dy) / 5.0f;
+            const float pulse = 0.5f + 0.5f * std::sin((phase + valuePhase * 0.4f - dist * 0.65f) * 2.0f * kPi);
+            const uint8_t localNorm = clampByte(static_cast<int>(
+                static_cast<float>(normalized) * (0.45f + 0.55f * pulse)));
+            const uint8_t localBrightness = clampByte(static_cast<int>(
+                static_cast<float>(brightness) * (0.22f + 0.78f * pulse)));
+            outFrame[xy(x, y)] = colorFor(localNorm, localBrightness);
         }
     }
 }

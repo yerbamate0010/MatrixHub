@@ -8,7 +8,7 @@ export type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seaso
 export type MatrixBackgroundMode = 0 | 1;
 export type MatrixDataVisualizationSource = 0 | 1 | 2 | 3;
 export type MatrixDataVisualizationMetric = 0 | 1 | 2 | 3 | 4 | 5;
-export type MatrixDataVisualizationMode = 0 | 1 | 2 | 3;
+export type MatrixDataVisualizationMode = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type MatrixDataVisualizationStaleBehavior = 0 | 1 | 2;
 
 export type MatrixDataVisualizationPreset = Pick<
@@ -158,6 +158,9 @@ export const MATRIX_DATA_VIZ_MODE_GAUGE = 0 satisfies MatrixDataVisualizationMod
 export const MATRIX_DATA_VIZ_MODE_CENTER_RIPPLE = 1 satisfies MatrixDataVisualizationMode;
 export const MATRIX_DATA_VIZ_MODE_HEATMAP = 2 satisfies MatrixDataVisualizationMode;
 export const MATRIX_DATA_VIZ_MODE_TREND = 3 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS = 4 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_PERIMETER_METER = 5 satisfies MatrixDataVisualizationMode;
+export const MATRIX_DATA_VIZ_MODE_PULSE = 6 satisfies MatrixDataVisualizationMode;
 export const MATRIX_DATA_STALE_DIM = 0 satisfies MatrixDataVisualizationStaleBehavior;
 export const MATRIX_DATA_STALE_GRAY = 1 satisfies MatrixDataVisualizationStaleBehavior;
 export const MATRIX_DATA_STALE_BLANK = 2 satisfies MatrixDataVisualizationStaleBehavior;
@@ -223,7 +226,7 @@ const MATRIX_DATA_PRESET_SIGNAL_QUALITY = {
 } as const satisfies MatrixDataVisualizationPreset;
 
 const MATRIX_DATA_PRESET_CSI = {
-	data_visualization_mode: MATRIX_DATA_VIZ_MODE_HEATMAP,
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS,
 	data_visualization_min: 0,
 	data_visualization_max: 100,
 	data_visualization_color_min: 0x0040ff,

@@ -19,6 +19,20 @@ MATRIX::MatrixDataVisualizationConfig baseConfig() {
     return config;
 }
 
+uint8_t countLit(const uint32_t* frame) {
+    uint8_t lit = 0;
+    for (uint8_t i = 0; i < 64; ++i) {
+        if (frame[i] != 0) {
+            lit++;
+        }
+    }
+    return lit;
+}
+
+uint16_t colorEnergy(uint32_t color) {
+    return static_cast<uint16_t>(((color >> 16) & 0xFFu) + ((color >> 8) & 0xFFu) + (color & 0xFFu));
+}
+
 }  // namespace
 
 void setUp(void) {}
@@ -97,6 +111,64 @@ void test_heatmap_is_deterministic_for_same_bins() {
     }
 }
 
+void test_each_visualization_mode_renders_non_empty_frame() {
+    for (uint8_t mode = 0; mode <= static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Pulse); ++mode) {
+        MATRIX_VIZ::MatrixDataVisualizationEngine engine;
+        auto config = baseConfig();
+        config.mode = mode;
+        engine.configure(config);
+
+        MATRIX::MatrixDataVisualizationInput input;
+        input.valid = true;
+        input.value = 65.0f;
+        input.timestampMs = 100 + mode;
+        input.binCount = 64;
+        for (uint8_t i = 0; i < 64; ++i) {
+            input.bins[i] = static_cast<uint8_t>((i * 7u + mode * 11u) & 0xFFu);
+        }
+        engine.setInput(input);
+
+        uint32_t frame[64] = {};
+        TEST_ASSERT_TRUE(engine.render(1000 + mode * 17u, frame, 64));
+        TEST_ASSERT_GREATER_THAN_UINT8(0, countLit(frame));
+    }
+}
+
+void test_stale_dim_behavior_dims_heatmap_bins() {
+    MATRIX::MatrixDataVisualizationInput input;
+    input.valid = true;
+    input.stale = true;
+    input.value = 100.0f;
+    input.timestampMs = 1;
+    input.binCount = 64;
+    for (uint8_t i = 0; i < 64; ++i) {
+        input.bins[i] = 255;
+    }
+
+    MATRIX_VIZ::MatrixDataVisualizationEngine staleEngine;
+    auto staleConfig = baseConfig();
+    staleConfig.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap);
+    staleConfig.staleBehavior = static_cast<uint8_t>(MATRIX::MatrixDataStaleBehavior::Dim);
+    staleEngine.configure(staleConfig);
+    staleEngine.setInput(input);
+
+    uint32_t staleFrame[64] = {};
+    TEST_ASSERT_TRUE(staleEngine.render(100, staleFrame, 64));
+
+    input.stale = false;
+    MATRIX_VIZ::MatrixDataVisualizationEngine freshEngine;
+    auto freshConfig = baseConfig();
+    freshConfig.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap);
+    freshEngine.configure(freshConfig);
+    freshEngine.setInput(input);
+
+    uint32_t freshFrame[64] = {};
+    TEST_ASSERT_TRUE(freshEngine.render(100, freshFrame, 64));
+
+    TEST_ASSERT_GREATER_THAN_UINT16(colorEnergy(staleFrame[0]) * 2u, colorEnergy(freshFrame[0]));
+    TEST_ASSERT_GREATER_THAN_UINT16(0, colorEnergy(staleFrame[0]));
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -106,5 +178,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_gauge_renders_expected_number_of_pixels);
     RUN_TEST(test_stale_blank_behavior_turns_frame_off);
     RUN_TEST(test_heatmap_is_deterministic_for_same_bins);
+    RUN_TEST(test_each_visualization_mode_renders_non_empty_frame);
+    RUN_TEST(test_stale_dim_behavior_dims_heatmap_bins);
     return UNITY_END();
 }
