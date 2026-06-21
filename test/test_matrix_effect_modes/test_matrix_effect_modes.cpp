@@ -21,7 +21,8 @@ void test_normalize_matrix_effect_mode_falls_back_to_static() {
 }
 
 void test_normalize_matrix_effect_mode_for_native_engine() {
-    TEST_ASSERT_EQUAL_UINT8(3, MATRIX::normalizeMatrixEffectModeForEngine(3, 1));
+    TEST_ASSERT_EQUAL_UINT8(13, MATRIX::normalizeMatrixEffectModeForEngine(13, 1));
+    TEST_ASSERT_EQUAL_UINT8(0, MATRIX::normalizeMatrixEffectModeForEngine(14, 1));
     TEST_ASSERT_EQUAL_UINT8(0, MATRIX::normalizeMatrixEffectModeForEngine(69, 1));
     TEST_ASSERT_EQUAL_UINT8(69, MATRIX::normalizeMatrixEffectModeForEngine(69, 0));
 }

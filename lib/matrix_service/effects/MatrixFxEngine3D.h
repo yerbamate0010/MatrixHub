@@ -42,6 +42,16 @@ private:
     void renderGravityParticles(uint32_t* outFrame);
     void renderDepthTunnel(uint32_t* outFrame);
     void renderLiquidWave(uint32_t* outFrame);
+    void renderOilSheen(uint32_t* outFrame);
+    void renderAuroraCurtain(uint32_t* outFrame);
+    void renderPlasmaCloud(uint32_t* outFrame);
+    void renderOrbitalRings(uint32_t* outFrame);
+    void renderTiltVortex(uint32_t* outFrame);
+    void renderCometField(uint32_t* outFrame);
+    void renderLavaLamp(uint32_t* outFrame);
+    void renderPrismSweep(uint32_t* outFrame);
+    void renderRainGlass(uint32_t* outFrame);
+    void renderBreathingTerrain(uint32_t* outFrame);
 
     void clearFrame(uint32_t* outFrame, uint32_t color = 0) const;
     void fadeFrame(uint32_t* outFrame, uint8_t amount) const;
@@ -53,6 +63,9 @@ private:
     uint32_t hsvColor(float hue, float saturation, float value) const;
     uint32_t mixColor(uint32_t a, uint32_t b, float t) const;
     uint32_t palette(float t) const;
+    uint32_t paletteColor(float t, float brightness) const;
+    float wave01(float value) const;
+    float softNoise(float x, float y, float z) const;
     float reactiveGain() const;
     void updateInputSmoothing(float dtSec);
 };

@@ -82,7 +82,17 @@ const native3dEffectLabelResolvers: Record<number, (args: { locale: string }) =>
 	0: m.matrix_eff_3d_gyro_cube,
 	1: m.matrix_eff_3d_gravity_particles,
 	2: m.matrix_eff_3d_depth_tunnel,
-	3: m.matrix_eff_3d_liquid_wave
+	3: m.matrix_eff_3d_liquid_wave,
+	4: m.matrix_eff_3d_oil_sheen,
+	5: m.matrix_eff_3d_aurora_curtain,
+	6: m.matrix_eff_3d_plasma_cloud,
+	7: m.matrix_eff_3d_orbital_rings,
+	8: m.matrix_eff_3d_tilt_vortex,
+	9: m.matrix_eff_3d_comet_field,
+	10: m.matrix_eff_3d_lava_lamp,
+	11: m.matrix_eff_3d_prism_sweep,
+	12: m.matrix_eff_3d_rain_glass,
+	13: m.matrix_eff_3d_breathing_terrain
 };
 
 export function getMatrixEffectName(

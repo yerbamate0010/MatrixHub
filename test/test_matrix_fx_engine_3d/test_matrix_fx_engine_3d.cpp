@@ -55,6 +55,38 @@ uint32_t countPixelsAboveBrightness(const uint32_t* frame, uint8_t threshold) {
     return count;
 }
 
+uint32_t countUniqueColors(const uint32_t* frame) {
+    uint32_t unique = 0;
+    uint32_t seen[MATRIX_FX::kMatrixFxPixelCount]{};
+    for (uint8_t i = 0; i < MATRIX_FX::kMatrixFxPixelCount; ++i) {
+        const uint32_t color = frame[i] & 0x00FFFFFFu;
+        bool exists = false;
+        for (uint8_t j = 0; j < unique; ++j) {
+            if (seen[j] == color) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            seen[unique++] = color;
+        }
+    }
+    return unique;
+}
+
+void renderSettledFrame(uint8_t mode,
+                        MATRIX_FX::MatrixFxConfig config,
+                        const MATRIX_FX::MatrixFxInput& input,
+                        uint32_t* frame) {
+    config.mode = mode;
+    MATRIX_FX::MatrixFxEngine3D engine;
+    engine.configure(config);
+    engine.setInput(input);
+    for (uint8_t step = 0; step < 8; ++step) {
+        TEST_ASSERT_TRUE(engine.render(1000 + step * 33, frame, MATRIX_FX::kMatrixFxPixelCount));
+    }
+}
+
 float weightedY(const uint32_t* frame) {
     float sum = 0.0f;
     float weight = 0.0f;
@@ -89,6 +121,60 @@ void test_engine_renders_all_native_modes_to_nonblank_frames() {
 
         TEST_ASSERT_TRUE(engine.render(1000 + mode * 40, frame, MATRIX_FX::kMatrixFxPixelCount));
         TEST_ASSERT_GREATER_THAN_UINT32(0, countLitPixels(frame));
+    }
+}
+
+void test_render_audit_all_native_modes_are_palette_responsive_and_varied() {
+    MATRIX_FX::MatrixFxInput input;
+    input.imuValid = true;
+    input.ax = 0.42f;
+    input.ay = -0.28f;
+    input.az = 0.85f;
+    input.motionEnergy = 0.25f;
+
+    for (uint8_t mode = 0; mode <= MATRIX_FX::kNative3DModeMax; ++mode) {
+        auto cool = makeConfig(mode);
+        cool.color1 = 0x0030FF;
+        cool.color2 = 0x00FF90;
+        cool.color3 = 0xB0F0FF;
+
+        auto warm = makeConfig(mode);
+        warm.color1 = 0x400020;
+        warm.color2 = 0xFF5030;
+        warm.color3 = 0xFFD060;
+
+        uint32_t coolFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+        uint32_t warmFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+        renderSettledFrame(mode, cool, input, coolFrame);
+        renderSettledFrame(mode, warm, input, warmFrame);
+
+        TEST_ASSERT_GREATER_THAN_UINT32(4, countLitPixels(coolFrame));
+        TEST_ASSERT_GREATER_THAN_UINT32(3, countUniqueColors(coolFrame));
+        TEST_ASSERT_GREATER_THAN_UINT32(4, countChangedPixels(coolFrame, warmFrame));
+    }
+}
+
+void test_render_audit_all_native_modes_react_to_imu_input() {
+    MATRIX_FX::MatrixFxInput idle;
+
+    MATRIX_FX::MatrixFxInput tilted;
+    tilted.imuValid = true;
+    tilted.ax = -0.72f;
+    tilted.ay = 0.58f;
+    tilted.az = 0.38f;
+    tilted.gx = 90.0f;
+    tilted.gy = -55.0f;
+    tilted.gz = 40.0f;
+    tilted.motionEnergy = 0.45f;
+
+    for (uint8_t mode = 0; mode <= MATRIX_FX::kNative3DModeMax; ++mode) {
+        const auto config = makeConfig(mode);
+        uint32_t idleFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+        uint32_t tiltedFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+        renderSettledFrame(mode, config, idle, idleFrame);
+        renderSettledFrame(mode, config, tilted, tiltedFrame);
+
+        TEST_ASSERT_GREATER_THAN_UINT32(0, countChangedPixels(idleFrame, tiltedFrame));
     }
 }
 
@@ -225,6 +311,8 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_engine_rejects_render_before_configure);
     RUN_TEST(test_engine_renders_all_native_modes_to_nonblank_frames);
+    RUN_TEST(test_render_audit_all_native_modes_are_palette_responsive_and_varied);
+    RUN_TEST(test_render_audit_all_native_modes_react_to_imu_input);
     RUN_TEST(test_engine_clamps_config_and_keeps_small_runtime_state);
     RUN_TEST(test_imu_input_changes_projected_frame);
     RUN_TEST(test_iridescent_ripple_reacts_to_tilted_center_and_hue);

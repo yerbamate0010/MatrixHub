@@ -70,14 +70,18 @@ describe('matrixModel', () => {
 		expect(matrixEffectCategoryContainsEffect('calm', 69)).toBe(false);
 		expect(getPreferredMatrixEffectCategory(11)).toBe('recommended');
 		expect(getPreferredMatrixEffectCategory(69)).toBe('dynamic');
-		expect(MATRIX_NATIVE_3D_EFFECT_MODE_MAX).toBe(3);
-		expect(MATRIX_NATIVE_3D_EFFECT_IDS).toEqual([0, 1, 2, 3]);
-		expect(getMatrixEffectIds(MATRIX_EFFECT_ENGINE_NATIVE_3D)).toEqual([0, 1, 2, 3]);
+		expect(MATRIX_NATIVE_3D_EFFECT_MODE_MAX).toBe(13);
+		expect(MATRIX_NATIVE_3D_EFFECT_IDS).toEqual(
+			Array.from({ length: 14 }, (_, effectId) => effectId)
+		);
+		expect(getMatrixEffectIds(MATRIX_EFFECT_ENGINE_NATIVE_3D)).toEqual(
+			Array.from({ length: 14 }, (_, effectId) => effectId)
+		);
 		expect(getMatrixEffectCategories(MATRIX_EFFECT_ENGINE_NATIVE_3D).at(-1)).toEqual({
 			value: 'all',
-			effectIds: [0, 1, 2, 3]
+			effectIds: Array.from({ length: 14 }, (_, effectId) => effectId)
 		});
-		expect(getPreferredMatrixEffectCategory(2, MATRIX_EFFECT_ENGINE_NATIVE_3D)).toBe(
+		expect(getPreferredMatrixEffectCategory(4, MATRIX_EFFECT_ENGINE_NATIVE_3D)).toBe(
 			'recommended'
 		);
 		expect(MATRIX_COLOR_PRESETS.map((preset) => preset.id)).toEqual([

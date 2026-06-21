@@ -137,7 +137,7 @@ export const MATRIX_CUSTOM_ICON_PIXELS = 64;
 // Keep this aligned with the backend validator. Matrix effects use one compact
 // 0..69 range end-to-end, with no hidden holes or excluded vendor IDs.
 export const MATRIX_EFFECT_MODE_MAX = 69;
-export const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 3;
+export const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 13;
 export const MATRIX_EFFECT_ENGINE_LEGACY = 0 satisfies MatrixEffectEngine;
 export const MATRIX_EFFECT_ENGINE_NATIVE_3D = 1 satisfies MatrixEffectEngine;
 export const MATRIX_REACTIVITY_PROVIDER_NONE = 0 satisfies MatrixEffectReactivityProvider;
@@ -325,19 +325,19 @@ export const MATRIX_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 export const MATRIX_NATIVE_3D_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 	{
 		value: 'recommended',
-		effectIds: [1, 2]
+		effectIds: [0, 1, 4, 5, 7, 10]
 	},
 	{
 		value: 'calm',
-		effectIds: [2, 3]
+		effectIds: [0, 3, 4, 5, 6, 10, 13]
 	},
 	{
 		value: 'dynamic',
-		effectIds: [0, 1, 2]
+		effectIds: [1, 2, 7, 8, 9, 11, 12]
 	},
 	{
 		value: 'seasonal',
-		effectIds: [3]
+		effectIds: [5, 10, 12]
 	},
 	{
 		value: 'all',

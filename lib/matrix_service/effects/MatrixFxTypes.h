@@ -23,12 +23,22 @@ enum class Native3DMode : uint8_t {
     GyroCube = CenterRipple,
     GravityParticles = 1,
     DepthTunnel = 2,
-    LiquidWave = 3
+    LiquidWave = 3,
+    OilSheen = 4,
+    AuroraCurtain = 5,
+    PlasmaCloud = 6,
+    OrbitalRings = 7,
+    TiltVortex = 8,
+    CometField = 9,
+    LavaLamp = 10,
+    PrismSweep = 11,
+    RainGlass = 12,
+    BreathingTerrain = 13
 };
 
 constexpr uint8_t kEffectEngineMax = static_cast<uint8_t>(EffectEngine::Native3D);
 constexpr uint8_t kReactiveProviderMax = static_cast<uint8_t>(ReactiveProvider::Imu);
-constexpr uint8_t kNative3DModeMax = static_cast<uint8_t>(Native3DMode::LiquidWave);
+constexpr uint8_t kNative3DModeMax = static_cast<uint8_t>(Native3DMode::BreathingTerrain);
 constexpr uint8_t kDefaultReactivityGain = 80;
 constexpr uint8_t kMaxReactivityGain = 200;
 
