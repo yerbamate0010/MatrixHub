@@ -377,11 +377,11 @@ void MatrixDataVisualizationEngine::renderSpectrumBars(
     uint32_t* outFrame,
     uint8_t normalized,
     uint8_t brightness) {
-    const float phase = static_cast<float>((nowMs / 80u) % 256u) / 255.0f;
+    (void)nowMs;
     for (uint8_t x = 0; x < kWidth; ++x) {
-        const float wave = 0.5f + 0.5f * std::sin((phase + static_cast<float>(x) * 0.13f) * 2.0f * kPi);
-        const uint8_t fallback = clampByte(static_cast<int>(
-            static_cast<float>(normalized) * (0.55f + 0.45f * wave)));
+        const uint8_t centerDistance = x > 3u ? static_cast<uint8_t>(x - 3u) : static_cast<uint8_t>(3u - x);
+        const uint16_t profile = static_cast<uint16_t>(255u - centerDistance * 24u);
+        const uint8_t fallback = static_cast<uint8_t>((static_cast<uint16_t>(normalized) * profile) / 255u);
         const uint8_t value = binForColumn(x, fallback);
         const uint8_t height = static_cast<uint8_t>(
             (static_cast<uint16_t>(value) * kHeight + 127u) / 255u);
@@ -402,16 +402,15 @@ void MatrixDataVisualizationEngine::renderPerimeterMeter(
     uint32_t* outFrame,
     uint8_t normalized,
     uint8_t brightness) {
+    (void)nowMs;
     constexpr uint8_t kPerimeterPixels = 28;
     const uint8_t lit = static_cast<uint8_t>(
         (static_cast<uint16_t>(normalized) * kPerimeterPixels + 127u) / 255u);
-    const uint8_t sweep = static_cast<uint8_t>((nowMs / 96u) % kPerimeterPixels);
 
     for (uint8_t i = 0; i < lit; ++i) {
-        const uint8_t index = static_cast<uint8_t>((i + sweep) % kPerimeterPixels);
         const uint8_t localNorm = static_cast<uint8_t>(
             (static_cast<uint16_t>(i) * 255u) / (kPerimeterPixels - 1u));
-        outFrame[xy(perimeterX(index), perimeterY(index))] =
+        outFrame[xy(perimeterX(i), perimeterY(i))] =
             colorFor(localNorm > normalized ? normalized : localNorm, brightness);
     }
 

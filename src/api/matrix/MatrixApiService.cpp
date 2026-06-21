@@ -58,14 +58,10 @@ void MatrixApiService::begin() {
 }
 
 esp_err_t MatrixApiService::handleCsiCalibration(PsychicRequest* request) {
-    if (!_csiService) {
-        return Response::error(request, 503, "matrix/csi_unavailable");
-    }
-
-    _csiService->requestMotionCalibration();
+    (void)_csiService;
     return Response::success(request, [](JsonVariant& root) {
         root["ok"] = true;
-        root["status"] = "calibration_requested";
+        root["status"] = "baseline_not_required";
     });
 }
 

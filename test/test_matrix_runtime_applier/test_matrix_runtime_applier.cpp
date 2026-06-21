@@ -189,6 +189,7 @@ void test_apply_with_manager_sets_background_layer_when_effects_enabled() {
     applier.apply(state);
 
     TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.showEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.clearBackgroundDataVisualizationCalls);
     TEST_ASSERT_EQUAL_UINT32(1, MATRIX_MANAGER::g_setLayerCalls);
     TEST_ASSERT_EQUAL_UINT8(
         static_cast<uint8_t>(MATRIX_MANAGER::Layer::BACKGROUND),
@@ -232,7 +233,7 @@ void test_apply_with_manager_sets_data_visualization_background_layer() {
     applier.apply(state);
 
     TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.showEffectCalls);
-    TEST_ASSERT_EQUAL_UINT32(1, g_matrixService.clearBackgroundEffectCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, g_matrixService.clearBackgroundEffectCalls);
     TEST_ASSERT_EQUAL_UINT32(1, MATRIX_MANAGER::g_setLayerCalls);
     TEST_ASSERT_EQUAL_UINT8(
         static_cast<uint8_t>(MATRIX_MANAGER::Layer::BACKGROUND),

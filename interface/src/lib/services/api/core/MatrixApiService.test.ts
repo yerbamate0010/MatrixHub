@@ -85,8 +85,8 @@ describe('MatrixApiService', () => {
 		expect(result).toBe(payload);
 	});
 
-	it('requests CSI data visualization calibration', async () => {
-		mockClient.post.mockResolvedValue({ ok: true, status: 'calibration_requested' });
+	it('keeps the legacy CSI data visualization calibration endpoint harmless', async () => {
+		mockClient.post.mockResolvedValue({ ok: true, status: 'baseline_not_required' });
 
 		const result = await service.calibrateCsiDataVisualization();
 
@@ -95,6 +95,6 @@ describe('MatrixApiService', () => {
 			{},
 			expect.objectContaining({ signal: expect.any(AbortSignal) })
 		);
-		expect(result).toEqual({ ok: true, status: 'calibration_requested' });
+		expect(result).toEqual({ ok: true, status: 'baseline_not_required' });
 	});
 });

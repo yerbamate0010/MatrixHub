@@ -33,6 +33,12 @@ uint16_t colorEnergy(uint32_t color) {
     return static_cast<uint16_t>(((color >> 16) & 0xFFu) + ((color >> 8) & 0xFFu) + (color & 0xFFu));
 }
 
+void assertFramesEqual(const uint32_t* expected, const uint32_t* actual) {
+    for (uint8_t i = 0; i < 64; ++i) {
+        TEST_ASSERT_EQUAL_HEX32(expected[i], actual[i]);
+    }
+}
+
 }  // namespace
 
 void setUp(void) {}
@@ -111,6 +117,44 @@ void test_heatmap_is_deterministic_for_same_bins() {
     }
 }
 
+void test_spectrum_bars_scalar_fallback_is_deterministic() {
+    MATRIX_VIZ::MatrixDataVisualizationEngine engine;
+    auto config = baseConfig();
+    config.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::SpectrumBars);
+    engine.configure(config);
+
+    MATRIX::MatrixDataVisualizationInput input;
+    input.valid = true;
+    input.value = 62.0f;
+    input.timestampMs = 1;
+    engine.setInput(input);
+
+    uint32_t frameA[64] = {};
+    uint32_t frameB[64] = {};
+    TEST_ASSERT_TRUE(engine.render(100, frameA, 64));
+    TEST_ASSERT_TRUE(engine.render(2400, frameB, 64));
+    assertFramesEqual(frameA, frameB);
+}
+
+void test_perimeter_meter_is_deterministic_for_same_value() {
+    MATRIX_VIZ::MatrixDataVisualizationEngine engine;
+    auto config = baseConfig();
+    config.mode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::PerimeterMeter);
+    engine.configure(config);
+
+    MATRIX::MatrixDataVisualizationInput input;
+    input.valid = true;
+    input.value = 74.0f;
+    input.timestampMs = 1;
+    engine.setInput(input);
+
+    uint32_t frameA[64] = {};
+    uint32_t frameB[64] = {};
+    TEST_ASSERT_TRUE(engine.render(100, frameA, 64));
+    TEST_ASSERT_TRUE(engine.render(2400, frameB, 64));
+    assertFramesEqual(frameA, frameB);
+}
+
 void test_each_visualization_mode_renders_non_empty_frame() {
     for (uint8_t mode = 0; mode <= static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Pulse); ++mode) {
         MATRIX_VIZ::MatrixDataVisualizationEngine engine;
@@ -178,6 +222,8 @@ int main(int argc, char** argv) {
     RUN_TEST(test_gauge_renders_expected_number_of_pixels);
     RUN_TEST(test_stale_blank_behavior_turns_frame_off);
     RUN_TEST(test_heatmap_is_deterministic_for_same_bins);
+    RUN_TEST(test_spectrum_bars_scalar_fallback_is_deterministic);
+    RUN_TEST(test_perimeter_meter_is_deterministic_for_same_value);
     RUN_TEST(test_each_visualization_mode_renders_non_empty_frame);
     RUN_TEST(test_stale_dim_behavior_dims_heatmap_bins);
     return UNITY_END();

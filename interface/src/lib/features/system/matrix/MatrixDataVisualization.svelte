@@ -11,7 +11,6 @@
 	} from '$lib/components/shared/forms';
 	import { Spinner } from '$lib/components/common';
 	import { BleApiService } from '$lib/services/api/connectivity/BleApiService';
-	import { MatrixApiService } from '$lib/services/api/core/MatrixApiService';
 	import { useSessionAccess } from '$lib/features/auth/useSessionAccess.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 	import type { BleStatus } from '$lib/types/connectivity/ble';
@@ -62,8 +61,6 @@
 	const session = useSessionAccess();
 	let bleStatus = $state<BleStatus | null>(null);
 	let bleLoadError = $state('');
-	let calibrationBusy = $state(false);
-	let calibrationMessage = $state('');
 	let minHex = $state('#00ff80');
 	let midHex = $state('#ffd166');
 	let maxHex = $state('#ff3000');
@@ -73,7 +70,6 @@
 		store.settings.data_visualization_source as MatrixDataVisualizationSource
 	);
 	const showBleSelector = $derived(selectedSource === MATRIX_DATA_SOURCE_BLE);
-	const showCsiCalibration = $derived(selectedSource === MATRIX_DATA_SOURCE_WIFI_CSI);
 
 	$effect(() => {
 		if (!store.loading) {
@@ -226,20 +222,6 @@
 			bleStatus = await new BleApiService(session.apiOptions).getStatus();
 		} catch {
 			bleLoadError = m.matrix_data_viz_ble_load_error({ locale: i18n.languageTag });
-		}
-	}
-
-	async function calibrateCsi() {
-		if (!canManage || calibrationBusy) return;
-		calibrationBusy = true;
-		calibrationMessage = '';
-		try {
-			await new MatrixApiService(session.apiOptions).calibrateCsiDataVisualization();
-			calibrationMessage = m.matrix_data_viz_csi_calibrate_ok({ locale: i18n.languageTag });
-		} catch {
-			calibrationMessage = m.matrix_data_viz_csi_calibrate_error({ locale: i18n.languageTag });
-		} finally {
-			calibrationBusy = false;
 		}
 	}
 </script>
@@ -460,27 +442,6 @@
 					/>
 				</ContentBox>
 
-				{#if showCsiCalibration}
-					<ContentBox class="flex items-center justify-between gap-3">
-						<div class="min-w-0">
-							<span class="font-bold text-sm">{m.matrix_data_viz_csi_calibrate()}</span>
-							{#if calibrationMessage}
-								<p class="mt-1 text-xs text-base-content/70">{calibrationMessage}</p>
-							{/if}
-						</div>
-						<FormButton
-							variant="secondary"
-							size="sm"
-							icon={Refresh}
-							label={calibrationBusy
-								? m.matrix_data_viz_csi_calibrating()
-								: m.matrix_data_viz_csi_calibrate()}
-							disabled={controlsDisabled}
-							loading={calibrationBusy}
-							onclick={() => void calibrateCsi()}
-						/>
-					</ContentBox>
-				{/if}
 			</div>
 		{/if}
 	</div>
