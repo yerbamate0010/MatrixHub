@@ -107,6 +107,40 @@ void test_deserialize_matrix_normalizes_rgb888_colors() {
     TEST_ASSERT_EQUAL_HEX32(0xFFFFFF, data.menu.textColor);
 }
 
+void test_deserialize_matrix_normalizes_native_3d_effect_fields() {
+    JsonDocument doc;
+    doc[CONFIG::Keys::kEffectEngine] = 1;
+    doc[CONFIG::Keys::kEffectMode] = 69;
+    doc[CONFIG::Keys::kEffectReactivityProvider] = 9;
+    doc[CONFIG::Keys::kEffectReactivityGain] = 255;
+
+    RTC::MatrixData data{};
+    JsonObject obj = doc.as<JsonObject>();
+    CONFIG::JSON::deserializeMatrix(obj, data);
+
+    TEST_ASSERT_EQUAL_UINT8(1, data.effectEngine);
+    TEST_ASSERT_EQUAL_UINT8(0, data.effectMode);
+    TEST_ASSERT_EQUAL_UINT8(0, data.effectReactivityProvider);
+    TEST_ASSERT_EQUAL_UINT8(200, data.effectReactivityGain);
+}
+
+void test_serialize_matrix_writes_effect_engine_and_reactivity_fields() {
+    RTC::MatrixData data{};
+    data.effectEngine = 1;
+    data.effectMode = 3;
+    data.effectReactivityProvider = 1;
+    data.effectReactivityGain = 125;
+
+    JsonDocument doc;
+    JsonObject obj = doc.to<JsonObject>();
+    CONFIG::JSON::serializeMatrix(data, obj);
+
+    TEST_ASSERT_EQUAL_UINT8(1, obj[CONFIG::Keys::kEffectEngine].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(3, obj[CONFIG::Keys::kEffectMode].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(1, obj[CONFIG::Keys::kEffectReactivityProvider].as<uint8_t>());
+    TEST_ASSERT_EQUAL_UINT8(125, obj[CONFIG::Keys::kEffectReactivityGain].as<uint8_t>());
+}
+
 void test_load_matrix_psram_normalizes_custom_icon_pixels() {
     JsonDocument doc;
     JsonArray icons = doc[CONFIG::Keys::kCustomIcons].to<JsonArray>();
@@ -130,6 +164,8 @@ int main(int argc, char** argv) {
 
     UNITY_BEGIN();
     RUN_TEST(test_deserialize_matrix_normalizes_rgb888_colors);
+    RUN_TEST(test_deserialize_matrix_normalizes_native_3d_effect_fields);
+    RUN_TEST(test_serialize_matrix_writes_effect_engine_and_reactivity_fields);
     RUN_TEST(test_load_matrix_psram_normalizes_custom_icon_pixels);
     return UNITY_END();
 }

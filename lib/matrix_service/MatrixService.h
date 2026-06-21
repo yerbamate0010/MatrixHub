@@ -5,6 +5,7 @@
 #include "types/MatrixTypes.h"
 #include "renderer/MatrixRenderer.h"
 #include "core/MatrixState.h"
+#include "effects/MatrixFxTypes.h"
 
 class MatrixService {
 public:
@@ -46,6 +47,7 @@ public:
     void setThermalBrightnessLimit(uint8_t limit);
     void setRotation(uint8_t rotation);
     void setScrollSpeed(uint16_t ms);
+    void setEffectInput(const MATRIX_FX::MatrixFxInput& input);
 
     // Forces a solid color (Active Mode - blocks passive updates)
     void showSolidColor(uint32_t color);
@@ -65,7 +67,15 @@ public:
      * @param color RGB888 Color (0xRRGGBB)
      * @param durationMs Duration before auto-clear (0 = permanent)
      */
-    void showEffect(uint8_t mode, uint32_t speed, uint32_t color, uint32_t color2, uint32_t color3, uint32_t durationMs = 0);
+    void showEffect(uint8_t mode,
+                    uint32_t speed,
+                    uint32_t color,
+                    uint32_t color2,
+                    uint32_t color3,
+                    uint32_t durationMs = 0,
+                    uint8_t engine = static_cast<uint8_t>(MATRIX_FX::EffectEngine::LegacyWs2812Fx),
+                    uint8_t reactivityProvider = static_cast<uint8_t>(MATRIX_FX::ReactiveProvider::None),
+                    uint8_t reactivityGain = MATRIX_FX::kDefaultReactivityGain);
 
 
 

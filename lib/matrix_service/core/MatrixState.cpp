@@ -55,24 +55,38 @@ void MatrixState::requestSolid(uint32_t color) {
     _currentMode = MatrixMode::ACTIVE_SOLID;
 }
 
-void MatrixState::requestEffect(uint8_t mode, uint32_t speed, uint32_t color, uint32_t color2, uint32_t color3, uint32_t durationMs) {
+void MatrixState::requestEffect(uint8_t mode,
+                                uint32_t speed,
+                                uint32_t color,
+                                uint32_t color2,
+                                uint32_t color3,
+                                uint32_t durationMs,
+                                uint8_t engine,
+                                uint8_t reactivityProvider,
+                                uint8_t reactivityGain) {
     SYSTEM::ScopeLock lock(_mutex);
     _pendingEffectMode = mode;
+    _pendingEffectEngine = engine;
     _pendingEffectSpeed = speed;
     _pendingEffectColor = color;
     _pendingEffectColor2 = color2;
     _pendingEffectColor3 = color3;
     _pendingEffectDuration = durationMs;
+    _pendingEffectReactivityProvider = reactivityProvider;
+    _pendingEffectReactivityGain = reactivityGain;
     _flags.effectDirty = true;
     
     // Background effect logic
     if (durationMs == 0) {
         _bgEffect.active = true;
         _bgEffect.mode = mode;
+        _bgEffect.engine = engine;
         _bgEffect.speed = speed;
         _bgEffect.color = color;
         _bgEffect.color2 = color2;
         _bgEffect.color3 = color3;
+        _bgEffect.reactivityProvider = reactivityProvider;
+        _bgEffect.reactivityGain = reactivityGain;
     }
     _currentMode = MatrixMode::ACTIVE_EFFECT;
 }
@@ -186,11 +200,14 @@ bool MatrixState::poll(MatrixCommand& cmd) {
     if (_flags.effectDirty) {
         cmd.type = CommandType::SHOW_EFFECT;
         cmd.value8 = _pendingEffectMode;  // Mode
+        cmd.effectEngine = _pendingEffectEngine;
         cmd.effectSpeedMs = _pendingEffectSpeed;
         cmd.value32 = _pendingEffectColor; // Color
         cmd.value32_2 = _pendingEffectColor2; // Color2
         cmd.value32_3 = _pendingEffectColor3; // Color3
         cmd.durationMs = _pendingEffectDuration;
+        cmd.effectReactivityProvider = _pendingEffectReactivityProvider;
+        cmd.effectReactivityGain = _pendingEffectReactivityGain;
         _flags.effectDirty = false;
         return true;
     }

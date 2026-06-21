@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "types/MatrixTypes.h"
+#include "../../lib/matrix_service/effects/MatrixFxTypes.h"
 
 class MatrixService {
 public:
@@ -16,12 +17,28 @@ public:
         lastTextColor = color;
         showTextCalls++;
     }
-    void showEffect(uint8_t mode, uint16_t speed, uint32_t color1, uint32_t color2, uint32_t color3) {
+    void setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
+        lastEffectInput = input;
+        setEffectInputCalls++;
+    }
+    void showEffect(uint8_t mode,
+                    uint32_t speed,
+                    uint32_t color1,
+                    uint32_t color2,
+                    uint32_t color3,
+                    uint32_t duration = 0,
+                    uint8_t engine = 0,
+                    uint8_t reactivityProvider = 0,
+                    uint8_t reactivityGain = 0) {
+        (void)duration;
         lastEffectMode = mode;
         lastEffectSpeed = speed;
         lastEffectColor1 = color1;
         lastEffectColor2 = color2;
         lastEffectColor3 = color3;
+        lastEffectEngine = engine;
+        lastEffectReactivityProvider = reactivityProvider;
+        lastEffectReactivityGain = reactivityGain;
         showEffectCalls++;
     }
     void showSolidColor(uint16_t color) {}
@@ -55,12 +72,17 @@ public:
     uint32_t clearBackgroundEffectCalls = 0;
     bool lastClearStopBackground = false;
     uint8_t lastEffectMode = 0;
-    uint16_t lastEffectSpeed = 0;
+    uint32_t lastEffectSpeed = 0;
+    uint8_t lastEffectEngine = 0;
+    uint8_t lastEffectReactivityProvider = 0;
+    uint8_t lastEffectReactivityGain = 0;
     uint32_t lastEffectColor1 = 0;
     uint32_t lastEffectColor2 = 0;
     uint32_t lastEffectColor3 = 0;
     uint16_t lastScrollSpeed = 0;
     uint8_t lastRotation = 0;
     uint32_t setRotationCalls = 0;
+    uint32_t setEffectInputCalls = 0;
+    MATRIX_FX::MatrixFxInput lastEffectInput{};
     bool customIconAssigned[4] = {false, false, false, false};
 };

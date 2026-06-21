@@ -38,11 +38,14 @@ public:
                 MATRIX_MANAGER::LayerContent bgContent;
                 bgContent.active = true;
                 bgContent.type = CommandType::SHOW_EFFECT;
+                bgContent.effectEngine = state.config.effectEngine;
                 bgContent.effectMode = state.config.effectMode;
                 bgContent.effectSpeed = state.config.effectSpeed;
                 bgContent.effectColor = state.config.effectColor;
                 bgContent.effectColor2 = state.config.effectColor2;
                 bgContent.effectColor3 = state.config.effectColor3;
+                bgContent.effectReactivityProvider = state.config.effectReactivityProvider;
+                bgContent.effectReactivityGain = state.config.effectReactivityGain;
                 _matrixManager->setLayer(MATRIX_MANAGER::Layer::BACKGROUND, bgContent);
             } else {
                 _matrixService->showEffect(
@@ -50,7 +53,11 @@ public:
                     state.config.effectSpeed,
                     state.config.effectColor,
                     state.config.effectColor2,
-                    state.config.effectColor3);
+                    state.config.effectColor3,
+                    0,
+                    state.config.effectEngine,
+                    state.config.effectReactivityProvider,
+                    state.config.effectReactivityGain);
             }
         } else {
             // The renderer can resurrect a cached background effect after a

@@ -4,6 +4,7 @@
 #include <LedMatrix.h>
 #include "../types/MatrixTypes.h"
 #include "../../src/config/System.h" // For UI constants
+#include "../effects/MatrixFxEngine3D.h"
 #include "IconDrawer.h"
 #include "TextDrawer.h"
 
@@ -19,6 +20,14 @@ public:
     void showIcon(IconType icon, const uint32_t* customBitmap = nullptr);
     void showSolid(uint32_t color);
     void showEffect(uint8_t mode, uint32_t speed, uint32_t color, uint32_t color2, uint32_t color3);
+    void showNative3DEffect(uint8_t mode,
+                            uint32_t speed,
+                            uint32_t color,
+                            uint32_t color2,
+                            uint32_t color3,
+                            uint8_t reactivityProvider,
+                            uint8_t reactivityGain);
+    void setEffectInput(const MATRIX_FX::MatrixFxInput& input);
     void clear();
     void setBrightness(uint8_t brightness);
     void setRotation(uint8_t rotation);
@@ -38,6 +47,7 @@ private:
     // State Flags
     bool _scrolling;
     bool _effectRunning;
+    bool _nativeEffectRunning = false;
     IconType _activeIcon = IconType::NONE;
     bool _hasActiveIconBitmap = false;
     uint32_t _activeIconBitmap[64];
@@ -51,4 +61,6 @@ private:
     uint16_t _scrollSpeed = UI::MATRIX::SCROLL_INTERVAL_MS;
     uint32_t _effectSpeedMs = UI::MATRIX::DEFAULT_EFFECT_SPEED;
     uint32_t _lastEffectServiceMs = 0;
+    uint32_t _nativeFrame[MATRIX_FX::kMatrixFxPixelCount] = {};
+    MATRIX_FX::MatrixFxEngine3D _nativeEngine;
 };

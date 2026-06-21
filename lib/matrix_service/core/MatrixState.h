@@ -16,7 +16,15 @@ public:
     void requestText(const char* text, uint32_t color, uint32_t durationMs);
     void requestClear(bool stopBackground);
     void requestSolid(uint32_t color);
-    void requestEffect(uint8_t mode, uint32_t speed, uint32_t color, uint32_t color2, uint32_t color3, uint32_t durationMs);
+    void requestEffect(uint8_t mode,
+                       uint32_t speed,
+                       uint32_t color,
+                       uint32_t color2,
+                       uint32_t color3,
+                       uint32_t durationMs,
+                       uint8_t engine = 0,
+                       uint8_t reactivityProvider = 0,
+                       uint8_t reactivityGain = 0);
     
     void setBrightness(uint8_t brightness);
     void setThermalBrightnessLimit(uint8_t limit);
@@ -30,10 +38,13 @@ public:
     struct BgEffect {
         bool active = false;
         uint8_t mode = 0;
+        uint8_t engine = 0;
         uint32_t speed = UI::MATRIX::DEFAULT_EFFECT_SPEED;
         uint32_t color = 0;
         uint32_t color2 = 0;
         uint32_t color3 = 0;
+        uint8_t reactivityProvider = 0;
+        uint8_t reactivityGain = 0;
     };
     
     BgEffect getBackgroundEffect() const;
@@ -77,11 +88,14 @@ private:
     
     // Effect State
     volatile uint8_t _pendingEffectMode = 0;
+    volatile uint8_t _pendingEffectEngine = 0;
     volatile uint32_t _pendingEffectSpeed = 0;
     volatile uint32_t _pendingEffectColor = 0;
     volatile uint32_t _pendingEffectColor2 = 0;
     volatile uint32_t _pendingEffectColor3 = 0;
     volatile uint32_t _pendingEffectDuration = 0;
+    volatile uint8_t _pendingEffectReactivityProvider = 0;
+    volatile uint8_t _pendingEffectReactivityGain = 0;
     
     volatile uint8_t _pendingBrightness = 0;
     volatile uint8_t _userTargetBrightness = 20; // Default fallback

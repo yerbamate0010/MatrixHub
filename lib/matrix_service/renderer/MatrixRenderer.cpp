@@ -3,6 +3,7 @@
 #include "../assets/MatrixBitmaps.h"
 #include "../../../src/matrix/MatrixEffectModes.h"
 #include <WS2812FX.h>
+#include <cstring>
 
 static const char* TAG = "MatrixRenderer";
 
@@ -18,6 +19,10 @@ void MatrixRenderer::blackout() {
     if (_effectRunning) {
         _matrix->stop();
         _effectRunning = false;
+    }
+    if (_nativeEffectRunning) {
+        _nativeEngine.reset();
+        _nativeEffectRunning = false;
     }
 
     _scrolling = false;
@@ -78,6 +83,11 @@ void MatrixRenderer::loop() {
         }
         _lastEffectServiceMs = now;
         _matrix->service();
+    } else if (_nativeEffectRunning) {
+        if (_nativeEngine.render(millis(), _nativeFrame, MATRIX_FX::kMatrixFxPixelCount)) {
+            _matrix->drawBitmap(_nativeFrame);
+            _matrix->show();
+        }
     }
 }
 
@@ -92,6 +102,10 @@ void MatrixRenderer::showText(const char* text, uint32_t color) {
     if (_effectRunning) {
         _matrix->stop();
         _effectRunning = false;
+    }
+    if (_nativeEffectRunning) {
+        _nativeEngine.reset();
+        _nativeEffectRunning = false;
     }
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
@@ -138,6 +152,7 @@ void MatrixRenderer::showSolid(uint32_t color) {
     }
     
     if (_effectRunning) { _matrix->stop(); _effectRunning = false; }
+    if (_nativeEffectRunning) { _nativeEngine.reset(); _nativeEffectRunning = false; }
     _scrolling = false;
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
@@ -170,7 +185,7 @@ void MatrixRenderer::setRotation(uint8_t rotation) {
             _matrix->fillScreen(0);  // Clear stale pixels; scroll continues from current _x
         }
         // Re-render static icon after rotation change
-        if (!_scrolling && !_effectRunning && _activeIcon != IconType::NONE) {
+        if (!_scrolling && !_effectRunning && !_nativeEffectRunning && _activeIcon != IconType::NONE) {
             _matrix->fillScreen(0);
             IconDrawer::draw(_matrix, _activeIcon, _hasActiveIconBitmap ? _activeIconBitmap : nullptr);
             _matrix->show();
@@ -185,7 +200,7 @@ void MatrixRenderer::setScrollSpeed(uint16_t ms) {
 }
 
 bool MatrixRenderer::isActive() const {
-    return _scrolling || _effectRunning;
+    return _scrolling || _effectRunning || _nativeEffectRunning;
 }
 
 void MatrixRenderer::showIcon(IconType icon, const uint32_t* customBitmap) {
@@ -196,6 +211,7 @@ void MatrixRenderer::showIcon(IconType icon, const uint32_t* customBitmap) {
     }
     
     if (_effectRunning) { _matrix->stop(); _effectRunning = false; }
+    if (_nativeEffectRunning) { _nativeEngine.reset(); _nativeEffectRunning = false; }
     _scrolling = false;
     _activeIcon = icon;
     
@@ -219,6 +235,10 @@ void MatrixRenderer::showEffect(uint8_t mode, uint32_t speed, uint32_t color, ui
     
     _activeIcon = IconType::NONE;
     _hasActiveIconBitmap = false;
+    if (_nativeEffectRunning) {
+        _nativeEngine.reset();
+        _nativeEffectRunning = false;
+    }
     uint32_t colors[] = { color, color2, color3 };
     // Guard the renderer too, so invalid values from stale state or a future
     // caller still fall back to a known-good effect.
@@ -241,4 +261,46 @@ void MatrixRenderer::showEffect(uint8_t mode, uint32_t speed, uint32_t color, ui
         _effectRunning = true;
     }
     _scrolling = false;
+}
+
+void MatrixRenderer::showNative3DEffect(uint8_t mode,
+                                        uint32_t speed,
+                                        uint32_t color,
+                                        uint32_t color2,
+                                        uint32_t color3,
+                                        uint8_t reactivityProvider,
+                                        uint8_t reactivityGain) {
+    if (!_matrix) return;
+    if (isDisplayMuted()) {
+        blackout();
+        return;
+    }
+
+    if (_effectRunning) {
+        _matrix->stop();
+        _effectRunning = false;
+    }
+    _scrolling = false;
+    _activeIcon = IconType::NONE;
+    _hasActiveIconBitmap = false;
+
+    MATRIX_FX::MatrixFxConfig config;
+    config.mode = MATRIX_FX::normalizeNative3DMode(mode);
+    config.speedMs = speed < UI::MATRIX::MIN_EFFECT_SPEED
+        ? UI::MATRIX::MIN_EFFECT_SPEED
+        : (speed > UI::MATRIX::MAX_EFFECT_SPEED ? UI::MATRIX::MAX_EFFECT_SPEED : speed);
+    config.color1 = color;
+    config.color2 = color2;
+    config.color3 = color3;
+    config.provider = static_cast<MATRIX_FX::ReactiveProvider>(
+        MATRIX_FX::normalizeReactiveProvider(reactivityProvider));
+    config.reactivityGain = MATRIX_FX::clampReactivityGain(reactivityGain);
+
+    _nativeEngine.configure(config);
+    _nativeEffectRunning = true;
+    memset(_nativeFrame, 0, sizeof(_nativeFrame));
+}
+
+void MatrixRenderer::setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
+    _nativeEngine.setInput(input);
 }

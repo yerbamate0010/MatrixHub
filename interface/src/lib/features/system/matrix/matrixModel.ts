@@ -1,6 +1,8 @@
 import type { MatrixSettings } from '$lib/services/api/core/MatrixApiService';
 
 export type MatrixSettingsKey = keyof MatrixSettings;
+export type MatrixEffectEngine = 0 | 1;
+export type MatrixEffectReactivityProvider = 0 | 1;
 export type MatrixEffectSpeedScale = 'ms' | 's' | 'm' | 'h';
 export type MatrixEffectCategoryId = 'recommended' | 'calm' | 'dynamic' | 'seasonal' | 'all';
 
@@ -20,11 +22,14 @@ export const DEFAULT_MATRIX_SETTINGS: MatrixSettings = {
 	rotation: 0,
 	auto_rotate: false,
 	effect_enabled: false,
+	effect_engine: 0,
 	effect_mode: 0,
 	effect_speed: 1000,
 	effect_color: 0x00ff00,
 	effect_color_2: 0xff0000,
 	effect_color_3: 0x0000ff,
+	effect_reactivity_provider: 0,
+	effect_reactivity_gain: 80,
 	menu_enabled: true,
 	menu_text_color: 0xffffff,
 	menu_scroll_speed: 20
@@ -46,11 +51,14 @@ export const MATRIX_ALARM_SETTING_KEYS = [
 
 export const MATRIX_EFFECT_SETTING_KEYS = [
 	'effect_enabled',
+	'effect_engine',
 	'effect_mode',
 	'effect_speed',
 	'effect_color',
 	'effect_color_2',
-	'effect_color_3'
+	'effect_color_3',
+	'effect_reactivity_provider',
+	'effect_reactivity_gain'
 ] as const satisfies readonly MatrixSettingsKey[];
 
 // Keep this aligned with the backend validator in MatrixConfigJson.cpp.
@@ -75,9 +83,20 @@ export const MATRIX_CUSTOM_ICON_PIXELS = 64;
 // Keep this aligned with the backend validator. Matrix effects use one compact
 // 0..69 range end-to-end, with no hidden holes or excluded vendor IDs.
 export const MATRIX_EFFECT_MODE_MAX = 69;
+export const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 3;
+export const MATRIX_EFFECT_ENGINE_LEGACY = 0 satisfies MatrixEffectEngine;
+export const MATRIX_EFFECT_ENGINE_NATIVE_3D = 1 satisfies MatrixEffectEngine;
+export const MATRIX_REACTIVITY_PROVIDER_NONE = 0 satisfies MatrixEffectReactivityProvider;
+export const MATRIX_REACTIVITY_PROVIDER_IMU = 1 satisfies MatrixEffectReactivityProvider;
+export const MATRIX_EFFECT_REACTIVITY_GAIN_MIN = 0;
+export const MATRIX_EFFECT_REACTIVITY_GAIN_MAX = 200;
 
 export const MATRIX_EFFECT_IDS = Array.from(
 	{ length: MATRIX_EFFECT_MODE_MAX + 1 },
+	(_, effectId) => effectId
+);
+export const MATRIX_NATIVE_3D_EFFECT_IDS = Array.from(
+	{ length: MATRIX_NATIVE_3D_EFFECT_MODE_MAX + 1 },
 	(_, effectId) => effectId
 );
 
@@ -101,6 +120,29 @@ export const MATRIX_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
 	{
 		value: 'all',
 		effectIds: MATRIX_EFFECT_IDS
+	}
+];
+
+export const MATRIX_NATIVE_3D_EFFECT_CATEGORIES: MatrixEffectCategoryDefinition[] = [
+	{
+		value: 'recommended',
+		effectIds: [1, 2]
+	},
+	{
+		value: 'calm',
+		effectIds: [2, 3]
+	},
+	{
+		value: 'dynamic',
+		effectIds: [0, 1, 2]
+	},
+	{
+		value: 'seasonal',
+		effectIds: [3]
+	},
+	{
+		value: 'all',
+		effectIds: MATRIX_NATIVE_3D_EFFECT_IDS
 	}
 ];
 
@@ -132,20 +174,41 @@ export const MATRIX_COLOR_PRESETS: MatrixColorPresetDefinition[] = [
 ];
 
 export function getMatrixEffectCategory(
-	categoryId: MatrixEffectCategoryId
+	categoryId: MatrixEffectCategoryId,
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
 ): MatrixEffectCategoryDefinition | undefined {
-	return MATRIX_EFFECT_CATEGORIES.find((category) => category.value === categoryId);
+	return getMatrixEffectCategories(engine).find((category) => category.value === categoryId);
 }
 
 export function matrixEffectCategoryContainsEffect(
 	categoryId: MatrixEffectCategoryId,
-	effectId: number
+	effectId: number,
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
 ): boolean {
-	return getMatrixEffectCategory(categoryId)?.effectIds.includes(effectId) ?? false;
+	return getMatrixEffectCategory(categoryId, engine)?.effectIds.includes(effectId) ?? false;
 }
 
-export function getPreferredMatrixEffectCategory(effectId: number): MatrixEffectCategoryId {
-	for (const category of MATRIX_EFFECT_CATEGORIES) {
+export function getMatrixEffectCategories(
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
+): MatrixEffectCategoryDefinition[] {
+	return engine === MATRIX_EFFECT_ENGINE_NATIVE_3D
+		? MATRIX_NATIVE_3D_EFFECT_CATEGORIES
+		: MATRIX_EFFECT_CATEGORIES;
+}
+
+export function getMatrixEffectIds(
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
+): number[] {
+	return engine === MATRIX_EFFECT_ENGINE_NATIVE_3D
+		? MATRIX_NATIVE_3D_EFFECT_IDS
+		: MATRIX_EFFECT_IDS;
+}
+
+export function getPreferredMatrixEffectCategory(
+	effectId: number,
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
+): MatrixEffectCategoryId {
+	for (const category of getMatrixEffectCategories(engine)) {
 		if (category.value === 'all') continue;
 		if (category.effectIds.includes(effectId)) {
 			return category.value;
@@ -153,6 +216,23 @@ export function getPreferredMatrixEffectCategory(effectId: number): MatrixEffect
 	}
 
 	return 'all';
+}
+
+export function normalizeMatrixEffectModeForEngine(
+	effectId: number,
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
+): number {
+	const max = engine === MATRIX_EFFECT_ENGINE_NATIVE_3D
+		? MATRIX_NATIVE_3D_EFFECT_MODE_MAX
+		: MATRIX_EFFECT_MODE_MAX;
+	if (!Number.isFinite(effectId)) return 0;
+	return Math.min(max, Math.max(0, Math.trunc(effectId)));
+}
+
+export function normalizeMatrixEffectEngine(value: number): MatrixEffectEngine {
+	return value === MATRIX_EFFECT_ENGINE_NATIVE_3D
+		? MATRIX_EFFECT_ENGINE_NATIVE_3D
+		: MATRIX_EFFECT_ENGINE_LEGACY;
 }
 
 function clampMatrixEffectSpeed(value: number): number {

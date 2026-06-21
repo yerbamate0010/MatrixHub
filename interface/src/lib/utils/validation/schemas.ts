@@ -102,6 +102,7 @@ export const MatrixSettingsSchema = z.object({
 	rotation: z.number().int().min(0).max(3),
 	auto_rotate: z.boolean(),
 	effect_enabled: z.boolean(),
+	effect_engine: z.number().int().min(0).max(1),
 	effect_mode: z.number().int().min(0).max(69),
 	effect_speed: z
 		.number()
@@ -111,6 +112,8 @@ export const MatrixSettingsSchema = z.object({
 	effect_color: MatrixColorSchema,
 	effect_color_2: MatrixColorSchema,
 	effect_color_3: MatrixColorSchema,
+	effect_reactivity_provider: z.number().int().min(0).max(1),
+	effect_reactivity_gain: z.number().int().min(0).max(200),
 	custom_icons: z.array(MatrixCustomIconSchema).length(3).optional(),
 	menu_enabled: z.boolean(),
 	menu_text_color: MatrixColorSchema,

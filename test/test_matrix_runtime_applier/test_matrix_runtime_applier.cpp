@@ -128,11 +128,14 @@ MATRIX::MatrixSettingsState makeState(bool effectEnabled) {
     state.config.brightness = 42;
     state.config.menu.scrollSpeed = 33;
     state.config.effectEnabled = effectEnabled;
-    state.config.effectMode = 11;
+    state.config.effectEngine = 1;
+    state.config.effectMode = 3;
     state.config.effectSpeed = 900;
     state.config.effectColor = 0x112233;
     state.config.effectColor2 = 0x445566;
     state.config.effectColor3 = 0x778899;
+    state.config.effectReactivityProvider = 1;
+    state.config.effectReactivityGain = 125;
     return state;
 }
 
@@ -187,11 +190,14 @@ void test_apply_with_manager_sets_background_layer_when_effects_enabled() {
         static_cast<uint8_t>(MATRIX_MANAGER::Layer::BACKGROUND),
         static_cast<uint8_t>(MATRIX_MANAGER::g_lastSetLayer));
     TEST_ASSERT_EQUAL_UINT8(CommandType::SHOW_EFFECT, MATRIX_MANAGER::g_lastSetContent.type);
-    TEST_ASSERT_EQUAL_UINT8(11, MATRIX_MANAGER::g_lastSetContent.effectMode);
+    TEST_ASSERT_EQUAL_UINT8(1, MATRIX_MANAGER::g_lastSetContent.effectEngine);
+    TEST_ASSERT_EQUAL_UINT8(3, MATRIX_MANAGER::g_lastSetContent.effectMode);
     TEST_ASSERT_EQUAL_UINT16(900, MATRIX_MANAGER::g_lastSetContent.effectSpeed);
     TEST_ASSERT_EQUAL_HEX32(0x112233, MATRIX_MANAGER::g_lastSetContent.effectColor);
     TEST_ASSERT_EQUAL_HEX32(0x445566, MATRIX_MANAGER::g_lastSetContent.effectColor2);
     TEST_ASSERT_EQUAL_HEX32(0x778899, MATRIX_MANAGER::g_lastSetContent.effectColor3);
+    TEST_ASSERT_EQUAL_UINT8(1, MATRIX_MANAGER::g_lastSetContent.effectReactivityProvider);
+    TEST_ASSERT_EQUAL_UINT8(125, MATRIX_MANAGER::g_lastSetContent.effectReactivityGain);
 }
 
 int main(int argc, char** argv) {

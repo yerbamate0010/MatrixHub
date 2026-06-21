@@ -83,8 +83,9 @@ constexpr uint32_t kMagicValid = 0xC0FFEE42;
  *  42 - Expanded Matrix effectSpeed to uint32_t for long-duration animations (April 2026)
  *  43 - Added WiFi CSI motion alarm retained settings (June 2026)
  *  44 - Added shared IMU runtime/settings state (June 2026)
+ *  45 - Added Matrix native effect engine/provider settings (June 2026)
  */
-constexpr uint32_t kSchemaVersion = 44;
+constexpr uint32_t kSchemaVersion = 45;
 
 // Shelly Constants moved to types/RtcShellyTypes.h
 

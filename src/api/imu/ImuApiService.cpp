@@ -152,6 +152,7 @@ esp_err_t ImuApiService::handleStatus(PsychicRequest* request) {
     writeConsumer(w, "auto_rotate", IMU::Consumer::AutoRotate, manager.desiredMask, manager.runningMask);
     writeConsumer(w, "alarm", IMU::Consumer::Alarm, manager.desiredMask, manager.runningMask);
     writeConsumer(w, "ui_monitor", IMU::Consumer::UiMonitor, manager.desiredMask, manager.runningMask);
+    writeConsumer(w, "matrix_effects", IMU::Consumer::MatrixEffects, manager.desiredMask, manager.runningMask);
     w.raw("}");
 
     w.raw(","); w.key(CONFIG::Keys::kAlarm);

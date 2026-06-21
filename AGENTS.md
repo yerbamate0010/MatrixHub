@@ -162,6 +162,8 @@ Core module directories:
 
 ## Git Notes
 
+- Never create additional branches unless the user explicitly asks for a new
+  branch. Commit directly on the current branch when the user asks for a commit.
 - Keep commits focused and do not include unrelated user changes.
 - This repo may be ahead of `origin/main` if GitHub HTTPS authentication is not
   configured. If `git push` fails with a username/auth error, report it instead

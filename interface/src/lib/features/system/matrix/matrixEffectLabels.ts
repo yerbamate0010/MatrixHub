@@ -1,4 +1,9 @@
 import * as m from '$lib/paraglide/messages.js';
+import {
+	MATRIX_EFFECT_ENGINE_LEGACY,
+	MATRIX_EFFECT_ENGINE_NATIVE_3D,
+	type MatrixEffectEngine
+} from './matrixModel';
 
 const effectLabelResolvers: Record<number, (args: { locale: string }) => string> = {
 	0: m.matrix_eff_static,
@@ -73,6 +78,20 @@ const effectLabelResolvers: Record<number, (args: { locale: string }) => string>
 	69: m.matrix_eff_oscillator
 };
 
-export function getMatrixEffectName(effectId: number, locale: string): string {
+const native3dEffectLabelResolvers: Record<number, (args: { locale: string }) => string> = {
+	0: m.matrix_eff_3d_gyro_cube,
+	1: m.matrix_eff_3d_gravity_particles,
+	2: m.matrix_eff_3d_depth_tunnel,
+	3: m.matrix_eff_3d_liquid_wave
+};
+
+export function getMatrixEffectName(
+	effectId: number,
+	locale: string,
+	engine: MatrixEffectEngine = MATRIX_EFFECT_ENGINE_LEGACY
+): string {
+	if (engine === MATRIX_EFFECT_ENGINE_NATIVE_3D) {
+		return native3dEffectLabelResolvers[effectId]?.({ locale }) ?? `3D Effect ${effectId}`;
+	}
 	return effectLabelResolvers[effectId]?.({ locale }) ?? `Effect ${effectId}`;
 }

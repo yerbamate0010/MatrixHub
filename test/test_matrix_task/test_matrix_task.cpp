@@ -94,6 +94,8 @@ bool g_hasAccel = false;
 float g_ax = 0.0f;
 float g_ay = 0.0f;
 float g_az = 0.0f;
+bool g_hasSample = false;
+IMU::ImuSample g_sample{};
 uint32_t g_setConsumerCalls = 0;
 bool g_lastConsumerActive = false;
 IMU::Consumer g_lastConsumer = IMU::Consumer::AutoRotate;
@@ -105,6 +107,21 @@ bool ImuService::getCachedAccel(float& x, float& y, float& z) const {
     y = g_ay;
     z = g_az;
     return g_hasAccel;
+}
+
+bool ImuService::getCachedSample(float& ax, float& ay, float& az, float& gx, float& gy, float& gz) const {
+    ax = g_sample.ax;
+    ay = g_sample.ay;
+    az = g_sample.az;
+    gx = g_sample.gx;
+    gy = g_sample.gy;
+    gz = g_sample.gz;
+    return g_hasSample;
+}
+
+bool ImuService::getCachedSample(IMU::ImuSample& sample) const {
+    sample = g_sample;
+    return g_hasSample;
 }
 
 namespace IMU {
@@ -145,6 +162,8 @@ void resetState() {
     g_ax = 0.0f;
     g_ay = 0.0f;
     g_az = 0.0f;
+    g_hasSample = false;
+    g_sample = IMU::ImuSample{};
     g_setConsumerCalls = 0;
     g_lastConsumerActive = false;
     g_lastConsumer = IMU::Consumer::AutoRotate;
@@ -199,12 +218,72 @@ void test_auto_rotate_reapplies_rotation_after_toggle() {
     TEST_ASSERT_TRUE(g_lastConsumerActive);
 }
 
+void test_effect_input_activates_imu_consumer_for_native_3d_provider() {
+    MatrixService matrix;
+    ImuService imu;
+    IMU::ImuManager manager(&imu);
+
+    RTC::mockStore.matrix.effectEnabled = true;
+    RTC::mockStore.matrix.effectEngine = 1;
+    RTC::mockStore.matrix.effectReactivityProvider = 1;
+    g_hasSample = true;
+    g_sample.ax = 0.25f;
+    g_sample.ay = -0.50f;
+    g_sample.az = 0.90f;
+    g_sample.gx = 45.0f;
+    g_sample.gy = -20.0f;
+    g_sample.gz = 10.0f;
+    g_sample.timestampMs = 700;
+    g_sample.valid = true;
+    TEST_STUBS::ARDUINO::millisValue = 750;
+
+    MATRIX::MatrixTask::evaluateEffectInput(&imu, &manager, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(1, g_setConsumerCalls);
+    TEST_ASSERT_EQUAL(IMU::Consumer::MatrixEffects, g_lastConsumer);
+    TEST_ASSERT_TRUE(g_lastConsumerActive);
+    TEST_ASSERT_EQUAL_UINT32(1, matrix.setEffectInputCalls);
+    TEST_ASSERT_TRUE(matrix.lastEffectInput.imuValid);
+    TEST_ASSERT_EQUAL_FLOAT(0.25f, matrix.lastEffectInput.ax);
+    TEST_ASSERT_EQUAL_FLOAT(-0.50f, matrix.lastEffectInput.ay);
+    TEST_ASSERT_EQUAL_FLOAT(0.90f, matrix.lastEffectInput.az);
+    TEST_ASSERT_EQUAL_FLOAT(45.0f, matrix.lastEffectInput.gx);
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.0f, matrix.lastEffectInput.motionEnergy);
+    TEST_ASSERT_EQUAL_UINT32(750, matrix.lastEffectInput.timestampMs);
+}
+
+void test_effect_input_disables_imu_consumer_when_provider_no_longer_needs_it() {
+    MatrixService matrix;
+    ImuService imu;
+    IMU::ImuManager manager(&imu);
+
+    RTC::mockStore.matrix.effectEnabled = true;
+    RTC::mockStore.matrix.effectEngine = 1;
+    RTC::mockStore.matrix.effectReactivityProvider = 1;
+    g_hasSample = true;
+    g_sample.ax = 0.0f;
+    g_sample.ay = 0.0f;
+    g_sample.az = 1.0f;
+
+    MATRIX::MatrixTask::evaluateEffectInput(&imu, &manager, &matrix);
+    RTC::mockStore.matrix.effectEnabled = false;
+    MATRIX::MatrixTask::evaluateEffectInput(&imu, &manager, &matrix);
+
+    TEST_ASSERT_EQUAL_UINT32(2, g_setConsumerCalls);
+    TEST_ASSERT_EQUAL(IMU::Consumer::MatrixEffects, g_lastConsumer);
+    TEST_ASSERT_FALSE(g_lastConsumerActive);
+    TEST_ASSERT_EQUAL_UINT32(2, matrix.setEffectInputCalls);
+    TEST_ASSERT_FALSE(matrix.lastEffectInput.imuValid);
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
 
     UNITY_BEGIN();
     RUN_TEST(test_auto_rotate_reapplies_rotation_after_toggle);
+    RUN_TEST(test_effect_input_activates_imu_consumer_for_native_3d_provider);
+    RUN_TEST(test_effect_input_disables_imu_consumer_when_provider_no_longer_needs_it);
     return UNITY_END();
 }
 

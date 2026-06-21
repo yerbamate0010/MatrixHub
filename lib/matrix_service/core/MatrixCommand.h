@@ -23,10 +23,13 @@ struct MatrixCommand {
     uint32_t color = 0;
     uint32_t durationMs = 0;
     uint8_t value8 = 0; // Brightness/Rotation/EffectMode
+    uint8_t effectEngine = 0;
     uint32_t effectSpeedMs = 0;
     uint32_t value32 = 0; // EffectColor
     uint32_t value32_2 = 0; // EffectColor2
     uint32_t value32_3 = 0; // EffectColor3
+    uint8_t effectReactivityProvider = 0;
+    uint8_t effectReactivityGain = 0;
     
     // Flags
     bool stopBackground = true;

@@ -54,11 +54,14 @@ struct __attribute__((packed)) MatrixData {
     
     // Effects
     bool effectEnabled = Defaults::Matrix::EffectEnabled;
+    uint8_t effectEngine = Defaults::Matrix::EffectEngine;
     uint8_t effectMode = Defaults::Matrix::EffectMode;
     uint32_t effectSpeed = Defaults::Matrix::EffectSpeed;
     uint32_t effectColor = Defaults::Matrix::EffectColor;
     uint32_t effectColor2 = Defaults::Matrix::EffectColor2;
     uint32_t effectColor3 = Defaults::Matrix::EffectColor3;
+    uint8_t effectReactivityProvider = Defaults::Matrix::EffectReactivityProvider;
+    uint8_t effectReactivityGain = Defaults::Matrix::EffectReactivityGain;
     
     // Menu settings
     MenuSettings menu;

@@ -8,11 +8,14 @@ export interface MatrixSettings {
 	auto_rotate: boolean;
 	// Effects
 	effect_enabled: boolean;
+	effect_engine: number;
 	effect_mode: number;
 	effect_speed: number;
 	effect_color: number;
 	effect_color_2: number;
 	effect_color_3: number;
+	effect_reactivity_provider: number;
+	effect_reactivity_gain: number;
 	custom_icons?: number[][];
 	// Menu settings
 	menu_enabled: boolean;

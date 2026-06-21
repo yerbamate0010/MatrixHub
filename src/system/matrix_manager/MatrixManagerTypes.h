@@ -36,11 +36,14 @@ struct LayerContent {
     uint32_t durationMs = 0;
     
     // Effect fields
+    uint8_t effectEngine = 0;
     uint8_t effectMode = 0;
     uint32_t effectSpeed = 0;
     uint32_t effectColor = 0;
     uint32_t effectColor2 = 0;
     uint32_t effectColor3 = 0;
+    uint8_t effectReactivityProvider = 0;
+    uint8_t effectReactivityGain = 0;
 
     void clear() {
         active = false;
@@ -49,11 +52,14 @@ struct LayerContent {
         color = 0xFFFFFF;
         icon = IconType::NONE;
         durationMs = 0;
+        effectEngine = 0;
         effectMode = 0;
         effectSpeed = 0;
         effectColor = 0;
         effectColor2 = 0;
         effectColor3 = 0;
+        effectReactivityProvider = 0;
+        effectReactivityGain = 0;
     }
 };
 

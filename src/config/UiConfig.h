@@ -31,6 +31,7 @@ namespace UI {
         constexpr int8_t DEFAULT_ROTATION = 0;
         constexpr bool DEFAULT_AUTO_ROTATE = false;
         constexpr bool DEFAULT_EFFECT_ENABLED = false;
+        constexpr uint8_t DEFAULT_EFFECT_ENGINE = 0;      // Legacy WS2812FX
         constexpr uint8_t DEFAULT_EFFECT_MODE = 0;      // Static
         constexpr uint32_t DEFAULT_EFFECT_SPEED = 1000;
         constexpr uint32_t MIN_EFFECT_SPEED = 50;
@@ -39,6 +40,8 @@ namespace UI {
         constexpr uint32_t DEFAULT_EFFECT_COLOR_PRIMARY = 0x00FF00;   // Green
         constexpr uint32_t DEFAULT_EFFECT_COLOR_SECONDARY = 0xFF0000; // Red
         constexpr uint32_t DEFAULT_EFFECT_COLOR_TERTIARY = 0x0000FF;  // Blue
+        constexpr uint8_t DEFAULT_EFFECT_REACTIVITY_PROVIDER = 0;     // None
+        constexpr uint8_t DEFAULT_EFFECT_REACTIVITY_GAIN = 80;
 
         constexpr uint32_t AUTO_ROTATE_INTERVAL_MS = 500;
         constexpr float AUTO_ROTATE_THRESHOLD_G = 0.65f;

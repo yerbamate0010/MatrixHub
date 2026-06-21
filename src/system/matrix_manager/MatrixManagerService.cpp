@@ -240,7 +240,10 @@ void MatrixManagerService::applyLayerToRenderer(const LayerContent& content) {
             _matrixService->showEffect(
                 content.effectMode, content.effectSpeed,
                 content.effectColor, content.effectColor2,
-                content.effectColor3, 0);
+                content.effectColor3, 0,
+                content.effectEngine,
+                content.effectReactivityProvider,
+                content.effectReactivityGain);
             break;
 
         case CommandType::CLEAR:

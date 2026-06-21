@@ -5,15 +5,20 @@ import {
 	MATRIX_COLOR_PRESETS,
 	MATRIX_CUSTOM_ICON_PIXELS,
 	MATRIX_EFFECT_CATEGORIES,
+	MATRIX_EFFECT_ENGINE_NATIVE_3D,
 	MATRIX_ALARM_SETTING_KEYS,
 	MATRIX_DISPLAY_SETTING_KEYS,
 	MATRIX_EFFECT_SETTING_KEYS,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
+	MATRIX_NATIVE_3D_EFFECT_IDS,
+	MATRIX_NATIVE_3D_EFFECT_MODE_MAX,
 	MATRIX_EFFECT_SPEED_MAX,
 	MATRIX_EFFECT_SPEED_MIN,
 	fromMatrixEffectSpeedScaleValue,
 	fromMatrixHexColor,
+	getMatrixEffectCategories,
+	getMatrixEffectIds,
 	getPreferredMatrixEffectCategory,
 	getPreferredMatrixEffectSpeedScale,
 	getMatrixCustomIcons,
@@ -50,6 +55,16 @@ describe('matrixModel', () => {
 		expect(matrixEffectCategoryContainsEffect('calm', 69)).toBe(false);
 		expect(getPreferredMatrixEffectCategory(11)).toBe('recommended');
 		expect(getPreferredMatrixEffectCategory(69)).toBe('dynamic');
+		expect(MATRIX_NATIVE_3D_EFFECT_MODE_MAX).toBe(3);
+		expect(MATRIX_NATIVE_3D_EFFECT_IDS).toEqual([0, 1, 2, 3]);
+		expect(getMatrixEffectIds(MATRIX_EFFECT_ENGINE_NATIVE_3D)).toEqual([0, 1, 2, 3]);
+		expect(getMatrixEffectCategories(MATRIX_EFFECT_ENGINE_NATIVE_3D).at(-1)).toEqual({
+			value: 'all',
+			effectIds: [0, 1, 2, 3]
+		});
+		expect(getPreferredMatrixEffectCategory(2, MATRIX_EFFECT_ENGINE_NATIVE_3D)).toBe(
+			'recommended'
+		);
 		expect(MATRIX_COLOR_PRESETS.map((preset) => preset.id)).toEqual([
 			'alert',
 			'forest',

@@ -6,11 +6,14 @@ type MatrixSettings = {
 	rotation: number;
 	auto_rotate: boolean;
 	effect_enabled: boolean;
+	effect_engine: number;
 	effect_mode: number;
 	effect_speed: number;
 	effect_color: number;
 	effect_color_2: number;
 	effect_color_3: number;
+	effect_reactivity_provider: number;
+	effect_reactivity_gain: number;
 	menu_enabled: boolean;
 	menu_text_color: number;
 	menu_scroll_speed: number;
@@ -23,11 +26,14 @@ const initialMatrixSettings: MatrixSettings = {
 	rotation: 0,
 	auto_rotate: false,
 	effect_enabled: true,
+	effect_engine: 0,
 	effect_mode: 2,
 	effect_speed: 1000,
 	effect_color: 0x00ff00,
 	effect_color_2: 0xff0000,
 	effect_color_3: 0x0000ff,
+	effect_reactivity_provider: 0,
+	effect_reactivity_gain: 80,
 	menu_enabled: true,
 	menu_text_color: 0xffffff,
 	menu_scroll_speed: 20,
@@ -133,8 +139,11 @@ test.describe('Matrix LED settings', () => {
 		await expect.poll(() => matrixPosts.length).toBe(2);
 		expect(matrixPosts[1]).toMatchObject({
 			effect_enabled: true,
+			effect_engine: 0,
 			effect_mode: 11,
-			effect_speed: 1000
+			effect_speed: 1000,
+			effect_reactivity_provider: 0,
+			effect_reactivity_gain: 80
 		});
 		expect(matrixPosts[1]).not.toHaveProperty('brightness');
 		expect(matrixPosts[1]).not.toHaveProperty('alarm_mode');

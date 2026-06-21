@@ -7,8 +7,10 @@
 #include <freertos/task.h>
 #include "../../sensors/imu/ImuService.h"
 #include "../../sensors/imu/ImuManager.h"
+#include "../../sensors/imu/ImuTypes.h"
 #include "../watchdog/TaskWatchdog.h"
 #include "../../matrix/menu/MatrixMenuService.h"
+#include "../../../lib/matrix_service/effects/MatrixFxTypes.h"
 #include "../../system/logging/Logging.h"
 
 #include <atomic>
@@ -25,6 +27,7 @@ std::atomic<bool> MatrixTask::_isRunning(false);
 uint32_t MatrixTask::_lastImuCheckMs = 0;
 bool MatrixTask::_lastAutoRotateEnabled = false;
 uint8_t MatrixTask::_lastAppliedAutoRotation = 0xFF;
+bool MatrixTask::_lastMatrixEffectsImuEnabled = false;
 
 namespace {
 
@@ -183,6 +186,7 @@ void MatrixTask::resetAutoRotationState() {
     _lastImuCheckMs = 0;
     _lastAutoRotateEnabled = false;
     _lastAppliedAutoRotation = 0xFF;
+    _lastMatrixEffectsImuEnabled = false;
 }
 
 void MatrixTask::taskLoop(void* param) {
@@ -209,6 +213,7 @@ void MatrixTask::taskLoop(void* param) {
         
         // Auto-Rotation evaluation
         evaluateAutoRotation(imuService, imuManager, matrixService);
+        evaluateEffectInput(imuService, imuManager, matrixService);
 
         // Matrix Manager: resolve layers before rendering
         if (matrixManager) matrixManager->update();
@@ -282,6 +287,49 @@ void MatrixTask::evaluateAutoRotation(ImuService* imuService, IMU::ImuManager* i
         }
         _lastAppliedAutoRotation = newRot;
     }
+}
+
+void MatrixTask::evaluateEffectInput(ImuService* imuService, IMU::ImuManager* imuManager, MatrixService* matrixService) {
+    const auto& matrixConfig = RTC::getConfig().matrix;
+    const bool wantsImu =
+        matrixConfig.effectEnabled &&
+        matrixConfig.effectEngine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D) &&
+        matrixConfig.effectReactivityProvider == static_cast<uint8_t>(MATRIX_FX::ReactiveProvider::Imu);
+
+    if (wantsImu != _lastMatrixEffectsImuEnabled) {
+        LOGI("Matrix effect IMU input %s", wantsImu ? "ON" : "OFF");
+        if (imuManager) {
+            imuManager->setConsumerActive(IMU::Consumer::MatrixEffects, wantsImu);
+        } else {
+            LOGW("ImuManager missing - matrix effect IMU consumer not updated");
+        }
+        _lastMatrixEffectsImuEnabled = wantsImu;
+    }
+
+    if (!matrixService) {
+        return;
+    }
+
+    MATRIX_FX::MatrixFxInput input;
+    input.timestampMs = millis();
+
+    if (wantsImu && imuService) {
+        IMU::ImuSample sample;
+        if (imuService->getCachedSample(sample)) {
+            input.imuValid = true;
+            input.ax = sample.ax;
+            input.ay = sample.ay;
+            input.az = sample.az;
+            input.gx = sample.gx;
+            input.gy = sample.gy;
+            input.gz = sample.gz;
+            const float accelMag = sqrtf(sample.ax * sample.ax + sample.ay * sample.ay + sample.az * sample.az);
+            const float gyroMag = sqrtf(sample.gx * sample.gx + sample.gy * sample.gy + sample.gz * sample.gz);
+            input.motionEnergy = fabsf(accelMag - 1.0f) + gyroMag * 0.001f;
+        }
+    }
+
+    matrixService->setEffectInput(input);
 }
 
 } // namespace MATRIX

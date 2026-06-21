@@ -9,11 +9,14 @@ function createMatrixPayload(overrides: Record<string, unknown> = {}) {
 		rotation: 0,
 		auto_rotate: false,
 		effect_enabled: false,
+		effect_engine: 0,
 		effect_mode: 0,
 		effect_speed: 1000,
 		effect_color: 0x1abcdef,
 		effect_color_2: 0xff0000,
 		effect_color_3: 0x0000ff,
+		effect_reactivity_provider: 0,
+		effect_reactivity_gain: 80,
 		custom_icons: [[], [], []],
 		menu_enabled: true,
 		menu_text_color: 0x1ffffff,
@@ -35,6 +38,27 @@ describe('device SDK matrix parser', () => {
 
 		expect(parsed?.effect_mode).toBe(69);
 		expect(parsed?.effect_speed).toBe(50);
+	});
+
+	it('keeps effect engine and reactivity settings inside the firmware-supported range', () => {
+		const parsed = parseMatrixSettings(
+			createMatrixPayload({
+				effect_engine: 9,
+				effect_reactivity_provider: 8,
+				effect_reactivity_gain: 255
+			})
+		);
+
+		expect(parsed?.effect_engine).toBe(1);
+		expect(parsed?.effect_reactivity_provider).toBe(1);
+		expect(parsed?.effect_reactivity_gain).toBe(200);
+	});
+
+	it('uses the compact native 3D effect mode range when the native engine is active', () => {
+		const parsed = parseMatrixSettings(createMatrixPayload({ effect_engine: 1, effect_mode: 69 }));
+
+		expect(parsed?.effect_engine).toBe(1);
+		expect(parsed?.effect_mode).toBe(3);
 	});
 
 	it('accepts exactly three custom icon slots with empty or 64-pixel payloads', () => {

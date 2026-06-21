@@ -16,7 +16,8 @@ enum class Consumer : uint8_t {
     AirMouseClick = 1,
     AutoRotate = 2,
     Alarm = 3,
-    UiMonitor = 4
+    UiMonitor = 4,
+    MatrixEffects = 5
 };
 
 enum class StartError : uint8_t {

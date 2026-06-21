@@ -141,9 +141,16 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_effect_category_dynamic: () => 'Dynamic',
 		matrix_effect_category_seasonal: () => 'Seasonal',
 		matrix_effect_category_all: () => 'All',
+		matrix_effect_engine: () => 'Effect Engine',
+		matrix_effect_engine_classic: () => 'Classic',
+		matrix_effect_engine_native_3d: () => 'Reactive 3D',
 		matrix_effect_mode: () => 'Effect Mode',
 		matrix_effect_mode_live_desc: () => 'Saved with the card Save action',
 		matrix_effect_speed: () => 'Animation Speed',
+		matrix_effect_reactivity_provider: () => 'Reactivity Provider',
+		matrix_effect_reactivity_provider_none: () => 'Off',
+		matrix_effect_reactivity_provider_imu: () => 'IMU Motion',
+		matrix_effect_reactivity_gain: () => 'Reactivity Gain',
 		matrix_effect_palettes: () => 'Palettes',
 		matrix_effect_palettes_desc: () => 'Preset colors',
 		matrix_effect_palette_alert: () => 'Alert',
@@ -157,6 +164,10 @@ vi.mock('$lib/paraglide/messages.js', () => {
 		matrix_effect_color_primary: () => 'Primary color',
 		matrix_effect_color_secondary: () => 'Secondary color',
 		matrix_effect_color_tertiary: () => 'Tertiary color',
+		matrix_eff_3d_gyro_cube: () => 'Gyro Cube',
+		matrix_eff_3d_gravity_particles: () => 'Gravity Particles',
+		matrix_eff_3d_depth_tunnel: () => 'Depth Tunnel',
+		matrix_eff_3d_liquid_wave: () => 'Liquid Wave',
 		imu_state_enabled: () => 'Enabled',
 		imu_state_disabled: () => 'Disabled'
 	};
@@ -169,11 +180,14 @@ function createMatrixSettings(overrides: Partial<MatrixSettingsModel> = {}): Mat
 		rotation: 0,
 		auto_rotate: false,
 		effect_enabled: true,
+		effect_engine: 0,
 		effect_mode: 2,
 		effect_speed: 1000,
 		effect_color: 0x00ff00,
 		effect_color_2: 0xff0000,
 		effect_color_3: 0x0000ff,
+		effect_reactivity_provider: 0,
+		effect_reactivity_gain: 80,
 		menu_enabled: true,
 		menu_text_color: 0xffffff,
 		menu_scroll_speed: 20,
@@ -224,6 +238,30 @@ describe('Matrix cards', () => {
 		expect(store.settings.effect_mode).toBe(11);
 		expect(store.saveSettingsSilentlyNow).not.toHaveBeenCalled();
 		expect(store.saveSettings).not.toHaveBeenCalled();
+	});
+
+	it('stages the native 3D engine and IMU reactivity as effect drafts', async () => {
+		const store = createMatrixStore({ effect_mode: 69 });
+		render(MatrixEffects, { props: { store, canManage: true } });
+
+		await fireEvent.change(screen.getByRole('combobox', { name: 'Effect Engine' }), {
+			target: { value: '1' }
+		});
+		await fireEvent.change(screen.getByRole('combobox', { name: 'Reactivity Provider' }), {
+			target: { value: '1' }
+		});
+		await fireEvent.input(screen.getByLabelText('Reactivity Gain'), {
+			target: { value: '125' }
+		});
+
+		expect(store.settings.effect_engine).toBe(1);
+		expect(store.settings.effect_mode).toBe(3);
+		expect(store.settings.effect_reactivity_provider).toBe(1);
+		expect(store.settings.effect_reactivity_gain).toBe(125);
+		expect((screen.getByRole('combobox', { name: 'Effect Mode' }) as HTMLSelectElement).value).toBe(
+			'3'
+		);
+		expect(store.saveSettingsSilentlyNow).not.toHaveBeenCalled();
 	});
 
 	it('uses real disabled controls while visual effects are turned off', () => {

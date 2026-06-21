@@ -24,6 +24,7 @@ public:
 private:
     static void taskLoop(void* param);
     static void evaluateAutoRotation(ImuService* imuService, IMU::ImuManager* imuManager, MatrixService* matrixService);
+    static void evaluateEffectInput(ImuService* imuService, IMU::ImuManager* imuManager, MatrixService* matrixService);
     static void resetAutoRotationState();
     static bool reapStoppedTask(TickType_t waitTicks);
     static void destroyTaskResources();
@@ -36,6 +37,7 @@ private:
     static uint32_t _lastImuCheckMs;
     static bool _lastAutoRotateEnabled;
     static uint8_t _lastAppliedAutoRotation;
+    static bool _lastMatrixEffectsImuEnabled;
     
     struct TaskParams {
         MatrixMenuService* menu;

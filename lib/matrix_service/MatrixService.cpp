@@ -50,7 +50,18 @@ void MatrixService::loop() {
                     // Single fetch under mutex (avoids redundant lock)
                     auto bg = _state.getBackgroundEffect();
                     if (!cmd.stopBackground && bg.active) {
-                        _renderer.showEffect(bg.mode, bg.speed, bg.color, bg.color2, bg.color3);
+                        if (bg.engine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D)) {
+                            _renderer.showNative3DEffect(
+                                bg.mode,
+                                bg.speed,
+                                bg.color,
+                                bg.color2,
+                                bg.color3,
+                                bg.reactivityProvider,
+                                bg.reactivityGain);
+                        } else {
+                            _renderer.showEffect(bg.mode, bg.speed, bg.color, bg.color2, bg.color3);
+                        }
                         ESP_LOGD(TAG, "Restored background effect (Clear)");
                     } else {
                         _renderer.clear();
@@ -95,12 +106,23 @@ void MatrixService::loop() {
                 
             case CommandType::SHOW_EFFECT:
                 _activeIcon = IconType::NONE;
-                _renderer.showEffect(
-                    cmd.value8,
-                    cmd.effectSpeedMs,
-                    cmd.value32,
-                    cmd.value32_2,
-                    cmd.value32_3);
+                if (cmd.effectEngine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D)) {
+                    _renderer.showNative3DEffect(
+                        cmd.value8,
+                        cmd.effectSpeedMs,
+                        cmd.value32,
+                        cmd.value32_2,
+                        cmd.value32_3,
+                        cmd.effectReactivityProvider,
+                        cmd.effectReactivityGain);
+                } else {
+                    _renderer.showEffect(
+                        cmd.value8,
+                        cmd.effectSpeedMs,
+                        cmd.value32,
+                        cmd.value32_2,
+                        cmd.value32_3);
+                }
                 
                 if (cmd.durationMs > 0) {
                     _displayStartMs = now;
@@ -128,7 +150,18 @@ void MatrixService::loop() {
             // Restore background effect if active
             auto bg = _state.getBackgroundEffect();
             if (bg.active) {
-                _renderer.showEffect(bg.mode, bg.speed, bg.color, bg.color2, bg.color3);
+                if (bg.engine == static_cast<uint8_t>(MATRIX_FX::EffectEngine::Native3D)) {
+                    _renderer.showNative3DEffect(
+                        bg.mode,
+                        bg.speed,
+                        bg.color,
+                        bg.color2,
+                        bg.color3,
+                        bg.reactivityProvider,
+                        bg.reactivityGain);
+                } else {
+                    _renderer.showEffect(bg.mode, bg.speed, bg.color, bg.color2, bg.color3);
+                }
                 ESP_LOGD(TAG, "Restored background effect (Timeout)");
             } else {
                 _renderer.clear();
@@ -182,9 +215,33 @@ void MatrixService::setScrollSpeed(uint16_t ms) {
     _renderer.setScrollSpeed(ms);
 }
 
-void MatrixService::showEffect(uint8_t mode, uint32_t speed, uint32_t color, uint32_t color2, uint32_t color3, uint32_t durationMs) {
-    ESP_LOGD(TAG, "showEffect mode=%d spd=%lu", mode, static_cast<unsigned long>(speed));
-    _state.requestEffect(mode, speed, color, color2, color3, durationMs);
+void MatrixService::setEffectInput(const MATRIX_FX::MatrixFxInput& input) {
+    _renderer.setEffectInput(input);
+}
+
+void MatrixService::showEffect(uint8_t mode,
+                               uint32_t speed,
+                               uint32_t color,
+                               uint32_t color2,
+                               uint32_t color3,
+                               uint32_t durationMs,
+                               uint8_t engine,
+                               uint8_t reactivityProvider,
+                               uint8_t reactivityGain) {
+    ESP_LOGD(TAG, "showEffect engine=%u mode=%u spd=%lu",
+             engine,
+             mode,
+             static_cast<unsigned long>(speed));
+    _state.requestEffect(
+        mode,
+        speed,
+        color,
+        color2,
+        color3,
+        durationMs,
+        engine,
+        reactivityProvider,
+        reactivityGain);
 }
 
 void MatrixService::showSolidColor(uint32_t color) {

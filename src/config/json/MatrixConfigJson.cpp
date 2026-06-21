@@ -70,6 +70,9 @@ void deserializeMatrix(JsonObject& obj, RTC::MatrixData& data) {
     if (obj[Keys::kEffectEnabled].is<bool>()) {
         data.effectEnabled = obj[Keys::kEffectEnabled].as<bool>();
     }
+    if (obj[Keys::kEffectEngine].is<uint8_t>()) {
+        data.effectEngine = MATRIX::normalizeMatrixEffectEngine(obj[Keys::kEffectEngine].as<uint8_t>());
+    }
     if (obj[Keys::kEffectMode].is<uint8_t>()) {
         // Reject hidden / unsupported IDs early so a crafted JSON payload
         // cannot enable matrix modes that the runtime does not fully support.
@@ -91,6 +94,15 @@ void deserializeMatrix(JsonObject& obj, RTC::MatrixData& data) {
     if (obj[Keys::kEffectColor3].is<uint32_t>()) {
         data.effectColor3 = MATRIX::normalizeMatrixColor(obj[Keys::kEffectColor3].as<uint32_t>());
     }
+    if (obj[Keys::kEffectReactivityProvider].is<uint8_t>()) {
+        data.effectReactivityProvider = MATRIX::normalizeMatrixEffectReactivityProvider(
+            obj[Keys::kEffectReactivityProvider].as<uint8_t>());
+    }
+    if (obj[Keys::kEffectReactivityGain].is<uint8_t>()) {
+        data.effectReactivityGain = MATRIX::normalizeMatrixEffectReactivityGain(
+            obj[Keys::kEffectReactivityGain].as<uint8_t>());
+    }
+    data.effectMode = MATRIX::normalizeMatrixEffectModeForEngine(data.effectMode, data.effectEngine);
 
     // Menu settings
     if (obj[Keys::kMenuTextColor].is<uint32_t>()) {
@@ -113,11 +125,14 @@ void serializeMatrix(const RTC::MatrixData& data, JsonObject& obj) {
 
     // Effects
     obj[Keys::kEffectEnabled] = data.effectEnabled;
+    obj[Keys::kEffectEngine] = data.effectEngine;
     obj[Keys::kEffectMode] = data.effectMode;
     obj[Keys::kEffectSpeed] = data.effectSpeed;
     obj[Keys::kEffectColor] = data.effectColor;
     obj[Keys::kEffectColor2] = data.effectColor2;
     obj[Keys::kEffectColor3] = data.effectColor3;
+    obj[Keys::kEffectReactivityProvider] = data.effectReactivityProvider;
+    obj[Keys::kEffectReactivityGain] = data.effectReactivityGain;
 
     // Menu settings
     obj[Keys::kMenuTextColor] = data.menu.textColor;

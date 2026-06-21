@@ -115,11 +115,14 @@ constexpr uint8_t AlarmMode = 1;  // MatrixAlarmMode::ICON
 constexpr uint8_t Rotation = UI::MATRIX::DEFAULT_ROTATION;
 constexpr bool AutoRotate = UI::MATRIX::DEFAULT_AUTO_ROTATE;
 constexpr bool EffectEnabled = UI::MATRIX::DEFAULT_EFFECT_ENABLED;
+constexpr uint8_t EffectEngine = UI::MATRIX::DEFAULT_EFFECT_ENGINE;
 constexpr uint8_t EffectMode = UI::MATRIX::DEFAULT_EFFECT_MODE;
 constexpr uint32_t EffectSpeed = UI::MATRIX::DEFAULT_EFFECT_SPEED;
 constexpr uint32_t EffectColor = UI::MATRIX::DEFAULT_EFFECT_COLOR_PRIMARY;
 constexpr uint32_t EffectColor2 = UI::MATRIX::DEFAULT_EFFECT_COLOR_SECONDARY;
 constexpr uint32_t EffectColor3 = UI::MATRIX::DEFAULT_EFFECT_COLOR_TERTIARY;
+constexpr uint8_t EffectReactivityProvider = UI::MATRIX::DEFAULT_EFFECT_REACTIVITY_PROVIDER;
+constexpr uint8_t EffectReactivityGain = UI::MATRIX::DEFAULT_EFFECT_REACTIVITY_GAIN;
 
 namespace Menu {
 constexpr uint32_t TextColor = UI::MATRIX::MENU_TEXT_COLOR_DEFAULT;

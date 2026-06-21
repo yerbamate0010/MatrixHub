@@ -76,7 +76,12 @@ export interface ImuStatus {
 	sample_age_ms: number | null;
 	last_sample_ms: number | null;
 	consumers: Record<
-		'airmouse_movement' | 'airmouse_click' | 'auto_rotate' | 'alarm' | 'ui_monitor',
+		| 'airmouse_movement'
+		| 'airmouse_click'
+		| 'auto_rotate'
+		| 'alarm'
+		| 'ui_monitor'
+		| 'matrix_effects',
 		ImuConsumerState
 	>;
 	alarm: ImuAlarmStatus;

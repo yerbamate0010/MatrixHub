@@ -9,11 +9,14 @@ export interface MatrixSettings {
   rotation: number;
   auto_rotate: boolean;
   effect_enabled: boolean;
+  effect_engine: number;
   effect_mode: number;
   effect_speed: number;
   effect_color: number;
   effect_color_2: number;
   effect_color_3: number;
+  effect_reactivity_provider: number;
+  effect_reactivity_gain: number;
   custom_icons?: number[][];
   menu_enabled: boolean;
   menu_text_color: number;
@@ -23,7 +26,11 @@ export interface MatrixSettings {
 const MATRIX_COLOR_MASK = 0xffffff;
 const MATRIX_CUSTOM_ICON_SLOTS = 3;
 const MATRIX_CUSTOM_ICON_PIXELS = 64;
+const MATRIX_EFFECT_ENGINE_MAX = 1;
 const MATRIX_EFFECT_MODE_MAX = 69;
+const MATRIX_NATIVE_3D_EFFECT_MODE_MAX = 3;
+const MATRIX_EFFECT_REACTIVITY_PROVIDER_MAX = 1;
+const MATRIX_EFFECT_REACTIVITY_GAIN_MAX = 200;
 const MATRIX_EFFECT_SPEED_MIN = 50;
 const MATRIX_EFFECT_SPEED_MAX = 24 * 60 * 60 * 1000;
 
@@ -96,11 +103,14 @@ export function parseMatrixSettings(value: unknown): MatrixSettings | null {
   const rotation = optionalNumber(value.rotation);
   const autoRotate = optionalBoolean(value.auto_rotate);
   const effectEnabled = optionalBoolean(value.effect_enabled);
+  const effectEngine = optionalNumber(value.effect_engine);
   const effectMode = optionalNumber(value.effect_mode);
   const effectSpeed = optionalNumber(value.effect_speed);
   const effectColor = optionalNumber(value.effect_color);
   const effectColor2 = optionalNumber(value.effect_color_2);
   const effectColor3 = optionalNumber(value.effect_color_3);
+  const effectReactivityProvider = optionalNumber(value.effect_reactivity_provider);
+  const effectReactivityGain = optionalNumber(value.effect_reactivity_gain);
   const menuEnabled = optionalBoolean(value.menu_enabled);
   const menuTextColor = optionalNumber(value.menu_text_color);
   const menuScrollSpeed = optionalNumber(value.menu_scroll_speed);
@@ -111,11 +121,14 @@ export function parseMatrixSettings(value: unknown): MatrixSettings | null {
     rotation === undefined ||
     autoRotate === undefined ||
     effectEnabled === undefined ||
+    effectEngine === undefined ||
     effectMode === undefined ||
     effectSpeed === undefined ||
     effectColor === undefined ||
     effectColor2 === undefined ||
     effectColor3 === undefined ||
+    effectReactivityProvider === undefined ||
+    effectReactivityGain === undefined ||
     menuEnabled === undefined ||
     menuTextColor === undefined ||
     menuScrollSpeed === undefined
@@ -123,13 +136,24 @@ export function parseMatrixSettings(value: unknown): MatrixSettings | null {
     return null;
   }
 
+  const normalizedEffectEngine = clampInteger(
+    effectEngine,
+    0,
+    MATRIX_EFFECT_ENGINE_MAX,
+  );
+  const effectModeMax =
+    normalizedEffectEngine === 1
+      ? MATRIX_NATIVE_3D_EFFECT_MODE_MAX
+      : MATRIX_EFFECT_MODE_MAX;
+
   const settings: MatrixSettings = {
     brightness: clampInteger(brightness, 0, 255),
     alarm_mode: clampInteger(alarmMode, 0, 2),
     rotation: clampInteger(rotation, 0, 3),
     auto_rotate: autoRotate,
     effect_enabled: effectEnabled,
-    effect_mode: clampInteger(effectMode, 0, MATRIX_EFFECT_MODE_MAX),
+    effect_engine: normalizedEffectEngine,
+    effect_mode: clampInteger(effectMode, 0, effectModeMax),
     effect_speed: clampInteger(
       effectSpeed,
       MATRIX_EFFECT_SPEED_MIN,
@@ -138,6 +162,16 @@ export function parseMatrixSettings(value: unknown): MatrixSettings | null {
     effect_color: normalizeColor(effectColor),
     effect_color_2: normalizeColor(effectColor2),
     effect_color_3: normalizeColor(effectColor3),
+    effect_reactivity_provider: clampInteger(
+      effectReactivityProvider,
+      0,
+      MATRIX_EFFECT_REACTIVITY_PROVIDER_MAX,
+    ),
+    effect_reactivity_gain: clampInteger(
+      effectReactivityGain,
+      0,
+      MATRIX_EFFECT_REACTIVITY_GAIN_MAX,
+    ),
     menu_enabled: menuEnabled,
     menu_text_color: normalizeColor(menuTextColor),
     menu_scroll_speed: clampInteger(menuScrollSpeed, 20, 120),

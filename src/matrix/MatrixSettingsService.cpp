@@ -311,7 +311,14 @@ bool MatrixSettingsService::syncCachedStateLocked() {
 
     // Re-sanitize cached RTC data on read so older persisted configs are healed
     // even if they were saved before effect-mode validation existed.
-    snapshot->config.effectMode = normalizeMatrixEffectMode(snapshot->config.effectMode);
+    snapshot->config.effectEngine = normalizeMatrixEffectEngine(snapshot->config.effectEngine);
+    snapshot->config.effectMode = normalizeMatrixEffectModeForEngine(
+        snapshot->config.effectMode,
+        snapshot->config.effectEngine);
+    snapshot->config.effectReactivityProvider = normalizeMatrixEffectReactivityProvider(
+        snapshot->config.effectReactivityProvider);
+    snapshot->config.effectReactivityGain = normalizeMatrixEffectReactivityGain(
+        snapshot->config.effectReactivityGain);
     _state = *snapshot;
     return true;
 }

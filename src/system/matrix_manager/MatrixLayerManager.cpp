@@ -17,11 +17,14 @@ uint32_t computeLayerHash(const LayerContent& content) {
     mix(static_cast<uint32_t>(content.type));
     mix(content.color);
     mix(static_cast<uint32_t>(content.icon));
+    mix(content.effectEngine);
     mix(content.effectMode);
     mix(content.effectSpeed);
     mix(content.effectColor);
     mix(content.effectColor2);
     mix(content.effectColor3);
+    mix(content.effectReactivityProvider);
+    mix(content.effectReactivityGain);
 
     for (size_t i = 0; content.text[i] != '\0'; ++i) {
         mix(static_cast<uint32_t>(content.text[i]));

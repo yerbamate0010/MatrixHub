@@ -53,6 +53,33 @@ void test_hash_changes_when_layer_content_changes() {
     TEST_ASSERT_NOT_EQUAL_UINT32(firstHash, secondHash);
 }
 
+void test_hash_changes_when_effect_reactivity_changes() {
+    MatrixLayerManager manager;
+
+    LayerContent first;
+    first.type = CommandType::SHOW_EFFECT;
+    first.effectEngine = 1;
+    first.effectMode = 2;
+    first.effectReactivityProvider = 0;
+    first.effectReactivityGain = 80;
+    manager.setLayer(Layer::BACKGROUND, first);
+
+    LayerContent top;
+    Layer layer = Layer::BACKGROUND;
+    uint32_t firstHash = 0;
+    TEST_ASSERT_TRUE(manager.getTopLayer(top, layer, firstHash));
+
+    LayerContent second = first;
+    second.effectReactivityProvider = 1;
+    second.effectReactivityGain = 125;
+    manager.setLayer(Layer::BACKGROUND, second);
+
+    uint32_t secondHash = 0;
+    TEST_ASSERT_TRUE(manager.getTopLayer(top, layer, secondHash));
+
+    TEST_ASSERT_NOT_EQUAL_UINT32(firstHash, secondHash);
+}
+
 void test_clear_removes_layer_and_hash() {
     MatrixLayerManager manager;
 
@@ -76,6 +103,7 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_top_layer_returns_cached_hash);
     RUN_TEST(test_hash_changes_when_layer_content_changes);
+    RUN_TEST(test_hash_changes_when_effect_reactivity_changes);
     RUN_TEST(test_clear_removes_layer_and_hash);
     return UNITY_END();
 }

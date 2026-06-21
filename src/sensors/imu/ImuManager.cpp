@@ -23,6 +23,7 @@ const char* ImuManager::consumerName(Consumer consumer) {
         case Consumer::AutoRotate: return "AutoRotate";
         case Consumer::Alarm: return "Alarm";
         case Consumer::UiMonitor: return "UiMonitor";
+        case Consumer::MatrixEffects: return "MatrixEffects";
         default: return "Unknown";
     }
 }
@@ -74,6 +75,9 @@ void ImuManager::formatConsumers(uint32_t mask, char* out, size_t len) {
     }
     if (mask & (1u << static_cast<uint8_t>(Consumer::UiMonitor))) {
         appendLabel(out, len, consumerName(Consumer::UiMonitor), first);
+    }
+    if (mask & (1u << static_cast<uint8_t>(Consumer::MatrixEffects))) {
+        appendLabel(out, len, consumerName(Consumer::MatrixEffects), first);
     }
 
     if (out[0] == '\0') {

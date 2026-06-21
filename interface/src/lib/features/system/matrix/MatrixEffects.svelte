@@ -10,19 +10,29 @@
 	import { getMatrixEffectName } from './matrixEffectLabels';
 	import {
 		MATRIX_COLOR_PRESETS,
-		MATRIX_EFFECT_CATEGORIES,
+		MATRIX_EFFECT_ENGINE_LEGACY,
+		MATRIX_EFFECT_ENGINE_NATIVE_3D,
+		MATRIX_REACTIVITY_PROVIDER_IMU,
+		MATRIX_REACTIVITY_PROVIDER_NONE,
+		MATRIX_EFFECT_REACTIVITY_GAIN_MAX,
+		MATRIX_EFFECT_REACTIVITY_GAIN_MIN,
 		type MatrixEffectSpeedScale,
 		type MatrixEffectCategoryId,
+		type MatrixEffectEngine,
+		type MatrixEffectReactivityProvider,
 		type MatrixColorPresetDefinition,
 		fromMatrixHexColor,
-		MATRIX_EFFECT_IDS,
 		MATRIX_EFFECT_SPEED_SCALE_CONFIG,
 		MATRIX_EFFECT_SPEED_SCALES,
 		fromMatrixEffectSpeedScaleValue,
+		getMatrixEffectCategories,
 		getMatrixEffectCategory,
+		getMatrixEffectIds,
 		getPreferredMatrixEffectSpeedScale,
 		getPreferredMatrixEffectCategory,
 		matrixEffectCategoryContainsEffect,
+		normalizeMatrixEffectEngine,
+		normalizeMatrixEffectModeForEngine,
 		normalizeMatrixEffectSpeedForScale,
 		toMatrixHexColor
 	} from './matrixModel';
@@ -54,9 +64,10 @@
 	let speedScaleInitialized = $state(false);
 	let effectCategory = $state<MatrixEffectCategoryId>('recommended');
 	let effectCategoryInitialized = $state(false);
+	let lastEffectEngine = $state<MatrixEffectEngine>(MATRIX_EFFECT_ENGINE_LEGACY);
 
 	const effectCategories = $derived.by<MatrixEffectCategory[]>(() =>
-		MATRIX_EFFECT_CATEGORIES.map((category) => ({
+		getMatrixEffectCategories(normalizeMatrixEffectEngine(store.settings.effect_engine)).map((category) => ({
 			...category,
 			label: getEffectCategoryLabel(category.value)
 		}))
@@ -112,8 +123,17 @@
 				MATRIX_EFFECT_SPEED_SCALE_CONFIG[speedScale].unitMs;
 
 			if (!effectCategoryInitialized) {
-				effectCategory = getPreferredMatrixEffectCategory(store.settings.effect_mode);
+				effectCategory = getPreferredMatrixEffectCategory(
+					store.settings.effect_mode,
+					normalizeMatrixEffectEngine(store.settings.effect_engine)
+				);
 				effectCategoryInitialized = true;
+			}
+
+			const engine = normalizeMatrixEffectEngine(store.settings.effect_engine);
+			if (lastEffectEngine !== engine) {
+				lastEffectEngine = engine;
+				effectCategory = getPreferredMatrixEffectCategory(store.settings.effect_mode, engine);
 			}
 		}
 	});
@@ -171,26 +191,48 @@
 	}
 
 	function applySelectedEffect(effectId: number) {
-		if (!canManage || store.settings.effect_mode === effectId) {
+		const engine = normalizeMatrixEffectEngine(store.settings.effect_engine);
+		const normalizedEffectId = normalizeMatrixEffectModeForEngine(effectId, engine);
+		if (!canManage || store.settings.effect_mode === normalizedEffectId) {
 			return;
 		}
 
-		store.updateSetting('effect_mode', effectId);
+		store.updateSetting('effect_mode', normalizedEffectId);
+	}
+
+	function selectEffectEngine(nextEngine: MatrixEffectEngine) {
+		if (!canManage || store.settings.effect_engine === nextEngine) {
+			return;
+		}
+
+		store.settings.effect_engine = nextEngine;
+		store.settings.effect_mode = normalizeMatrixEffectModeForEngine(
+			store.settings.effect_mode,
+			nextEngine
+		);
+		effectCategory = getPreferredMatrixEffectCategory(store.settings.effect_mode, nextEngine);
+		effectCategoryInitialized = true;
 	}
 
 	function handleEffectCategoryChange(e: Event) {
 		const nextCategory = (e.currentTarget as HTMLSelectElement).value as MatrixEffectCategoryId;
+		const engine = normalizeMatrixEffectEngine(store.settings.effect_engine);
 		effectCategory = nextCategory;
 		effectCategoryInitialized = true;
 
-		if (matrixEffectCategoryContainsEffect(nextCategory, store.settings.effect_mode)) {
+		if (matrixEffectCategoryContainsEffect(nextCategory, store.settings.effect_mode, engine)) {
 			return;
 		}
 
-		const nextEffect = getMatrixEffectCategory(nextCategory)?.effectIds[0];
+		const nextEffect = getMatrixEffectCategory(nextCategory, engine)?.effectIds[0];
 		if (nextEffect !== undefined && canManage) {
 			applySelectedEffect(nextEffect);
 		}
+	}
+
+	function selectReactivityProvider(nextProvider: MatrixEffectReactivityProvider) {
+		if (!canManage) return;
+		store.settings.effect_reactivity_provider = nextProvider;
 	}
 
 	function applyColorPreset(preset: MatrixColorPreset) {
@@ -213,14 +255,54 @@
 	);
 
 	const effectOptions = $derived.by(() =>
-		(getCategoryById(effectCategory)?.effectIds ?? MATRIX_EFFECT_IDS).map((effectId) => ({
+		(
+			getCategoryById(effectCategory)?.effectIds ??
+			getMatrixEffectIds(normalizeMatrixEffectEngine(store.settings.effect_engine))
+		).map((effectId) => ({
 			value: effectId,
-			label: getMatrixEffectName(effectId, i18n.languageTag)
+			label: getMatrixEffectName(
+				effectId,
+				i18n.languageTag,
+				normalizeMatrixEffectEngine(store.settings.effect_engine)
+			)
 		}))
 	);
 
+	const effectEngineOptions = $derived.by(() => [
+		{
+			value: MATRIX_EFFECT_ENGINE_LEGACY,
+			label: m.matrix_effect_engine_classic({ locale: i18n.languageTag })
+		},
+		{
+			value: MATRIX_EFFECT_ENGINE_NATIVE_3D,
+			label: m.matrix_effect_engine_native_3d({ locale: i18n.languageTag })
+		}
+	]);
+
+	const reactivityProviderOptions = $derived.by(() => [
+		{
+			value: MATRIX_REACTIVITY_PROVIDER_NONE,
+			label: m.matrix_effect_reactivity_provider_none({ locale: i18n.languageTag })
+		},
+		{
+			value: MATRIX_REACTIVITY_PROVIDER_IMU,
+			label: m.matrix_effect_reactivity_provider_imu({ locale: i18n.languageTag })
+		}
+	]);
+
 	const speedScaleConfig = $derived.by(() => MATRIX_EFFECT_SPEED_SCALE_CONFIG[speedScale]);
 	const effectControlsDisabled = $derived(!canManage || !store.settings.effect_enabled);
+	const normalizedEffectEngine = $derived(
+		normalizeMatrixEffectEngine(store.settings.effect_engine)
+	);
+	const native3DControlsVisible = $derived(
+		normalizedEffectEngine === MATRIX_EFFECT_ENGINE_NATIVE_3D
+	);
+	const reactivityControlsDisabled = $derived(
+		effectControlsDisabled ||
+			!native3DControlsVisible ||
+			store.settings.effect_reactivity_provider === MATRIX_REACTIVITY_PROVIDER_NONE
+	);
 	const activeColorPresetId = $derived.by(() => {
 		const activePreset = colorPresets.find(
 			(preset) =>
@@ -288,6 +370,19 @@
 			<div class="flex flex-col gap-1" aria-disabled={!store.settings.effect_enabled}>
 				<ContentBox>
 					<FormSelect
+						label={m.matrix_effect_engine()}
+						value={store.settings.effect_engine}
+						options={effectEngineOptions}
+						disabled={effectControlsDisabled}
+						onchange={(e) =>
+							selectEffectEngine(
+								Number((e.target as HTMLSelectElement).value) as MatrixEffectEngine
+							)}
+					/>
+				</ContentBox>
+
+				<ContentBox>
+					<FormSelect
 						label={m.matrix_effect_category()}
 						value={effectCategory}
 						options={effectCategoryOptions}
@@ -337,6 +432,36 @@
 						{/each}
 					</div>
 				</ContentBox>
+
+				{#if native3DControlsVisible}
+					<ContentBox>
+						<FormSelect
+							label={m.matrix_effect_reactivity_provider()}
+							value={store.settings.effect_reactivity_provider}
+							options={reactivityProviderOptions}
+							disabled={effectControlsDisabled}
+							onchange={(e) =>
+								selectReactivityProvider(
+									Number(
+										(e.target as HTMLSelectElement).value
+									) as MatrixEffectReactivityProvider
+								)}
+						/>
+					</ContentBox>
+
+					<ContentBox>
+						<FormRange
+							label={m.matrix_effect_reactivity_gain()}
+							min={MATRIX_EFFECT_REACTIVITY_GAIN_MIN}
+							max={MATRIX_EFFECT_REACTIVITY_GAIN_MAX}
+							step={5}
+							suffix="%"
+							valueClass="w-20"
+							disabled={reactivityControlsDisabled}
+							bind:value={store.settings.effect_reactivity_gain}
+						/>
+					</ContentBox>
+				{/if}
 
 				<ContentBox class="flex flex-col gap-3">
 					<div>

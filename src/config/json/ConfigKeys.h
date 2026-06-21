@@ -185,11 +185,14 @@ namespace Keys {
     constexpr const char* kRotation = "rotation";
     constexpr const char* kAutoRotate = "auto_rotate";
     constexpr const char* kEffectEnabled = "effect_enabled";
+    constexpr const char* kEffectEngine = "effect_engine";
     constexpr const char* kEffectMode = "effect_mode";
     constexpr const char* kEffectSpeed = "effect_speed";
     constexpr const char* kEffectColor = "effect_color";
     constexpr const char* kEffectColor2 = "effect_color_2";
     constexpr const char* kEffectColor3 = "effect_color_3";
+    constexpr const char* kEffectReactivityProvider = "effect_reactivity_provider";
+    constexpr const char* kEffectReactivityGain = "effect_reactivity_gain";
     constexpr const char* kMenuTextColor = "menu_text_color";
     constexpr const char* kMenuScrollSpeed = "menu_scroll_speed";
     constexpr const char* kMenuEnabled = "menu_enabled";
