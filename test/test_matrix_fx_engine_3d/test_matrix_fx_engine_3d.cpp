@@ -36,11 +36,23 @@ uint32_t countChangedPixels(const uint32_t* a, const uint32_t* b) {
     return count;
 }
 
+uint32_t countPixelsAboveBrightness(const uint32_t* frame, uint8_t threshold);
+
 uint8_t brightness(uint32_t color) {
     const uint8_t r = static_cast<uint8_t>((color >> 16) & 0xFF);
     const uint8_t g = static_cast<uint8_t>((color >> 8) & 0xFF);
     const uint8_t b = static_cast<uint8_t>(color & 0xFF);
     return static_cast<uint8_t>((static_cast<uint16_t>(r) + g + b) / 3);
+}
+
+uint32_t countPixelsAboveBrightness(const uint32_t* frame, uint8_t threshold) {
+    uint32_t count = 0;
+    for (uint8_t i = 0; i < MATRIX_FX::kMatrixFxPixelCount; ++i) {
+        if (brightness(frame[i]) > threshold) {
+            count++;
+        }
+    }
+    return count;
 }
 
 float weightedY(const uint32_t* frame) {
@@ -119,6 +131,49 @@ void test_imu_input_changes_projected_frame() {
     TEST_ASSERT_GREATER_THAN_UINT32(0, countChangedPixels(idleFrame, reactiveFrame));
 }
 
+void test_iridescent_ripple_reacts_to_tilted_center_and_hue() {
+    const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::CenterRipple));
+    uint32_t idleFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+    uint32_t tiltedFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+
+    MATRIX_FX::MatrixFxEngine3D idle;
+    idle.configure(config);
+    TEST_ASSERT_TRUE(idle.render(1000, idleFrame, MATRIX_FX::kMatrixFxPixelCount));
+
+    MATRIX_FX::MatrixFxEngine3D tilted;
+    tilted.configure(config);
+    MATRIX_FX::MatrixFxInput input;
+    input.imuValid = true;
+    input.ax = 0.80f;
+    input.ay = -0.55f;
+    input.motionEnergy = 0.40f;
+    tilted.setInput(input);
+    TEST_ASSERT_TRUE(tilted.render(1000, tiltedFrame, MATRIX_FX::kMatrixFxPixelCount));
+
+    TEST_ASSERT_GREATER_THAN_UINT32(4, countChangedPixels(idleFrame, tiltedFrame));
+}
+
+void test_liquid_wave_reacts_to_imu_tilt() {
+    const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::LiquidWave));
+    uint32_t idleFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+    uint32_t tiltedFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+
+    MATRIX_FX::MatrixFxEngine3D idle;
+    idle.configure(config);
+    TEST_ASSERT_TRUE(idle.render(1000, idleFrame, MATRIX_FX::kMatrixFxPixelCount));
+
+    MATRIX_FX::MatrixFxEngine3D tilted;
+    tilted.configure(config);
+    MATRIX_FX::MatrixFxInput input;
+    input.imuValid = true;
+    input.ax = -0.70f;
+    input.ay = 0.65f;
+    tilted.setInput(input);
+    TEST_ASSERT_TRUE(tilted.render(1000, tiltedFrame, MATRIX_FX::kMatrixFxPixelCount));
+
+    TEST_ASSERT_GREATER_THAN_UINT32(8, countChangedPixels(idleFrame, tiltedFrame));
+}
+
 void test_gravity_particles_fall_opposite_accelerometer_support_vector() {
     const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::GravityParticles));
     uint32_t supportUpFrame[MATRIX_FX::kMatrixFxPixelCount]{};
@@ -157,9 +212,10 @@ void test_depth_tunnel_keeps_readable_wireframe_shape() {
 
     TEST_ASSERT_TRUE(engine.render(1000, frame, MATRIX_FX::kMatrixFxPixelCount));
 
-    const uint32_t litPixels = countLitPixels(frame);
-    TEST_ASSERT_GREATER_THAN_UINT32(8, litPixels);
-    TEST_ASSERT_LESS_THAN_UINT32(MATRIX_FX::kMatrixFxPixelCount, litPixels);
+    TEST_ASSERT_EQUAL_UINT32(MATRIX_FX::kMatrixFxPixelCount, countLitPixels(frame));
+    const uint32_t brightPixels = countPixelsAboveBrightness(frame, 42);
+    TEST_ASSERT_GREATER_THAN_UINT32(8, brightPixels);
+    TEST_ASSERT_LESS_THAN_UINT32(MATRIX_FX::kMatrixFxPixelCount, brightPixels);
 }
 
 int main(int argc, char** argv) {
@@ -171,6 +227,8 @@ int main(int argc, char** argv) {
     RUN_TEST(test_engine_renders_all_native_modes_to_nonblank_frames);
     RUN_TEST(test_engine_clamps_config_and_keeps_small_runtime_state);
     RUN_TEST(test_imu_input_changes_projected_frame);
+    RUN_TEST(test_iridescent_ripple_reacts_to_tilted_center_and_hue);
+    RUN_TEST(test_liquid_wave_reacts_to_imu_tilt);
     RUN_TEST(test_gravity_particles_fall_opposite_accelerometer_support_vector);
     RUN_TEST(test_depth_tunnel_keeps_readable_wireframe_shape);
     return UNITY_END();

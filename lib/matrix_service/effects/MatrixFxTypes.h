@@ -19,7 +19,8 @@ enum class ReactiveProvider : uint8_t {
 };
 
 enum class Native3DMode : uint8_t {
-    GyroCube = 0,
+    CenterRipple = 0,
+    GyroCube = CenterRipple,
     GravityParticles = 1,
     DepthTunnel = 2,
     LiquidWave = 3
@@ -44,7 +45,7 @@ struct MatrixFxInput {
 };
 
 struct MatrixFxConfig {
-    uint8_t mode = static_cast<uint8_t>(Native3DMode::GyroCube);
+    uint8_t mode = static_cast<uint8_t>(Native3DMode::CenterRipple);
     uint32_t speedMs = 1000;
     uint32_t color1 = 0x00FF00;
     uint32_t color2 = 0xFF0000;
@@ -68,7 +69,7 @@ constexpr uint8_t normalizeReactiveProvider(uint8_t value) {
 constexpr uint8_t normalizeNative3DMode(uint8_t value) {
     return value <= kNative3DModeMax
         ? value
-        : static_cast<uint8_t>(Native3DMode::GyroCube);
+        : static_cast<uint8_t>(Native3DMode::CenterRipple);
 }
 
 constexpr uint8_t clampReactivityGain(uint8_t value) {

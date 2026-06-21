@@ -246,6 +246,14 @@ const registry = [
 		guards: ['admin']
 	},
 	{
+		type: 'leaf',
+		id: 'matrix_led',
+		href: '/system/matrix',
+		activePathPrefixes: ['/system/matrix'],
+		icon: menuIcons.GridDots,
+		label: m.menu_matrix_led
+	},
+	{
 		type: 'group',
 		id: 'system',
 		icon: menuIcons.Settings,
@@ -257,7 +265,6 @@ const registry = [
 			'compensation',
 			'imu',
 			'power',
-			'matrix_led',
 			'users',
 			'files',
 			'styles'
@@ -308,14 +315,6 @@ const registry = [
 		icon: menuIcons.Power,
 		label: m.menu_power,
 		guards: ['admin']
-	},
-	{
-		type: 'leaf',
-		id: 'matrix_led',
-		href: '/system/matrix',
-		activePathPrefixes: ['/system/matrix'],
-		icon: menuIcons.GridDots,
-		label: m.menu_matrix_led
 	},
 	{
 		type: 'leaf',

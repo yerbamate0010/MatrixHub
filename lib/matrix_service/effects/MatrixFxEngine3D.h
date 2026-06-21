@@ -38,7 +38,7 @@ private:
     float _tiltY = 0.0f;
 
     void initParticles();
-    void renderGyroCube(uint32_t* outFrame);
+    void renderIridescentRipple(uint32_t* outFrame);
     void renderGravityParticles(uint32_t* outFrame);
     void renderDepthTunnel(uint32_t* outFrame);
     void renderLiquidWave(uint32_t* outFrame);
@@ -50,6 +50,7 @@ private:
     void drawRect(uint32_t* outFrame, int left, int top, int right, int bottom, uint32_t color, float alpha) const;
     uint32_t blend(uint32_t base, uint32_t add, float alpha) const;
     uint32_t scaleColor(uint32_t color, float scale) const;
+    uint32_t hsvColor(float hue, float saturation, float value) const;
     uint32_t mixColor(uint32_t a, uint32_t b, float t) const;
     uint32_t palette(float t) const;
     float reactiveGain() const;

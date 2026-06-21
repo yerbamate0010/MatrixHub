@@ -122,6 +122,7 @@ describe('createMenuStructure', () => {
 		const wifiSta = findSubmenuItem(menu, 'WiFi', 'WiFi STA');
 		const wifiAp = findSubmenuItem(menu, 'WiFi', 'WiFi AP');
 		const notifications = findVisibleItem(menu, 'Notifications');
+		const matrixItem = findVisibleItem(menu, 'Matrix LED');
 		const systemItem = findVisibleItem(menu, 'System');
 		const systemSubmenuTitles = (systemItem?.submenu ?? [])
 			.filter((item) => isFeatureEnabled(item.feature))
@@ -134,6 +135,7 @@ describe('createMenuStructure', () => {
 			'WiFi',
 			'Bluetooth',
 			'USB Features',
+			'Matrix LED',
 			'System',
 			'Help'
 		]);
@@ -151,13 +153,14 @@ describe('createMenuStructure', () => {
 			'Compensation',
 			'IMU',
 			'Power',
-			'Matrix LED',
 			'Users',
 			'Files',
 			'Styles'
 		]);
 		expect(wifiSta?.disabledReason).toBeUndefined();
 		expect(wifiAp?.disabledReason).toBeUndefined();
+		expect(matrixItem?.href).toBe('/system/matrix');
+		expect(matrixItem?.submenu).toBeUndefined();
 		expect(notifications?.disabledReason).toBe('Administrator access required');
 		expect(hrefs).toContain('/alarms');
 		expect(hrefs).toContain('/charts');
@@ -222,6 +225,7 @@ describe('createMenuStructure', () => {
 			'WiFi',
 			'Bluetooth',
 			'USB Features',
+			'Matrix LED',
 			'System',
 			'Help'
 		]);
@@ -246,6 +250,27 @@ describe('createMenuStructure', () => {
 		expect(hrefs).toContain('/usb-features/keyboard');
 		expect(hrefs).toContain('/usb-features/macros');
 		expect(hrefs).toContain('/settings/sensors/imu');
+	});
+
+	it('keeps Matrix LED as an active top-level item outside the System submenu', () => {
+		const menu = createMenuStructure(
+			{
+				ntpEnabled: true,
+				canManage: true,
+				isStaConnected: true
+			},
+			'en',
+			'/system/matrix/effects'
+		);
+
+		const matrixItem = findVisibleItem(menu, 'Matrix LED');
+		const systemItem = findVisibleItem(menu, 'System');
+
+		expect(matrixItem?.active).toBe(true);
+		expect(matrixItem?.href).toBe('/system/matrix');
+		expect(matrixItem?.submenu).toBeUndefined();
+		expect(systemItem?.active).toBe(false);
+		expect(systemItem?.submenu?.map((item) => item.title)).not.toContain('Matrix LED');
 	});
 
 	it('marks WiFi as active and highlights Shelly when the Shelly page is open', () => {
