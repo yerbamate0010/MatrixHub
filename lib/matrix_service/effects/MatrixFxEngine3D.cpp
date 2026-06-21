@@ -197,15 +197,26 @@ void MatrixFxEngine3D::drawLine(uint32_t* outFrame, int x0, int y0, int x1, int 
     }
 }
 
+void MatrixFxEngine3D::drawRect(uint32_t* outFrame, int left, int top, int right, int bottom, uint32_t color, float alpha) const {
+    if (left > right || top > bottom) {
+        return;
+    }
+    drawLine(outFrame, left, top, right, top, color, alpha);
+    drawLine(outFrame, right, top, right, bottom, color, alpha);
+    drawLine(outFrame, right, bottom, left, bottom, color, alpha);
+    drawLine(outFrame, left, bottom, left, top, color, alpha);
+}
+
 void MatrixFxEngine3D::renderGyroCube(uint32_t* outFrame) {
     clearFrame(outFrame);
 
     const bool useImu = _config.provider == ReactiveProvider::Imu && _input.imuValid;
     const float gain = reactiveGain();
-    const float gyroBoost = useImu ? clampf((_input.gx + _input.gy + _input.gz) * 0.0015f * gain, -1.2f, 1.2f) : 0.0f;
-    const float angleX = _phase * 2.0f * kPi + _tiltY * 1.1f * gain;
-    const float angleY = _phase * 1.5f * kPi + _tiltX * 1.2f * gain;
-    const float angleZ = _phase * 1.1f * kPi + gyroBoost;
+    const float gyroSpin = useImu ? clampf(_input.gz * 0.0035f * gain, -0.9f, 0.9f) : 0.0f;
+    const float idle = _phase * 2.0f * kPi;
+    const float angleX = _tiltY * 0.95f * gain + std::sin(idle) * 0.16f;
+    const float angleY = -_tiltX * 0.95f * gain + std::cos(idle * 0.8f) * 0.18f;
+    const float angleZ = idle * 0.28f + gyroSpin;
     const float cx = std::cos(angleX);
     const float sx = std::sin(angleX);
     const float cy = std::cos(angleY);
@@ -251,7 +262,12 @@ void MatrixFxEngine3D::renderGyroCube(uint32_t* outFrame) {
         const Point2& a = projected[edge[0]];
         const Point2& b = projected[edge[1]];
         const float depth = clampf((a.z + b.z + 2.0f) * 0.25f, 0.20f, 1.0f);
-        drawLine(outFrame, a.x, a.y, b.x, b.y, palette(depth + _phase), 0.35f + depth * 0.65f);
+        drawLine(outFrame, a.x, a.y, b.x, b.y, palette(0.15f + depth * 0.65f), 0.22f + depth * 0.78f);
+    }
+
+    for (const auto& point : projected) {
+        const float depth = clampf((point.z + 1.0f) * 0.5f, 0.25f, 1.0f);
+        addPixel(outFrame, point.x, point.y, _config.color2, 0.35f + depth * 0.55f);
     }
 }
 
@@ -264,16 +280,16 @@ void MatrixFxEngine3D::renderGravityParticles(uint32_t* outFrame) {
     const float dt = _lastDeltaSec;
     const float frameScale = dt * 20.0f;
     const float gain = reactiveGain();
-    const float gravityX = _tiltX * gain * 5.0f;
-    const float gravityY = _tiltY * gain * 5.0f;
-    const float idleSpin = std::sin(_phase * 2.0f * kPi) * 0.20f;
+    const float gravityX = -_tiltX * gain * 5.2f;
+    const float gravityY = -_tiltY * gain * 5.2f;
+    const float idleSpin = std::sin(_phase * 2.0f * kPi) * 0.08f;
 
     for (uint8_t i = 0; i < kParticleCount; ++i) {
         Particle& p = _particles[i];
         p.vx += (gravityX + idleSpin) * dt;
         p.vy += (gravityY - idleSpin) * dt;
-        p.vx *= 0.94f;
-        p.vy *= 0.94f;
+        p.vx *= 0.90f;
+        p.vy *= 0.90f;
         p.x += p.vx * frameScale;
         p.y += p.vy * frameScale;
 
@@ -298,39 +314,44 @@ void MatrixFxEngine3D::renderGravityParticles(uint32_t* outFrame) {
 }
 
 void MatrixFxEngine3D::renderDepthTunnel(uint32_t* outFrame) {
-    const float gain = reactiveGain();
-    const float centerX = 3.5f + _tiltX * 1.8f * gain;
-    const float centerY = 3.5f + _tiltY * 1.8f * gain;
+    clearFrame(outFrame);
 
-    for (uint8_t y = 0; y < kMatrixFxHeight; ++y) {
-        for (uint8_t x = 0; x < kMatrixFxWidth; ++x) {
-            const float dx = static_cast<float>(x) - centerX;
-            const float dy = static_cast<float>(y) - centerY;
-            const float dist = std::sqrt(dx * dx + dy * dy);
-            const float angle = std::atan2(dy, dx) / (2.0f * kPi) + 0.5f;
-            const float rings = fract(dist * 0.45f - _phase * 2.2f + angle * 0.75f);
-            const float brightness = clampf(1.0f - std::abs(rings - 0.5f) * 2.0f, 0.0f, 1.0f);
-            outFrame[y * kMatrixFxWidth + x] = scaleColor(palette(angle + _phase), brightness * brightness);
-        }
+    const float gain = reactiveGain();
+    const float centerX = 3.5f - _tiltX * 1.35f * gain;
+    const float centerY = 3.5f - _tiltY * 1.35f * gain;
+
+    for (uint8_t layer = 0; layer < 4; ++layer) {
+        const float depth = fract(_phase * 1.55f + static_cast<float>(layer) * 0.25f);
+        const float halfSize = 0.35f + depth * 3.25f;
+        const int left = static_cast<int>(std::round(centerX - halfSize));
+        const int right = static_cast<int>(std::round(centerX + halfSize));
+        const int top = static_cast<int>(std::round(centerY - halfSize));
+        const int bottom = static_cast<int>(std::round(centerY + halfSize));
+        const float alpha = clampf(0.18f + depth * 0.78f, 0.18f, 0.96f);
+        drawRect(outFrame, left, top, right, bottom, palette(depth * 0.7f + 0.1f), alpha);
     }
+
+    addPixel(outFrame, static_cast<int>(std::round(centerX)), static_cast<int>(std::round(centerY)), _config.color3, 0.65f);
 }
 
 void MatrixFxEngine3D::renderLiquidWave(uint32_t* outFrame) {
     const float gain = reactiveGain();
-    const float waveTiltX = _tiltX * 1.5f * gain;
-    const float waveTiltY = _tiltY * 1.5f * gain;
+    const float waveTiltX = -_tiltX * 0.65f * gain;
+    const float waveTiltY = -_tiltY * 0.65f * gain;
 
     for (uint8_t y = 0; y < kMatrixFxHeight; ++y) {
         for (uint8_t x = 0; x < kMatrixFxWidth; ++x) {
-            const float nx = (static_cast<float>(x) - 3.5f) * 0.55f;
-            const float ny = (static_cast<float>(y) - 3.5f) * 0.55f;
-            const float v =
-                std::sin(nx * 2.2f + _phase * 2.0f * kPi + waveTiltY) +
-                std::cos(ny * 2.7f - _phase * 1.6f * kPi + waveTiltX) +
-                std::sin((nx + ny) * 1.4f + _phase * 2.8f * kPi);
-            const float normalized = clampf((v + 3.0f) / 6.0f, 0.0f, 1.0f);
-            const float bright = 0.15f + normalized * 0.85f;
-            outFrame[y * kMatrixFxWidth + x] = scaleColor(palette(normalized + _phase * 0.2f), bright);
+            const float nx = (static_cast<float>(x) - 3.5f) / 3.5f;
+            const float ny = static_cast<float>(y) / 7.0f;
+            const float perspective = 0.55f + ny * 1.65f;
+            const float surfaceX = nx * perspective + waveTiltX;
+            const float surfaceY = ny + waveTiltY * 0.35f;
+            const float wave =
+                std::sin(surfaceX * 3.1f + _phase * 2.0f * kPi + surfaceY * 1.6f) * (0.18f + ny * 0.26f);
+            const float band = 1.0f - std::abs(fract((surfaceY + wave) * 4.0f - _phase * 1.15f) - 0.5f) * 2.0f;
+            const float depthLight = 0.16f + ny * 0.38f;
+            const float bright = clampf(depthLight + band * (0.28f + ny * 0.34f), 0.05f, 1.0f);
+            outFrame[y * kMatrixFxWidth + x] = scaleColor(palette(0.48f + surfaceY * 0.28f + wave * 0.25f), bright);
         }
     }
 }

@@ -47,6 +47,7 @@ private:
     void fadeFrame(uint32_t* outFrame, uint8_t amount) const;
     void addPixel(uint32_t* outFrame, int x, int y, uint32_t color, float alpha) const;
     void drawLine(uint32_t* outFrame, int x0, int y0, int x1, int y1, uint32_t color, float alpha) const;
+    void drawRect(uint32_t* outFrame, int left, int top, int right, int bottom, uint32_t color, float alpha) const;
     uint32_t blend(uint32_t base, uint32_t add, float alpha) const;
     uint32_t scaleColor(uint32_t color, float scale) const;
     uint32_t mixColor(uint32_t a, uint32_t b, float t) const;

@@ -36,6 +36,26 @@ uint32_t countChangedPixels(const uint32_t* a, const uint32_t* b) {
     return count;
 }
 
+uint8_t brightness(uint32_t color) {
+    const uint8_t r = static_cast<uint8_t>((color >> 16) & 0xFF);
+    const uint8_t g = static_cast<uint8_t>((color >> 8) & 0xFF);
+    const uint8_t b = static_cast<uint8_t>(color & 0xFF);
+    return static_cast<uint8_t>((static_cast<uint16_t>(r) + g + b) / 3);
+}
+
+float weightedY(const uint32_t* frame) {
+    float sum = 0.0f;
+    float weight = 0.0f;
+    for (uint8_t y = 0; y < MATRIX_FX::kMatrixFxHeight; ++y) {
+        for (uint8_t x = 0; x < MATRIX_FX::kMatrixFxWidth; ++x) {
+            const float b = static_cast<float>(brightness(frame[y * MATRIX_FX::kMatrixFxWidth + x]));
+            sum += static_cast<float>(y) * b;
+            weight += b;
+        }
+    }
+    return weight > 0.0f ? sum / weight : 0.0f;
+}
+
 }  // namespace
 
 void setUp(void) {}
@@ -99,6 +119,49 @@ void test_imu_input_changes_projected_frame() {
     TEST_ASSERT_GREATER_THAN_UINT32(0, countChangedPixels(idleFrame, reactiveFrame));
 }
 
+void test_gravity_particles_fall_opposite_accelerometer_support_vector() {
+    const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::GravityParticles));
+    uint32_t supportUpFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+    uint32_t supportDownFrame[MATRIX_FX::kMatrixFxPixelCount]{};
+
+    MATRIX_FX::MatrixFxInput supportUp;
+    supportUp.imuValid = true;
+    supportUp.ay = 0.85f;
+
+    MATRIX_FX::MatrixFxInput supportDown;
+    supportDown.imuValid = true;
+    supportDown.ay = -0.85f;
+
+    MATRIX_FX::MatrixFxEngine3D supportUpEngine;
+    supportUpEngine.configure(config);
+    supportUpEngine.setInput(supportUp);
+    for (uint8_t i = 0; i < 24; ++i) {
+        TEST_ASSERT_TRUE(supportUpEngine.render(1000 + i * 33, supportUpFrame, MATRIX_FX::kMatrixFxPixelCount));
+    }
+
+    MATRIX_FX::MatrixFxEngine3D supportDownEngine;
+    supportDownEngine.configure(config);
+    supportDownEngine.setInput(supportDown);
+    for (uint8_t i = 0; i < 24; ++i) {
+        TEST_ASSERT_TRUE(supportDownEngine.render(1000 + i * 33, supportDownFrame, MATRIX_FX::kMatrixFxPixelCount));
+    }
+
+    TEST_ASSERT_LESS_THAN_FLOAT(weightedY(supportDownFrame) - 0.45f, weightedY(supportUpFrame));
+}
+
+void test_depth_tunnel_keeps_readable_wireframe_shape() {
+    const auto config = makeConfig(static_cast<uint8_t>(MATRIX_FX::Native3DMode::DepthTunnel));
+    uint32_t frame[MATRIX_FX::kMatrixFxPixelCount]{};
+    MATRIX_FX::MatrixFxEngine3D engine;
+    engine.configure(config);
+
+    TEST_ASSERT_TRUE(engine.render(1000, frame, MATRIX_FX::kMatrixFxPixelCount));
+
+    const uint32_t litPixels = countLitPixels(frame);
+    TEST_ASSERT_GREATER_THAN_UINT32(8, litPixels);
+    TEST_ASSERT_LESS_THAN_UINT32(MATRIX_FX::kMatrixFxPixelCount, litPixels);
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
@@ -108,5 +171,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_engine_renders_all_native_modes_to_nonblank_frames);
     RUN_TEST(test_engine_clamps_config_and_keeps_small_runtime_state);
     RUN_TEST(test_imu_input_changes_projected_frame);
+    RUN_TEST(test_gravity_particles_fall_opposite_accelerometer_support_vector);
+    RUN_TEST(test_depth_tunnel_keeps_readable_wireframe_shape);
     return UNITY_END();
 }
