@@ -226,7 +226,7 @@ const MATRIX_DATA_PRESET_SIGNAL_QUALITY = {
 } as const satisfies MatrixDataVisualizationPreset;
 
 const MATRIX_DATA_PRESET_CSI = {
-	data_visualization_mode: MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS,
+	data_visualization_mode: MATRIX_DATA_VIZ_MODE_HEATMAP,
 	data_visualization_min: 0,
 	data_visualization_max: 100,
 	data_visualization_color_min: 0x0040ff,
@@ -234,7 +234,7 @@ const MATRIX_DATA_PRESET_CSI = {
 	data_visualization_color_max: 0xff3000,
 	data_visualization_brightness_min: 8,
 	data_visualization_brightness_max: 220,
-	data_visualization_smoothing: 35
+	data_visualization_smoothing: 45
 } as const satisfies MatrixDataVisualizationPreset;
 
 export function getDefaultMatrixDataVisualizationMetric(

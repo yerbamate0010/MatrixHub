@@ -122,6 +122,29 @@ inline uint32_t normalizeMatrixDataColor(uint32_t value) {
     return value & 0x00FFFFFFu;
 }
 
+inline void normalizeMatrixDataVisualizationConfig(MatrixDataVisualizationConfig& config) {
+    config.source = normalizeMatrixDataSource(config.source);
+    config.metric = normalizeMatrixDataMetric(config.metric);
+    config.mode = normalizeMatrixDataVizMode(config.mode);
+    config.staleBehavior = normalizeMatrixDataStaleBehavior(config.staleBehavior);
+    config.colorMin = normalizeMatrixDataColor(config.colorMin);
+    config.colorMid = normalizeMatrixDataColor(config.colorMid);
+    config.colorMax = normalizeMatrixDataColor(config.colorMax);
+
+    if (config.source == static_cast<uint8_t>(MatrixDataSource::WifiCsi)) {
+        config.minValue = 0.0f;
+        config.maxValue = 100.0f;
+    } else if (config.maxValue <= config.minValue) {
+        config.maxValue = config.minValue + 1.0f;
+    }
+
+    if (config.brightnessMax < config.brightnessMin) {
+        const uint8_t tmp = config.brightnessMax;
+        config.brightnessMax = config.brightnessMin;
+        config.brightnessMin = tmp;
+    }
+}
+
 inline void copyMatrixDataDeviceId(char* dest, size_t destSize, const char* src) {
     if (!dest || destSize == 0) {
         return;

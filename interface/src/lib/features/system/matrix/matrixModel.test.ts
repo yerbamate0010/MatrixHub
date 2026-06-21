@@ -20,7 +20,7 @@ import {
 	MATRIX_DATA_SOURCE_WIFI_CSI,
 	MATRIX_DATA_SOURCE_WIFI_RSSI,
 	MATRIX_DATA_VIZ_MODE_GAUGE,
-	MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS,
+	MATRIX_DATA_VIZ_MODE_HEATMAP,
 	MATRIX_DATA_VIZ_MODE_TREND,
 	MATRIX_EFFECT_IDS,
 	MATRIX_EFFECT_MODE_MAX,
@@ -146,10 +146,11 @@ describe('matrixModel', () => {
 		expect(
 			getMatrixDataVisualizationPreset(MATRIX_DATA_SOURCE_WIFI_CSI, MATRIX_DATA_METRIC_SIGNAL_QUALITY)
 		).toMatchObject({
-			data_visualization_mode: MATRIX_DATA_VIZ_MODE_SPECTRUM_BARS,
+			data_visualization_mode: MATRIX_DATA_VIZ_MODE_HEATMAP,
 			data_visualization_min: 0,
 			data_visualization_max: 100,
-			data_visualization_brightness_max: 220
+			data_visualization_brightness_max: 220,
+			data_visualization_smoothing: 45
 		});
 	});
 

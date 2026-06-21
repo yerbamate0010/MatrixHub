@@ -257,12 +257,35 @@ void test_apply_with_manager_sets_data_visualization_background_layer() {
     TEST_ASSERT_EQUAL_STRING("AA:BB:CC:DD:EE:FF", config.deviceId);
 }
 
+void test_apply_normalizes_csi_data_visualization_range() {
+    MATRIX_MANAGER::MatrixManagerService manager(&g_matrixService);
+    MATRIX::MatrixRuntimeApplier applier(&g_matrixService, nullptr, &manager, nullptr);
+
+    MATRIX::MatrixSettingsState state = makeState(true);
+    state.config.backgroundMode = static_cast<uint8_t>(MATRIX::MatrixBackgroundMode::DataVisualization);
+    state.config.dataVisualizationEnabled = true;
+    state.config.dataVisualizationSource = static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi);
+    state.config.dataVisualizationMetric = static_cast<uint8_t>(MATRIX::MatrixDataMetric::CsiMotion);
+    state.config.dataVisualizationMode = static_cast<uint8_t>(MATRIX::MatrixDataVizMode::Heatmap);
+    state.config.dataVisualizationMin = -100.0f;
+    state.config.dataVisualizationMax = 100.0f;
+
+    applier.apply(state);
+
+    TEST_ASSERT_EQUAL_UINT32(1, MATRIX_MANAGER::g_setLayerCalls);
+    const auto& config = MATRIX_MANAGER::g_lastSetContent.dataVisualizationConfig;
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(MATRIX::MatrixDataSource::WifiCsi), config.source);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, config.minValue);
+    TEST_ASSERT_EQUAL_FLOAT(100.0f, config.maxValue);
+}
+
 int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_apply_without_manager_clears_renderer_when_effects_disabled);
     RUN_TEST(test_apply_with_manager_clears_background_layer_without_direct_renderer_clear);
     RUN_TEST(test_apply_with_manager_sets_background_layer_when_effects_enabled);
     RUN_TEST(test_apply_with_manager_sets_data_visualization_background_layer);
+    RUN_TEST(test_apply_normalizes_csi_data_visualization_range);
     return UNITY_END();
 }
 

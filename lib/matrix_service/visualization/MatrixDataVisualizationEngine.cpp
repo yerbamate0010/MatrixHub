@@ -14,21 +14,7 @@ constexpr uint8_t kPixels = MATRIX::kMatrixDataVizPixelCount;
 
 void MatrixDataVisualizationEngine::configure(const MATRIX::MatrixDataVisualizationConfig& config) {
     _config = config;
-    _config.source = MATRIX::normalizeMatrixDataSource(config.source);
-    _config.metric = MATRIX::normalizeMatrixDataMetric(config.metric);
-    _config.mode = MATRIX::normalizeMatrixDataVizMode(config.mode);
-    _config.staleBehavior = MATRIX::normalizeMatrixDataStaleBehavior(config.staleBehavior);
-    _config.colorMin = MATRIX::normalizeMatrixDataColor(config.colorMin);
-    _config.colorMid = MATRIX::normalizeMatrixDataColor(config.colorMid);
-    _config.colorMax = MATRIX::normalizeMatrixDataColor(config.colorMax);
-    if (_config.maxValue <= _config.minValue) {
-        _config.maxValue = _config.minValue + 1.0f;
-    }
-    if (_config.brightnessMax < _config.brightnessMin) {
-        const uint8_t tmp = _config.brightnessMax;
-        _config.brightnessMax = _config.brightnessMin;
-        _config.brightnessMin = tmp;
-    }
+    MATRIX::normalizeMatrixDataVisualizationConfig(_config);
     _configured = true;
     _hasSmoothed = false;
     _lastInputTimestamp = 0;

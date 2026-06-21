@@ -55,6 +55,7 @@ public:
             config.smoothing = state.config.dataVisualizationSmoothing;
             config.staleBehavior = state.config.dataVisualizationStaleBehavior;
             copyMatrixDataDeviceId(config.deviceId, sizeof(config.deviceId), state.config.dataVisualizationDeviceId);
+            normalizeMatrixDataVisualizationConfig(config);
 
             if (_matrixManager) {
                 MATRIX_MANAGER::LayerContent bgContent;

@@ -128,6 +128,7 @@ MATRIX::MatrixDataVisualizationConfig buildDataVisualizationConfig(const RTC::Ma
     config.smoothing = matrixConfig.dataVisualizationSmoothing;
     config.staleBehavior = MATRIX::normalizeMatrixDataStaleBehavior(matrixConfig.dataVisualizationStaleBehavior);
     MATRIX::copyMatrixDataDeviceId(config.deviceId, sizeof(config.deviceId), matrixConfig.dataVisualizationDeviceId);
+    MATRIX::normalizeMatrixDataVisualizationConfig(config);
     return config;
 }
 
