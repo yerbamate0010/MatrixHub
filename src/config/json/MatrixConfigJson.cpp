@@ -9,6 +9,7 @@
 #include "../../matrix/MatrixCustomIconStore.h"
 #include "../../matrix/MatrixDataVisualizationTypes.h"
 #include "../../matrix/MatrixEffectModes.h"
+#include "../../matrix/MatrixSettingsTypes.h"
 #include "../../system/rtc/RtcConfig.h"
 #include <algorithm>
 
@@ -167,6 +168,7 @@ void deserializeMatrix(JsonObject& obj, RTC::MatrixData& data) {
             sizeof(data.dataVisualizationDeviceId),
             obj[Keys::kDataVisualizationDeviceId].as<const char*>());
     }
+    MATRIX::normalizeMatrixBackgroundSelection(data);
 
     // Menu settings
     if (obj[Keys::kMenuTextColor].is<uint32_t>()) {

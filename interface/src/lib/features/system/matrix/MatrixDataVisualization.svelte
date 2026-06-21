@@ -164,6 +164,7 @@
 		store.settings.data_visualization_enabled = enabled;
 		if (enabled) {
 			store.settings.background_mode = MATRIX_BACKGROUND_MODE_DATA_VISUALIZATION;
+			store.settings.effect_enabled = false;
 		}
 	}
 
@@ -171,7 +172,9 @@
 		if (!canManage) return;
 		const source = Number((e.currentTarget as HTMLSelectElement).value) as MatrixDataVisualizationSource;
 		store.settings.data_visualization_source = source;
+		store.settings.data_visualization_enabled = true;
 		store.settings.background_mode = MATRIX_BACKGROUND_MODE_DATA_VISUALIZATION;
+		store.settings.effect_enabled = false;
 		setDefaultMetricForSource(source);
 	}
 

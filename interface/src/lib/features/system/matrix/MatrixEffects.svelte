@@ -237,6 +237,7 @@
 		store.settings.effect_enabled = enabled;
 		if (enabled) {
 			store.settings.background_mode = MATRIX_BACKGROUND_MODE_EFFECTS;
+			store.settings.data_visualization_enabled = false;
 		}
 	}
 

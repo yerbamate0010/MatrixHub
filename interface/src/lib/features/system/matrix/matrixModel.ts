@@ -85,6 +85,7 @@ export const MATRIX_ALARM_SETTING_KEYS = [
 export const MATRIX_EFFECT_SETTING_KEYS = [
 	'background_mode',
 	'effect_enabled',
+	'data_visualization_enabled',
 	'effect_engine',
 	'effect_mode',
 	'effect_speed',
@@ -97,6 +98,7 @@ export const MATRIX_EFFECT_SETTING_KEYS = [
 
 export const MATRIX_DATA_VISUALIZATION_SETTING_KEYS = [
 	'background_mode',
+	'effect_enabled',
 	'data_visualization_enabled',
 	'data_visualization_source',
 	'data_visualization_metric',

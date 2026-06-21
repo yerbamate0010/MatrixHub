@@ -343,6 +343,7 @@ bool MatrixSettingsService::syncCachedStateLocked() {
         std::swap(snapshot->config.dataVisualizationBrightnessMax,
                   snapshot->config.dataVisualizationBrightnessMin);
     }
+    normalizeMatrixBackgroundSelection(snapshot->config);
     _state = *snapshot;
     return true;
 }

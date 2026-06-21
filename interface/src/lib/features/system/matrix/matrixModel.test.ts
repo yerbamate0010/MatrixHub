@@ -90,7 +90,7 @@ describe('matrixModel', () => {
 		]);
 	});
 
-	it('defines matrix settings sections for UI pages with only background mode shared', () => {
+	it('defines matrix settings sections with only background arbitration keys shared', () => {
 		const sections = [
 			MATRIX_DISPLAY_SETTING_KEYS,
 			MATRIX_ALARM_SETTING_KEYS,
@@ -100,7 +100,11 @@ describe('matrixModel', () => {
 		const keys = sections.flat();
 		const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
 
-		expect(duplicates).toEqual(['background_mode']);
+		expect(duplicates).toEqual([
+			'background_mode',
+			'effect_enabled',
+			'data_visualization_enabled'
+		]);
 		expect(MATRIX_ALARM_SETTING_KEYS).toEqual(['alarm_mode', 'custom_icons']);
 		expect(MATRIX_EFFECT_SETTING_KEYS).toContain('effect_enabled');
 		expect(MATRIX_DATA_VISUALIZATION_SETTING_KEYS).toContain('data_visualization_source');
