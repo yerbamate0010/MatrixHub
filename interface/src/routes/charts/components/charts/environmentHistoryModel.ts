@@ -7,7 +7,8 @@ export interface EnvironmentSeriesInput {
 	unit: string;
 	decimals: number;
 	data: (number | null)[];
-	minTrendRange: number;
+	minPlotRange: number;
+	band: EnvironmentPlotBand;
 }
 
 export interface EnvironmentSeriesStats {
@@ -22,8 +23,9 @@ export interface EnvironmentSeriesStats {
 }
 
 export interface EnvironmentSeriesModel extends EnvironmentSeriesInput {
-	normalizedData: (number | null)[];
+	bandData: (number | null)[];
 	stats: EnvironmentSeriesStats | null;
+	plotRange: [number, number] | null;
 }
 
 export interface EnvironmentSampleValue {
@@ -35,10 +37,16 @@ export interface EnvironmentSampleValue {
 	value: number | null;
 }
 
-const TREND_MIDPOINT = 50;
-const TREND_VISIBLE_SPAN = 72;
-const TREND_MIN = 6;
-const TREND_MAX = 94;
+export interface EnvironmentPlotBand {
+	min: number;
+	max: number;
+}
+
+export interface EnvironmentPlotData {
+	timestamps: number[];
+	rawIndexes: (number | null)[];
+	series: Record<EnvironmentSensorKey, (number | null)[]>;
+}
 
 function isFiniteNumber(value: number | null | undefined): value is number {
 	return typeof value === 'number' && Number.isFinite(value);
@@ -81,31 +89,100 @@ export function calculateEnvironmentSeriesStats(
 	};
 }
 
-export function normalizeEnvironmentTrend(
+export function getEnvironmentPlotRange(
+	stats: EnvironmentSeriesStats | null,
+	minPlotRange: number
+): [number, number] | null {
+	if (!stats) return null;
+
+	const range = Math.max(stats.range, minPlotRange);
+	const pad = Math.max(range * 0.08, minPlotRange * 0.04);
+	const center = (stats.min + stats.max) / 2;
+	const half = range / 2 + pad;
+
+	return [center - half, center + half];
+}
+
+export function projectEnvironmentBand(
 	data: (number | null)[],
-	minTrendRange: number
+	minPlotRange: number,
+	band: EnvironmentPlotBand
 ): (number | null)[] {
 	const stats = calculateEnvironmentSeriesStats(data);
 	if (!stats) return data.map(() => null);
 
-	const trendRange = Math.max(stats.range, minTrendRange);
-	const center = (stats.min + stats.max) / 2;
+	const plotRange = getEnvironmentPlotRange(stats, minPlotRange);
+	if (!plotRange) return data.map(() => null);
+
+	const [lo, hi] = plotRange;
+	const span = hi - lo;
+	const bandSpan = band.max - band.min;
 
 	return data.map((value) => {
 		if (!isFiniteNumber(value)) return null;
-		const normalized = TREND_MIDPOINT + ((value - center) / trendRange) * TREND_VISIBLE_SPAN;
-		return clamp(normalized, TREND_MIN, TREND_MAX);
+		const ratio = span === 0 ? 0.5 : (value - lo) / span;
+		return clamp(band.min + ratio * bandSpan, band.min, band.max);
 	});
 }
 
 export function buildEnvironmentSeriesModels(
 	series: EnvironmentSeriesInput[]
 ): EnvironmentSeriesModel[] {
-	return series.map((input) => ({
-		...input,
-		stats: calculateEnvironmentSeriesStats(input.data),
-		normalizedData: normalizeEnvironmentTrend(input.data, input.minTrendRange)
-	}));
+	return series.map((input) => {
+		const stats = calculateEnvironmentSeriesStats(input.data);
+		return {
+			...input,
+			stats,
+			plotRange: getEnvironmentPlotRange(stats, input.minPlotRange),
+			bandData: projectEnvironmentBand(input.data, input.minPlotRange, input.band)
+		};
+	});
+}
+
+export function buildEnvironmentPlotData(
+	timestamps: number[],
+	series: EnvironmentSeriesModel[],
+	gapThresholdSeconds = 60 * 60
+): EnvironmentPlotData {
+	const plotData: EnvironmentPlotData = {
+		timestamps: [],
+		rawIndexes: [],
+		series: {
+			co2: [],
+			temperature: [],
+			humidity: []
+		}
+	};
+
+	for (let index = 0; index < timestamps.length; index++) {
+		const previousTimestamp = timestamps[index - 1];
+		const timestamp = timestamps[index];
+
+		if (
+			index > 0 &&
+			Number.isFinite(previousTimestamp) &&
+			Number.isFinite(timestamp) &&
+			timestamp - previousTimestamp > gapThresholdSeconds
+		) {
+			plotData.timestamps.push(previousTimestamp + (timestamp - previousTimestamp) / 2);
+			plotData.rawIndexes.push(null);
+			for (const key of Object.keys(plotData.series) as EnvironmentSensorKey[]) {
+				plotData.series[key].push(null);
+			}
+		}
+
+		plotData.timestamps.push(timestamp);
+		plotData.rawIndexes.push(index);
+		for (const key of Object.keys(plotData.series) as EnvironmentSensorKey[]) {
+			plotData.series[key].push(null);
+		}
+		for (const model of series) {
+			plotData.series[model.key][plotData.series[model.key].length - 1] =
+				model.bandData[index] ?? null;
+		}
+	}
+
+	return plotData;
 }
 
 export function getEnvironmentSampleValues(

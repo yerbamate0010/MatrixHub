@@ -11,16 +11,19 @@ The environment history view intentionally uses one shared chart card for CO2,
 temperature, and humidity:
 
 - one shared X axis keeps all readings aligned by timestamp;
-- the plotted Y values are normalized to a trend scale, because ppm, Celsius,
-  and percent cannot share one raw axis without becoming misleading;
+- CO2, temperature, and humidity are drawn in separate sensor tracks, because
+  ppm, Celsius, and percent cannot share one raw axis without becoming
+  misleading;
 - the metric tiles and hover readout always show the real raw values and units;
-- small changes are not stretched to the full chart height. Each sensor has a
-  minimum meaningful trend range so flat humidity or temperature data remains
-  visually calm instead of looking noisy.
+- small changes are not stretched to the full track height. Each sensor has a
+  minimum meaningful plot range so flat humidity or temperature data remains
+  visually calm instead of looking noisy;
+- large time gaps insert null plot points so the chart does not imply continuous
+  data collection where the retained log has no samples.
 
 The transformation lives in
 `interface/src/routes/charts/components/charts/environmentHistoryModel.ts`.
-Keep that file framework-independent so the normalization and stats can be
+Keep that file framework-independent so the projection and stats can be
 covered by Vitest without a browser or canvas.
 
 ## Validation

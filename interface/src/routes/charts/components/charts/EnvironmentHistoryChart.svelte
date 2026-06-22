@@ -14,10 +14,12 @@
 	import { wheelZoomPlugin } from '$lib/utils/charts/wheelZoomPlugin';
 	import { formatTimeOnlyTick } from '$lib/utils/charts/timeFormatters';
 	import {
+		buildEnvironmentPlotData,
 		buildEnvironmentSeriesModels,
 		formatSensorValue,
 		getEnvironmentSampleValues,
 		type EnvironmentSensorKey,
+		type EnvironmentPlotData,
 		type EnvironmentSeriesModel
 	} from './environmentHistoryModel';
 
@@ -43,6 +45,13 @@
 	let visibleKeys = $state<EnvironmentSensorKey[]>(['co2', 'temperature', 'humidity']);
 	let initialXRange: { min: number; max: number } | null = null;
 
+	const TRACK_GAP_SECONDS = 60 * 60;
+	const SENSOR_BANDS = {
+		co2: { min: 70, max: 94 },
+		temperature: { min: 38, max: 62 },
+		humidity: { min: 6, max: 30 }
+	} as const;
+
 	const locale = $derived(i18n.languageTag);
 	const seriesModels = $derived(
 		buildEnvironmentSeriesModels([
@@ -53,7 +62,8 @@
 				unit: CHART_CONFIGS.co2.unit,
 				decimals: CHART_CONFIGS.co2.decimals,
 				data: co2,
-				minTrendRange: 200
+				minPlotRange: 200,
+				band: SENSOR_BANDS.co2
 			},
 			{
 				key: 'temperature',
@@ -62,7 +72,8 @@
 				unit: CHART_CONFIGS.temperature.unit,
 				decimals: CHART_CONFIGS.temperature.decimals,
 				data: temperature,
-				minTrendRange: 5
+				minPlotRange: 5,
+				band: SENSOR_BANDS.temperature
 			},
 			{
 				key: 'humidity',
@@ -71,9 +82,13 @@
 				unit: CHART_CONFIGS.humidity.unit,
 				decimals: CHART_CONFIGS.humidity.decimals,
 				data: humidity,
-				minTrendRange: 10
+				minPlotRange: 10,
+				band: SENSOR_BANDS.humidity
 			}
 		])
+	);
+	const environmentPlotData = $derived(
+		buildEnvironmentPlotData(timestamps, seriesModels, TRACK_GAP_SECONDS)
 	);
 
 	const selectedTimestamp = $derived(
@@ -106,10 +121,10 @@
 
 	$effect(() => {
 		const models = seriesModels;
-		const times = timestamps;
+		const plotData = environmentPlotData;
 
-		if (chartViewport && chartMount && uPlotLib && times.length > 0) {
-			renderChart(models, times);
+		if (chartViewport && chartMount && uPlotLib && plotData.timestamps.length > 0) {
+			renderChart(models, plotData);
 		}
 	});
 
@@ -134,11 +149,11 @@
 
 	function getChartSize() {
 		const width = Math.max(280, Math.floor((chartViewport?.clientWidth ?? 320) - 2));
-		const height = width < 420 ? 235 : width < 768 ? 285 : 330;
+		const height = width < 420 ? 310 : width < 768 ? 360 : 420;
 		return { width, height };
 	}
 
-	function renderChart(models: EnvironmentSeriesModel[], times: number[]) {
+	function renderChart(models: EnvironmentSeriesModel[], plotData: EnvironmentPlotData) {
 		if (!uPlotLib || !chartMount) return;
 
 		destroyChart();
@@ -155,22 +170,26 @@
 		const opts: Options = {
 			width,
 			height,
-			padding: width < 420 ? [8, 10, 0, 0] : [10, 14, 0, 0],
+			padding: width < 420 ? [12, 10, 0, 0] : [14, 14, 0, 0],
 			scales: {
 				x: { time: true },
-				trend: { range: [0, 100] }
+				y: { range: [0, 100] }
 			},
 			series: [
 				{ label: 'Time' },
 				...models.map((model) => ({
 					label: model.label,
-					scale: 'trend',
+					scale: 'y',
 					stroke: model.color,
 					width: 2,
 					paths: linearPath,
 					spanGaps: false,
 					points: {
-						show: false
+						show: true,
+						size: width < 420 ? 3 : 4,
+						width: 0,
+						fill: model.color,
+						stroke: model.color
 					}
 				}))
 			],
@@ -187,13 +206,8 @@
 						vals.map((v, i, arr) => formatTimeOnlyTick(v, i, arr, u.scales.x))
 				},
 				{
-					scale: 'trend',
-					stroke: '#9ca3af',
-					grid: { stroke: 'rgba(148, 163, 184, 0.14)', width: 1 },
-					ticks: { stroke: 'rgba(148, 163, 184, 0.24)', width: 1, size: 4 },
-					gap: 4,
-					size: width < 420 ? 32 : 38,
-					values: (_u, vals: number[]) => vals.map((v) => v.toFixed(0))
+					scale: 'y',
+					show: false
 				}
 			],
 			cursor: {
@@ -205,14 +219,17 @@
 			legend: { show: false }
 		};
 
-		const plotData = [times, ...models.map((model) => model.normalizedData)] as AlignedData;
-		chart = new uPlotLib(opts, plotData, chartMount);
+		const alignedData = [
+			plotData.timestamps,
+			...models.map((model) => plotData.series[model.key])
+		] as AlignedData;
+		chart = new uPlotLib(opts, alignedData, chartMount);
 		initialXRange = {
-			min: times[0],
-			max: times[times.length - 1]
+			min: plotData.timestamps[0],
+			max: plotData.timestamps[plotData.timestamps.length - 1]
 		};
 
-		setupCursorHandlers();
+		setupCursorHandlers(plotData.rawIndexes);
 		setupZoomTracking();
 		applySeriesVisibility(models, visibleKeys);
 	}
@@ -222,7 +239,7 @@
 		chart = undefined;
 	}
 
-	function setupCursorHandlers() {
+	function setupCursorHandlers(rawIndexes: (number | null)[]) {
 		if (!chart) return;
 
 		chart.over.addEventListener('mousemove', () => {
@@ -231,7 +248,7 @@
 			const left = chart.cursor.left ?? 0;
 			const viewportWidth = chartViewport?.clientWidth ?? 320;
 			tooltipLeft = Math.min(Math.max(left, 112), Math.max(112, viewportWidth - 112));
-			selectedIndex = typeof index === 'number' && index >= 0 ? index : null;
+			selectedIndex = typeof index === 'number' && index >= 0 ? (rawIndexes[index] ?? null) : null;
 		});
 
 		chart.over.addEventListener('mouseleave', () => {
@@ -309,6 +326,19 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		}).format(new Date(ms));
+	}
+
+	function bandTopPercent(series: EnvironmentSeriesModel) {
+		return 100 - series.band.max + 1;
+	}
+
+	function formatSeriesRange(series: EnvironmentSeriesModel) {
+		if (!series.stats) return '';
+		return `${formatSensorValue(series.stats.min, series.decimals, series.unit)} - ${formatSensorValue(
+			series.stats.max,
+			series.decimals,
+			series.unit
+		)}`;
 	}
 </script>
 
@@ -392,7 +422,7 @@
 
 		<div
 			bind:this={chartViewport}
-			class="relative min-h-[235px] overflow-hidden rounded-md border border-base-content/10 bg-base-100/40 sm:min-h-[285px] lg:min-h-[330px]"
+			class="relative min-h-[310px] overflow-hidden rounded-md border border-base-content/10 bg-base-100/40 sm:min-h-[360px] lg:min-h-[420px]"
 		>
 			{#if isLibraryLoading}
 				<div class="absolute inset-0 z-20 flex items-center justify-center bg-base-100/40">
@@ -400,6 +430,29 @@
 				</div>
 			{/if}
 			<div bind:this={chartMount}></div>
+
+			<div class="pointer-events-none absolute inset-0">
+				<div class="absolute inset-x-3 top-1/3 h-px bg-base-content/10"></div>
+				<div class="absolute inset-x-3 top-2/3 h-px bg-base-content/10"></div>
+				{#each seriesModels as series (series.key)}
+					<div
+						class="absolute left-3 right-3 flex items-center justify-between gap-2 text-[10px] uppercase tracking-normal text-base-content/50"
+						class:opacity-40={!isSeriesVisible(series.key)}
+						style="top: {bandTopPercent(series)}%;"
+					>
+						<span class="flex min-w-0 items-center gap-1.5">
+							<span
+								class="h-1.5 w-1.5 shrink-0 rounded-full"
+								style="background-color: {series.color};"
+							></span>
+							<span class="truncate">{series.label}</span>
+						</span>
+						<span class="hidden shrink-0 font-mono text-base-content/45 sm:inline">
+							{formatSeriesRange(series)}
+						</span>
+					</div>
+				{/each}
+			</div>
 
 			{#if selectedTimestamp != null}
 				<div
