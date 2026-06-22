@@ -22,6 +22,7 @@ technical references that support implementation, debugging, and validation.
 ## Operations
 
 - [api-contract.md](api-contract.md) - firmware/frontend/SDK/API path contract and verifier
+- [charts-ui.md](charts-ui.md) - historical chart UX, trend normalization, and validation notes
 - [frontend-quality.md](frontend-quality.md) - frontend quality gates, CI checks, and review rules
 - [operations/security_hardening.md](operations/security_hardening.md) - security model and hardening notes
 - [operations/testing.md](operations/testing.md) - backend and frontend validation

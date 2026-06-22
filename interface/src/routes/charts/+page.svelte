@@ -3,8 +3,7 @@
 	import FeatureHelpModal from '$lib/components/help/FeatureHelpModal.svelte';
 	import HelpTriggerButton from '$lib/components/help/HelpTriggerButton.svelte';
 	import DateSelector from './components/DateSelector.svelte';
-	import BaseChart from './components/charts/BaseChart.svelte';
-	import { CHART_CONFIGS } from './chartConfigs';
+	import EnvironmentHistoryChart from './components/charts/EnvironmentHistoryChart.svelte';
 	import { parseBinaryLog, BinaryLogParseError } from '$lib/utils/logs/binaryLogParser';
 	import {
 		LogsApiService,
@@ -173,7 +172,7 @@
 			});
 		}
 	});
-	import { PageWrapper, GridLayout } from '$lib/components/layout';
+	import { PageWrapper } from '$lib/components/layout';
 </script>
 
 <PageWrapper>
@@ -214,29 +213,12 @@
 
 		{#if chartData.timestamps.length > 0}
 			<div class="transition-opacity duration-300" class:opacity-30={isLoading}>
-				<GridLayout cols={1}>
-					<BaseChart
-						data={chartData.co2}
-						timestamps={chartData.timestamps}
-						title="CO₂"
-						chartId="co2Chart"
-						{...CHART_CONFIGS.co2}
-					/>
-					<BaseChart
-						data={chartData.temp}
-						timestamps={chartData.timestamps}
-						title={m.dashboard_temp({ locale: i18n.languageTag })}
-						chartId="tempChart"
-						{...CHART_CONFIGS.temperature}
-					/>
-					<BaseChart
-						data={chartData.humid}
-						timestamps={chartData.timestamps}
-						title={m.dashboard_humid({ locale: i18n.languageTag })}
-						chartId="humidChart"
-						{...CHART_CONFIGS.humidity}
-					/>
-				</GridLayout>
+				<EnvironmentHistoryChart
+					timestamps={chartData.timestamps}
+					co2={chartData.co2}
+					temperature={chartData.temp}
+					humidity={chartData.humid}
+				/>
 			</div>
 		{:else if !isLoading}
 			<div class="alert alert-info">

@@ -18,7 +18,7 @@ screenshots and long walkthroughs; the UI changes faster than images.
 | `/wifi/sta` | Connect the device to a home Wi-Fi network. |
 | `/wifi/ap` | Configure the device access point. |
 | `/alarms` | Create and manage threshold alarms and notification actions. |
-| `/charts` | Inspect current and historical sensor readings. |
+| `/charts` | Compare retained CO2, temperature, and humidity history on a shared timeline. |
 | `/logs` | Browse and download stored sensor logs. |
 | `/bluetooth` | Manage scanner-only BLE sensors and discovered devices. |
 | `/shelly` | Add and control Shelly relay devices. |
